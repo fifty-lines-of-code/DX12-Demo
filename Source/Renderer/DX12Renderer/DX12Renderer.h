@@ -29,6 +29,7 @@ using Microsoft::WRL::ComPtr;
 
 class Mesh;
 struct MeshResource;
+struct DX12FrameResource;
 
 class DX12Renderer : public Renderer {
 
@@ -106,6 +107,7 @@ private:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 	std::vector<std::unique_ptr<MeshResource>> mMeshResources;
+	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
 
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;

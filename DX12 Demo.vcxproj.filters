@@ -138,6 +138,15 @@
     <ClInclude Include="Source\Engine\Camera\Camera.h">
       <Filter>Header Files\Engine\Scene Manager\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12FrameResource.h">
+      <Filter>Header Files\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RenderItem.h">
+      <Filter>Header Files\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Helper\MathHelper.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -181,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Camera\Camera.cpp">
       <Filter>Source Files\Engine\Scene Manager\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\DX12Renderer\DX12FrameResource.cpp">
+      <Filter>Source Files\Renderer\DX2Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

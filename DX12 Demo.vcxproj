@@ -139,8 +139,11 @@
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h" />
     <ClInclude Include="Source\Game Timer\GameTimer.h" />
     <ClInclude Include="Source\Helper\Helper.h" />
+    <ClInclude Include="Source\Helper\MathHelper.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12FrameResource.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RenderItem.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\UploadBuffer.h" />
     <ClInclude Include="Source\Renderer\Renderer.h" />
   </ItemGroup>
@@ -157,6 +160,7 @@
     <ClCompile Include="Source\Game Timer\GameTimer.cpp" />
     <ClCompile Include="Source\Helper\Helper.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Renderer\DX12Renderer\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Renderer\Renderer.cpp" />
   </ItemGroup>

@@ -2,7 +2,7 @@
 
 #include "../Helper/Helper.h"
 #include <memory>
-#include "MathHelper.h"
+#include "../Helper/MathHelper.h"
 
 class DX12Renderer;
 class SceneManager;

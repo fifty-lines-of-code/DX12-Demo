@@ -7,6 +7,7 @@
 #include "../../Helper/Helper.h"
 #include "UploadBuffer.h"
 #include "../../Engine/Scene Manager/Entities/Mesh/Mesh.h"
+#include "DX12FrameResource.h"
 
 using namespace DirectX;
 

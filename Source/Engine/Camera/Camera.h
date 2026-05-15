@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../MathHelper.h"
+#include "../../Helper/MathHelper.h"
 #include <wtypes.h>
 
 class Camera {
