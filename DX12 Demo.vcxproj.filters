@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Engine">
+      <UniqueIdentifier>{87ec24d0-eef7-403a-8a9d-49016f00f336}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{4bd52247-4534-48b8-9892-cf1be24ac49a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer">
+      <UniqueIdentifier>{56bbb743-0e87-4960-b852-4fa4a5280d5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Renderer">
+      <UniqueIdentifier>{4036d22d-2ca0-40ba-95a4-40c7d484ee3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Renderer\DX12Renderer">
+      <UniqueIdentifier>{45816bc1-7796-4e9f-b30e-8f909b5c78e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Helper">
+      <UniqueIdentifier>{95b9e197-0e7e-4af3-b041-4918c4c0e8a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Helper">
+      <UniqueIdentifier>{9b9acf19-7790-4518-997e-7aa29ca11007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\DX2Renderer">
+      <UniqueIdentifier>{048976fb-5860-42e1-8630-83a17bd17d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager">
+      <UniqueIdentifier>{cc89332c-14ef-4cad-a731-fadf23906ccf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager">
+      <UniqueIdentifier>{1834a152-6a64-4816-ac7a-f84c88cd0e3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager\Camera">
+      <UniqueIdentifier>{46975459-7bdd-4461-98d5-c4ac289fc850}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager\Camera">
+      <UniqueIdentifier>{660204ff-0d65-4db5-8aa9-e6ee8eaf3865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager\Entity">
+      <UniqueIdentifier>{ee2a8c6e-63ab-4efe-989c-483c64ac999e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager\Entity">
+      <UniqueIdentifier>{048c1f24-862a-4330-ac79-5cebe39d6a65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager\Entity\Mesh">
+      <UniqueIdentifier>{916755c0-a897-4799-a6fc-7727c3e648a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager\Entity\Mesh">
+      <UniqueIdentifier>{0de30c2d-e99b-457f-ab11-6cf1ac097a9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager\ResourceManager">
+      <UniqueIdentifier>{7821fa3b-eb40-48f5-9acd-d034136a8267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager\ResourceManager">
+      <UniqueIdentifier>{aabd4978-14ad-4d63-81fb-899e5a312956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{df2aeb42-ffb3-4418-a288-271c3926c669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Scene Manager\World Manager">
+      <UniqueIdentifier>{91702e22-de5a-4d9e-8fb7-fe0ab04eaded}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene Manager\World Manager">
+      <UniqueIdentifier>{9ae901d9-5468-4a34-9feb-d4dc1780e556}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\DX12Demo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\d3dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Renderer.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Engine.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h">
+      <Filter>Header Files\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game Timer\GameTimer.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Helper\Helper.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\SceneManager.h">
+      <Filter>Header Files\Engine\Scene Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h">
+      <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.h">
+      <Filter>Header Files\Engine\Scene Manager\Entity\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h">
+      <Filter>Header Files\Engine\Scene Manager\Entity\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h">
+      <Filter>Header Files\Engine\Scene Manager\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\DX12Renderer\UploadBuffer.h">
+      <Filter>Header Files\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\EntityConstantBufferData.h">
+      <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\MathHelper.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h">
+      <Filter>Header Files\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h">
+      <Filter>Header Files\Engine\Scene Manager\World Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree.h">
+      <Filter>Header Files\Engine\Scene Manager\World Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Camera\Camera.h">
+      <Filter>Header Files\Engine\Scene Manager\Camera</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\DX12Demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Renderer.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Helper\Helper.cpp">
+      <Filter>Source Files\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\DX12Renderer\DX12Renderer.cpp">
+      <Filter>Source Files\Renderer\DX2Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Engine.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game Timer\GameTimer.cpp">
+      <Filter>Source Files\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\SceneManager.cpp">
+      <Filter>Source Files\Engine\Scene Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\Entities\Entity.cpp">
+      <Filter>Source Files\Engine\Scene Manager\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.cpp">
+      <Filter>Source Files\Engine\Scene Manager\Entity\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.cpp">
+      <Filter>Source Files\Engine\Scene Manager\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\World Manager\World Manager.cpp">
+      <Filter>Source Files\Engine\Scene Manager\World Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree.cpp">
+      <Filter>Source Files\Engine\Scene Manager\World Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Camera\Camera.cpp">
+      <Filter>Source Files\Engine\Scene Manager\Camera</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="DX12 Demo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Shaders\color.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>
