@@ -3,7 +3,7 @@ Features to implement:
 
 
 1. ~~Basic Camera~~
-2. Per frame resources, 3 frames, to keep gpu and cpu busy at almost all times
+2. ~~Per frame resources, 3 frames, to keep gpu and cpu busy at almost all times~~
 3. A plane "floor"
 4. A plane "wall"
 5. Xbox controller support to move player (cube)
