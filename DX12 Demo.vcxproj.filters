@@ -152,9 +152,6 @@
     <ClCompile Include="Source\DX12Demo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Renderer\Renderer.cpp">
-      <Filter>Source Files\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Helper\Helper.cpp">
       <Filter>Source Files\Helper</Filter>
     </ClCompile>
