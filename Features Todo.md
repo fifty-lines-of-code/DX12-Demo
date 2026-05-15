@@ -9,14 +9,15 @@ Features to implement:
 5. Xbox controller support to move player (cube)
 6. FromSoft style movement of camera when player moves
 7. Camera rotation around player
-8. Full screen support
-9. Switch between fullscreen and windowed
-10. Player "breathing" animation when idle
-11. Collision of player with the above wall
-12. PS controller support
-13. FromSoft style lockon
-14. Main menu
-15. Frustum Culling
-16. Dynamic loading and unloading of data as player moves/crosses a boundary
-17. 
+8. Rotate player based on controller input
+9. Full screen support
+10. Switch between fullscreen and windowed
+11. Player "breathing" animation when idle
+12. Collision of player with the above wall
+13. PS controller support
+14. FromSoft style lockon
+15. Main menu
+16. Frustum Culling
+17. Dynamic loading and unloading of data as player moves/crosses a boundary
+18. 
 
