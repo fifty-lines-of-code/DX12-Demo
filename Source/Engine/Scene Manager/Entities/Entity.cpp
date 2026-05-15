@@ -2,9 +2,13 @@
 
 #include "Mesh/Mesh.h"
 
-Entity::Entity() : mMesh(nullptr) {}
+Entity::Entity(uint32_t Id) : mID(Id), mMesh(nullptr) {}
 
 Entity::~Entity() {}
+
+uint32_t Entity::GetID() const {
+	return mID;
+}
 
 void Entity::SetMesh(const Mesh* mesh) {
 	this->mMesh = mesh;
@@ -14,31 +18,46 @@ const Mesh* Entity::GetMesh() const {
 	return mMesh;
 }
 
-void Entity::Update(DirectX::XMFLOAT4X4 viewProj) {
+void Entity::Update(const DirectX::XMFLOAT4X4* viewProj) {
 	DirectX::XMFLOAT4X4 identity = MathHelper::Identity4x4();
 
 	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&identity);
-	DirectX::XMMATRIX xmViewProj = DirectX::XMLoadFloat4x4(&viewProj);
-	DirectX::XMMATRIX worldViewProj = world * xmViewProj;
 	DirectX::XMStoreFloat4x4(
-		&mConstantBufferData.WorldViewProjection, 
-		XMMatrixTranspose(worldViewProj)
+		&mConstantBufferData.World, 
+		world
 	);
+
+	//todo: for now we will set this once and then set isDirty to false
+	// but later only set isDirty if we haven't changed any state
+	static bool hasRunOnce = false;
+	if (!hasRunOnce) {
+		mIsDirty = true;
+		hasRunOnce = false;
+	}
 }
 
-void* Entity::GetConstantBufferData() {
-	return &mConstantBufferData.WorldViewProjection;
+DirectX::XMFLOAT4X4 Entity::GetConstantBufferDataTransposeIfNecessray() {
+	DirectX::XMMATRIX worldTranspose = DirectX::XMMatrixTranspose(
+		DirectX::XMLoadFloat4x4(&mConstantBufferData.World)
+	);
+	DirectX::XMFLOAT4X4 worldTranspose44;
+	DirectX::XMStoreFloat4x4(&worldTranspose44, worldTranspose);
+	return worldTranspose44;
 }
 
 const EntityAABBMinMax Entity::GetAABBMinMax() const {
-	//todo: calculate the AABB min max based on position and scale
-	
-	// for now return the AABB min max of a unit cube centered at the origin
-	DirectX::XMFLOAT3 center = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	float halfSize = 1.0 / 2;
+	float halfSize = mScale *.5f;
 
-	DirectX::XMFLOAT3 min = DirectX::XMFLOAT3(center.x - halfSize, center.y - halfSize, center.z - halfSize);
-	DirectX::XMFLOAT3 max = DirectX::XMFLOAT3(center.x + halfSize, center.y + halfSize, center.z + halfSize);
+	DirectX::XMFLOAT3 min = DirectX::XMFLOAT3(mCenter.x - halfSize, mCenter.y - halfSize, mCenter.z - halfSize);
+	DirectX::XMFLOAT3 max = DirectX::XMFLOAT3(mCenter.x + halfSize, mCenter.y + halfSize, mCenter.z + halfSize);
 
 	return EntityAABBMinMax{min, max , halfSize};
+}
+
+bool Entity::GetIsDirty() const {
+	return mIsDirty;
+}
+
+void Entity::SetIsDirty(bool dirty) {
+	mIsDirty = dirty;
 }

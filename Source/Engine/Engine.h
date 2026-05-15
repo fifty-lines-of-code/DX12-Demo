@@ -3,6 +3,7 @@
 #include "../Helper/Helper.h"
 #include <memory>
 #include "../Helper/MathHelper.h"
+#include <vector>
 
 class DX12Renderer;
 class SceneManager;
@@ -22,6 +23,7 @@ public:
 	void CalculateFrameStats(const GameTimer* const timer);
 
 private:
+	static const int NumberOfFrameResources = 3;
 	HINSTANCE mhAppInst = nullptr; // application instance handle
 	HWND mhMainWnd = nullptr;
 	std::wstring mMainWndCaption;
@@ -31,6 +33,7 @@ private:
 	std::unique_ptr<DX12Renderer> mRenderer;
 	std::unique_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<Camera> mCamera;
+	std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
 
 private:
 	bool InitializeCamera();

@@ -130,7 +130,7 @@
     <ClInclude Include="Source\Engine\Engine.h" />
     <ClInclude Include="Source\Engine\MathHelper.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h" />
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\EntityConstantBufferData.h" />
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h" />
@@ -144,7 +144,7 @@
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RenderItem.h" />
-    <ClInclude Include="Source\Renderer\DX12Renderer\UploadBuffer.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Renderer\Renderer.h" />
   </ItemGroup>
   <ItemGroup>

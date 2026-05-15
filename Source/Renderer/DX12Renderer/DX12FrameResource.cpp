@@ -11,11 +11,11 @@ DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT 
         )
     );
 
-    mPassCB = std::make_unique<UploadBuffer<DX12PerPassConstants>>(device, passCount, true);
-    mRenderItemCB = std::make_unique<UploadBuffer<DX12RenderItemConstants>>(device, objectCount, true);
+    mPerPassCB = std::make_unique<DX12ConstantBuffersUploadBuffer<DX12PerPassConstants>>(device, passCount, true);
+    mPerRenderItemCB = std::make_unique<DX12ConstantBuffersUploadBuffer<DX12RenderItemConstants>>(device, objectCount, true);
 }
 
 DX12FrameResource::~DX12FrameResource()
 {
-
+    mCommandListAllocator->Reset();
 }

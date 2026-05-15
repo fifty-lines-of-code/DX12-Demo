@@ -5,7 +5,7 @@ Features to implement:
 1. ~~Basic Camera~~
 2. Per frame resources, 3 frames, to keep gpu and cpu busy at almost all times
 3. A plane "floor"
-4. A plane "wall" 
+4. A plane "wall"
 5. Xbox controller support to move player (cube)
 6. FromSoft style movement of camera when player moves
 7. Camera rotation around player
@@ -17,8 +17,6 @@ Features to implement:
 13. FromSoft style lockon
 14. Main menu
 15. Frustum Culling
-16. Dynamic loading and unloading as player moves
+16. Dynamic loading and unloading of data as player moves/crosses a boundary
 17. 
-
-
 

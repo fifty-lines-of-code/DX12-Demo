@@ -28,26 +28,28 @@
 using Microsoft::WRL::ComPtr;
 
 class Mesh;
-struct MeshResource;
+struct DX12MeshResource;
 struct DX12FrameResource;
 
-class DX12Renderer : public Renderer {
+class DX12Renderer : public IRenderer {
 
 public: 		
 	DX12Renderer(int clientWidth, int clientHeight);
 	~DX12Renderer();
 
-	bool Initialize(HWND mainHwnd) override;
-	bool SetupPipeline(uint32_t numberOfItems, size_t sizeOfEachItem);
-	void FinishInitialize();
+	bool Initialize(HWND mainHwnd, int numberOfFrameResources) override;
+	bool SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV);
+	void CreateFrameResources(uint32_t numberOfEntities);
 	void LoadGeometry(const Mesh* const mesh);
 	void Shutdown() override;
-
-	void Update(uint32_t meshID, void* data, size_t dataSize) override;
+	void PrepareForUpdate() override;
+	void UpdatePerPassCb(void* data, size_t dataSize);
+	void UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize);
 	void BeginFrame() override;
-	bool Draw(uint32_t meshID, uint32_t indexCount) override;
+	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
 	void EndFrame() override;
 	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
+	void FinishInitialize() override;
 
 private:
 	bool InitializeDevice();
@@ -57,23 +59,24 @@ private:
 	void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
 	void CreateCommandObjects();
 	void CreateSwapChain();
-	void BuildDescriptorHeaps();
+	void CreateRtvDsvDescriptorHeaps();
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
-	bool CreateRawUploadBufferForConstantBuffer(size_t numberOfItems, size_t sizeOfEachItem);
-	bool CreateConstantBufferView(size_t numberOfItems, size_t sizeOfEachItem);
-	bool BuildRootSignature();
-	bool BuildShadersAndInputLayout();
-	bool BuildPipelineStateObject();
+	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb);
+	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB);
+	bool CreateRootSignature();
+	bool CreateShadersAndInputLayout();
+	bool CreatePipelineStateObject();
 
 private:
-
-	int mClientWidth;
-	int mClientHeight;
-	HWND mMainHwnd = nullptr;
 	static const int SwapChainBufferCount = 2;
+
+	int mClientWidth = 0;
+	int mClientHeight = 0;
+	HWND mMainHwnd = nullptr;
+	int mNumberOfFrameResources = 0;
+
 	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.
-	const size_t DX12_CBV_ALIGNMENT = 256;
 	UINT mRtvDescriptorSize = 0;
 	UINT mDsvDescriptorSize = 0;
 	UINT mCbvSrvUavDescriptorSize = 0;
@@ -85,13 +88,16 @@ private:
 	UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
 	UINT64 mCurrentFence = 0;
 	UINT mCurrentBackBuffer = 0;
+	UINT mPerEntityCbHeapOffset = 0;
+	UINT mCurrentFrameResourceIndex = 0;
+	DX12FrameResource* mCurrentFrameResource = nullptr;
 
 	// DX12
 	ComPtr<IDXGIFactory4> mdxgiFactory;
 	ComPtr<ID3D12Device> mDX12Device;
 	ComPtr<ID3D12Fence> mFence;
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
-	ComPtr<ID3D12CommandAllocator> mCommandAllocator;
+	ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> mCommandList;
 	ComPtr<IDXGISwapChain> mSwapChain;
 	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
@@ -99,14 +105,12 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mCBVDescriptorHeap;
 	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
-	ComPtr<ID3D12Resource> mConstantBufferUploadBuffer;
-	void* mCpuVirtualAddressHoldingGpuAddressForConstantBuffer = nullptr;
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
-	std::vector<std::unique_ptr<MeshResource>> mMeshResources;
+	std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
 	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
 
 	D3D12_VIEWPORT mScreenViewport;

@@ -5,7 +5,7 @@
 #include <WindowsX.h>
 #include <DirectXColors.h>
 #include "../../Helper/Helper.h"
-#include "UploadBuffer.h"
+#include "DX12DefaultUploadBuffer.h"
 #include "../../Engine/Scene Manager/Entities/Mesh/Mesh.h"
 #include "DX12FrameResource.h"
 
@@ -35,13 +35,14 @@ DX12Renderer::~DX12Renderer() {
 	}
 }
 
-bool DX12Renderer::Initialize(HWND mainHWND) {
+bool DX12Renderer::Initialize(HWND mainHWND, int numberOfFrameResources) {
 	mMainHwnd = mainHWND;
+	mNumberOfFrameResources = numberOfFrameResources;
 
 	InitializeDevice();
 	CreateCommandObjects();
 	CreateSwapChain();
-	BuildDescriptorHeaps();
+	CreateRtvDsvDescriptorHeaps();
 	
 	// do initial resize
 	OnResize(mClientWidth, mClientHeight);
@@ -145,8 +146,13 @@ bool DX12Renderer::InitializeDevice() {
 }
 
 void DX12Renderer::Shutdown() {
-	for (auto &meshResource : mMeshResources) {
-		meshResource->DisposeUploaders();
+	for (auto& resource : mFrameResources) {
+		resource.reset();
+	}
+	for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
+		uint32_t id = it->first;
+		auto& meshResource = it->second;
+
 		meshResource->VertexBufferGPU.Reset();
 		meshResource->IndexBufferGPU.Reset();
 	}
@@ -154,8 +160,6 @@ void DX12Renderer::Shutdown() {
 	mpsByteCode.Reset();
 	mvsByteCode.Reset();
 	mRootSignature.Reset();
-	mConstantBufferUploadBuffer->Unmap(0, nullptr);
-	mConstantBufferUploadBuffer.Reset();
 	mDepthStencilBuffer.Reset();
 	for (UINT i = 0; i < SwapChainBufferCount; ++i) {
 		mSwapChainBuffer[i].Reset();
@@ -165,26 +169,57 @@ void DX12Renderer::Shutdown() {
 	mRTVDescriptorHeap.Reset();
 	mSwapChain.Reset();
 	mCommandList.Reset();
-	mCommandAllocator.Reset();
+	mInitAndResizeCommandAllocator.Reset();
 	mCommandQueue.Reset();
 	mFence.Reset();
 	mDX12Device.Reset();
 	mdxgiFactory.Reset();
 }
 
-void DX12Renderer::Update(uint32_t meshID, void* data, size_t dataSize) {
-	memcpy(mCpuVirtualAddressHoldingGpuAddressForConstantBuffer, data, dataSize);
+void DX12Renderer::PrepareForUpdate() {
+	// Cycle through the circular frame resource array.
+	mCurrentFrameResourceIndex = (mCurrentFrameResourceIndex + 1) % mNumberOfFrameResources;
+	mCurrentFrameResource = mFrameResources[mCurrentFrameResourceIndex].get();
+
+	// Has the GPU finished processing the commands of the current frame resource?
+	// If not, wait until the GPU has completed commands up to this fence point.
+	if (mCurrentFrameResource->mFenceValue != 0 && mFence->GetCompletedValue() < mCurrentFrameResource->mFenceValue) {
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+		ThrowIfFailed(
+			mFence->SetEventOnCompletion(
+				mCurrentFrameResource->mFenceValue, 
+				eventHandle
+			)
+		);
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+}
+
+
+void DX12Renderer::UpdatePerPassCb(void* data, size_t dataSize) {
+	auto currPassCB = mCurrentFrameResource->mPerPassCB.get();
+	currPassCB->CopyData(0, data);
+}
+
+void DX12Renderer::UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) {
+	uint32_t alignedPerRenderItemCbSize = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(perRenderItemCbSize);
+
+	// update per render item cb
+	auto currPassCB = mCurrentFrameResource->mPerRenderItemCB.get();
+	currPassCB->CopyData(renderItemIndex, data);
 }
 
 void DX12Renderer::BeginFrame() {
+	auto commandAllocator = mCurrentFrameResource->mCommandListAllocator;
 	// Reuse the memory associated with command recording.
 	// We can only reset when the associated command lists have finished execution on the GPU.
-	ThrowIfFailed(mCommandAllocator->Reset());
+	ThrowIfFailed(commandAllocator->Reset());
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	ThrowIfFailed(mCommandList->Reset(
-		mCommandAllocator.Get(),
+		commandAllocator.Get(),
 		mPipelineStateObject.Get())
 	);
 
@@ -236,27 +271,41 @@ void DX12Renderer::BeginFrame() {
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+	auto perPassCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCBVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	perPassCbvHandle.Offset(mCurrentFrameResourceIndex, mCbvSrvUavDescriptorSize);
+	mCommandList->SetGraphicsRootDescriptorTable(1, perPassCbvHandle);
 }
 
-bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount) {
-	auto vertexBufferView = mMeshResources[0]->VertexBufferView();
+bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) {
+	DX12MeshResource* resource = mMeshResourceMap[meshID].get();
+
+	if (resource == nullptr) { return false; }
+
+	auto vertexBufferView = resource->VertexBufferView();
 	mCommandList->IASetVertexBuffers(
 		0, 
 		1, 
 		&vertexBufferView
 	);
 
-	auto indexBufferView = mMeshResources[0]->IndexBufferView();
+	auto indexBufferView = resource->IndexBufferView();
 	mCommandList->IASetIndexBuffer(
 		&indexBufferView
 	);
 
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	mCommandList->SetGraphicsRootDescriptorTable(
-		0, 
+	// Offset to the CBV in the descriptor heap for this object and for this frame resource.
+	UINT cbvIndex = 
+		mPerEntityCbHeapOffset +
+		mCurrentFrameResourceIndex * entityCount + entityIndex;
+	auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
 		mCBVDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
+	cbvHandle.Offset(cbvIndex, mCbvSrvUavDescriptorSize);
+
+	mCommandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
 	mCommandList->DrawIndexedInstanced(
 		indexCount,
@@ -289,10 +338,13 @@ void DX12Renderer::EndFrame() {
 	ThrowIfFailed(mSwapChain->Present(0, 0));
 	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
 
-	// Wait until frame commands are complete.  This waiting is inefficient and is
-	// done for simplicity.  Later we will show how to organize our rendering code
-	// so we do not have to wait per frame.
-	FlushCommandQueue();
+	// Advance the fence value to mark commands up to this fence point.
+	mCurrentFrameResource->mFenceValue = ++mCurrentFence;
+
+	// Add an instruction to the command queue to set a new fence point. 
+	// Because we are on the GPU timeline, the new fence point won't be 
+	// set until the GPU finishes processing all the commands prior to this Signal().
+	mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
 
 void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
@@ -303,14 +355,14 @@ void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
 
 	// ensure if we have devicewe also have swap chain, allocator
 	assert(mSwapChain);
-	assert(mCommandAllocator);
+	assert(mInitAndResizeCommandAllocator);
 
 	// flush before changing any resources
 	FlushCommandQueue();
 
 	// reset command list allocator
 	ThrowIfFailed(
-		mCommandList->Reset(mCommandAllocator.Get(), nullptr)
+		mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr)
 	);
 
 	// release the previous resources
@@ -544,11 +596,11 @@ void DX12Renderer::CreateCommandObjects() {
 		)
 	);
 
-	// create command allocator
+	// create init and resize command allocator
 	ThrowIfFailed(
 		mDX12Device->CreateCommandAllocator(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			IID_PPV_ARGS(mCommandAllocator.GetAddressOf())
+			IID_PPV_ARGS(mInitAndResizeCommandAllocator.GetAddressOf())
 		)
 	);
 
@@ -557,7 +609,7 @@ void DX12Renderer::CreateCommandObjects() {
 		mDX12Device->CreateCommandList(
 			0,
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			mCommandAllocator.Get(), // Associated command allocator
+			mInitAndResizeCommandAllocator.Get(), // Associated command allocator
 			nullptr,                   // Initial PipelineStateObject
 			IID_PPV_ARGS(mCommandList.GetAddressOf())
 		)
@@ -600,7 +652,7 @@ void DX12Renderer::CreateSwapChain() {
 	);
 }
 
-void DX12Renderer::BuildDescriptorHeaps() {
+void DX12Renderer::CreateRtvDsvDescriptorHeaps() {
 	// get rtv, dsv, and srv descriptor size
 	mRtvDescriptorSize = mDX12Device->GetDescriptorHandleIncrementSize(
 		D3D12_DESCRIPTOR_HEAP_TYPE_RTV
@@ -641,21 +693,6 @@ void DX12Renderer::BuildDescriptorHeaps() {
 			IID_PPV_ARGS(mDSVDescriptorHeap.GetAddressOf())
 		)
 	);
-
-	// describe the cbv descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-	cbvHeapDesc.NumDescriptors = 1;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.NodeMask = 0;
-
-	// create the cbv descriptor heap
-	ThrowIfFailed(
-		mDX12Device->CreateDescriptorHeap(
-			&cbvHeapDesc,
-			IID_PPV_ARGS(&mCBVDescriptorHeap)
-		)
-	);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DX12Renderer::CurrentBackBufferView() const
@@ -672,91 +709,110 @@ D3D12_CPU_DESCRIPTOR_HANDLE DX12Renderer::DepthStencilView()const
 	return mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
-bool DX12Renderer::SetupPipeline(uint32_t numberOfItems, size_t sizeOfEachItem) {
+bool DX12Renderer::SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCb, uint32_t sizeOfPerObjectCb) {
 	// Reset the command list to prep for initialization commands.
-	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
+	ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
-	if (!CreateRawUploadBufferForConstantBuffer(numberOfItems, sizeOfEachItem)) { return false; }
-	if (!BuildRootSignature()) { return false; }
-	if (!BuildShadersAndInputLayout()) { return false; }
-	if (!BuildPipelineStateObject()) { return false; }
+	CreateFrameResources(numberOfEntities);
+	if (!CreateConstantBufferDescriptor(numberOfEntities, sizeOfPerPassCb, sizeOfPerObjectCb)) { return false; }
+	if (!CreateRootSignature()) { return false; }
+	if (!CreateShadersAndInputLayout()) { return false; }
+	if (!CreatePipelineStateObject()) { return false; }
 
 	return true;
 }
 
-bool DX12Renderer::CreateRawUploadBufferForConstantBuffer(size_t numberOfItems, size_t sizeOfEachItem) {
-    // 1. Align the totalBytes to the nearest 256-byte boundary
-    // Formula: (n + 255) & ~255
+bool DX12Renderer::CreateConstantBufferDescriptor(
+	uint32_t numberOfEntities, 
+	uint32_t sizeOfPerPassCb,
+	uint32_t sizeOfPerEntityCb
+) {
+	uint32_t alignedSizeOfPerPassCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerPassCb);
 
-	size_t alignedBytesOfEachItem = (sizeOfEachItem + (DX12_CBV_ALIGNMENT - 1)) & ~(DX12_CBV_ALIGNMENT - 1);
-	size_t totalBytes = numberOfItems * alignedBytesOfEachItem;
+	// 1 * because we have 1 per pass cb, update this when we have more per pass cbs
+	mPerEntityCbHeapOffset = 1 * mNumberOfFrameResources;
 
-    // 2. Define the "Where" (Upload Heap)
-    auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    
-    // 3. Define the "What" (A raw buffer of 'alignedTotalBytes' size)
-    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(totalBytes);
+	// +1 for the per pass cb
+	UINT numberOfDescriptors = (numberOfEntities + 1) * mNumberOfFrameResources;
 
-    // 4. Create the Resource
-    ThrowIfFailed(
-		mDX12Device->CreateCommittedResource(
-			&heapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&bufferDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&mConstantBufferUploadBuffer)
+	// describe the cbv descriptor heap
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+	cbvHeapDesc.NumDescriptors = numberOfDescriptors;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.NodeMask = 0;
+
+	// create the cbv descriptor heap
+	ThrowIfFailed(
+		mDX12Device->CreateDescriptorHeap(
+			&cbvHeapDesc,
+			IID_PPV_ARGS(&mCBVDescriptorHeap)
 		)
 	);
 
-    // 5. Map the buffer permanently
-    // We store the pointer in our verbose-named variable
-    mConstantBufferUploadBuffer->Map(
-		0, 
-		nullptr,
-		&mCpuVirtualAddressHoldingGpuAddressForConstantBuffer
-	);
+	uint32_t alignedSizeOfPerEntityCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerEntityCb);
 
-	// 6. Create the CBV for each item
-	return CreateConstantBufferView(numberOfItems, alignedBytesOfEachItem);
+	// Create the CBV for each item and per pass cbv for each frame
+	return CreateConstantBufferViews(numberOfEntities, alignedSizeOfPerPassCb, alignedSizeOfPerEntityCb);
 }
 
-bool DX12Renderer::CreateConstantBufferView(size_t numberOfItems, size_t alignedSizeOfEachItem) {
-	// 1. Get the start of your Descriptor Heap
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(mCBVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+bool DX12Renderer::CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t alignedSizeOfPerPassCb, uint32_t alignedSizeOfPerEntityCb) {
+	// per pass CB are laid out first, currently only a single per pass cb
+	// (alignedPerPassCBSize * numberOfFrames) 
+	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	{
+		auto passCB = mFrameResources[frameIndex]->mPerPassCB->Resource();
+		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = passCB->GetGPUVirtualAddress();
 
-	// 2. For each item, create a CBV in the heap
-	for (size_t i = 0; i < numberOfItems; ++i) {
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCBVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset(frameIndex, mCbvSrvUavDescriptorSize);
 
-		// Offset the GPU address for each object
-		cbvDesc.BufferLocation = mConstantBufferUploadBuffer->GetGPUVirtualAddress() + (i * alignedSizeOfEachItem);
-		cbvDesc.SizeInBytes = (UINT)alignedSizeOfEachItem; // The size of the SLOT, not the whole buffer
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+		cbvDesc.BufferLocation = cbAddress;
+		cbvDesc.SizeInBytes = alignedSizeOfPerPassCb;
 
-		// Create the view in the heap at the current handle
 		mDX12Device->CreateConstantBufferView(&cbvDesc, handle);
+	}
 
-		// Move the handle forward in the heap to the next slot
-		handle.Offset(1, mCbvSrvUavDescriptorSize);
+	// and then per Entity cb are laid out
+	// ((alignedPerItemCB) * numberOfEntities * numberOfFrames)
+
+	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	{
+		auto renderItemCB = mFrameResources[frameIndex]->mPerRenderItemCB->Resource();
+		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = renderItemCB->GetGPUVirtualAddress();
+
+		for (uint32_t i = 0; i < numberOfEntities; ++i) {
+			// Offset to this render item cbv in the descriptor heap.
+			int heapIndex = mPerEntityCbHeapOffset + (numberOfEntities * frameIndex) + i;
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCBVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
+
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+			cbvDesc.BufferLocation = cbAddress + (i * alignedSizeOfPerEntityCb);
+			cbvDesc.SizeInBytes = alignedSizeOfPerEntityCb;
+
+			mDX12Device->CreateConstantBufferView(&cbvDesc, handle);
+		}
 	}
 
 	return true;
 }
 
-bool DX12Renderer::BuildRootSignature() {
-	// Shader programs typically require resources as input (constant buffers,
-	// textures, samplers).  The root signature defines the resources the shader
-	// programs expect.  If we think of the shader programs as a function, and
-	// the input resources as function parameters, then the root signature can be
-	// thought of as defining the function signature.  
+bool DX12Renderer::CreateRootSignature() {
+	// per object cb
+	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
-	// Root parameter can be a table, root descriptor or root constants
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	// per pass cb consumed by each object
+	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 
-	// Create a single descriptor table of CBVs.
-	CD3DX12_DESCRIPTOR_RANGE cbvRange;
-	cbvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvRange);
+	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+
+	// Create a two descriptor tables of CBVs.
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
@@ -796,7 +852,7 @@ bool DX12Renderer::BuildRootSignature() {
 	return true;
 }
 
-bool DX12Renderer::BuildShadersAndInputLayout() {
+bool DX12Renderer::CreateShadersAndInputLayout() {
 	HRESULT hr = S_OK;
 
 	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
@@ -811,7 +867,7 @@ bool DX12Renderer::BuildShadersAndInputLayout() {
 	return true;
 }
 
-bool DX12Renderer::BuildPipelineStateObject() {
+bool DX12Renderer::CreatePipelineStateObject() {
 	// describe the pso
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -849,9 +905,21 @@ bool DX12Renderer::BuildPipelineStateObject() {
 	return true;
 }
 
+void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities) {
+	for (int i = 0; i < mNumberOfFrameResources; ++i) {
+		mFrameResources.push_back(
+			std::make_unique<DX12FrameResource>(
+				mDX12Device.Get(),
+				1,
+				numberOfEntities
+			)
+		);
+	}
+}
+
 void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
 	// create mesh resource
-	std::unique_ptr<MeshResource> meshResource = std::make_unique<MeshResource>();
+	std::unique_ptr<DX12MeshResource> meshResource = std::make_unique<DX12MeshResource>();
 	meshResource->id = (uint32_t)mesh->meshID;
 
 	// create blob of vbByteSize and store address in vertex buffer cpu address
@@ -907,20 +975,25 @@ void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
 	meshResource->IndexFormat = DXGI_FORMAT_R16_UINT;
 	meshResource->IndexBufferByteSize = mesh->ibByteSize;
 
-	// increase the size of our vector if needed and store the mesh Resource
-	if ((uint64_t)mesh->meshID >= mMeshResources.size()) {
-		mMeshResources.resize((uint64_t)mesh->meshID + 1);
-	}
-	
-	mMeshResources[(uint64_t)mesh->meshID] = std::move(meshResource);
+	// store it in our map
+	mMeshResourceMap[(uint64_t)mesh->meshID] = std::move(meshResource);
 }
 
 void DX12Renderer::FinishInitialize() {
 	// Execute the initialization commands.
 	ThrowIfFailed(mCommandList->Close());
+
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Wait until initialization is complete.
 	FlushCommandQueue();
+
+	// dispose uploaders
+	for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
+		uint32_t id = it->first;
+		auto& meshResource = it->second;
+
+		meshResource->DisposeUploaders();
+	}
 }

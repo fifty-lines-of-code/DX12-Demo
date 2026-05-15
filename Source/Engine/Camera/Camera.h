@@ -9,7 +9,8 @@ public:
 	~Camera();
 
 	void OnResize(UINT newClientWidth, UINT newClientHeight);
-	DirectX::XMFLOAT4X4 GetViewProjection() const;
+	const DirectX::XMFLOAT4X4* GetViewProjection() const;
+	void Update();
 
 private:
 	float mAspectRatio;

@@ -28,7 +28,7 @@ struct RenderItem
     // Index into GPU constant buffer corresponding to the ObjectCB for this render item.
     UINT ObjCBIndex = -1;
 
-    MeshResource* Geo = nullptr;
+    DX12MeshResource* Geo = nullptr;
 
     // Primitive topology.
     D3D12_PRIMITIVE_TOPOLOGY PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
