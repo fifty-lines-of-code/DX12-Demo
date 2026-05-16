@@ -28,7 +28,7 @@ void Entity::Update(const DirectX::XMFLOAT4X4* viewProj) {
 	);
 
 	//todo: for now we will set this once
-	// but later only set isDirty to true if we have't changed any state
+	// but later only set isDirty to true if we have changed any state
 	static bool hasRunOnce = false;
 	if (!hasRunOnce) {
 		mIsDirty = true;
