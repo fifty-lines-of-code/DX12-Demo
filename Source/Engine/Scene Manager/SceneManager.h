@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 #include <DirectXMath.h>
+#include <unordered_map>
+#include "../Scene Manager/Entities/Mesh/Mesh.h"
 
 class Camera;
 class Entity;
@@ -15,17 +17,20 @@ public:
 
 	bool Initialize();
 	bool LoadScene();
-	void Update(DirectX::XMFLOAT4X4 viewProj);
+	void Update(const DirectX::XMFLOAT4X4* viewProj);
 
+	uint32_t GetEntityCount() const;
+	uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
+	uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const;
 
-	size_t GetEntityCount() const;
-	size_t GetConstantBufferDataByteSizeOfEachEntity() const;
-
-	const std::vector<std::unique_ptr<Entity>>& GetEntities() const;
+	const std::vector<std::unique_ptr<Entity>>* GetEntities() const;
+	std::vector<const Mesh*> GetMeshesToLoad();
 
 private:
+	uint32_t mMostRecenttlyCreatedID = -1;
 	std::vector<std::unique_ptr<Entity>> mEntities;
 	std::unique_ptr<ResourceManager> mResourceManager;
+	std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
 
 private:
 	bool GenerateCubeEntity();

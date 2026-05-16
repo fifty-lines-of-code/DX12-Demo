@@ -14,9 +14,11 @@ void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	BuildViewProjectionMatrix();
 }
 
-DirectX::XMFLOAT4X4 Camera::GetViewProjection() const {
-	return mViewProjection;
+const DirectX::XMFLOAT4X4* Camera::GetViewProjection() const {
+	return &mViewProjection;
 }
+
+void Camera::Update() {}
 
 void Camera::BuildViewProjectionMatrix() {
 	// build projection

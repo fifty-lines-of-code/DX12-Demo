@@ -14,22 +14,37 @@ bool SceneManager::Initialize() {
 	return true;
 }
 
-void SceneManager::Update(DirectX::XMFLOAT4X4 viewProj) {
+void SceneManager::Update(const DirectX::XMFLOAT4X4* viewProj) {
 	for (auto& entity : mEntities) {
 		entity->Update(viewProj);
 	}
 }
 
-size_t SceneManager::GetEntityCount() const {
-	return mEntities.size();
+uint32_t SceneManager::GetEntityCount() const {
+	return (uint32_t)mEntities.size();
 }
 
-size_t SceneManager::GetConstantBufferDataByteSizeOfEachEntity() const {
+uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachEntity() const {
 	return sizeof(EntityConstantBufferData);
 }
 
-const std::vector<std::unique_ptr<Entity>>& SceneManager::GetEntities() const {
-	return mEntities;
+uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachPerPassObject() const {
+	return sizeof(PerPassConstantBufferData);
+}
+
+const std::vector<std::unique_ptr<Entity>>* SceneManager::GetEntities() const {
+	return &mEntities;
+}
+
+std::vector<const Mesh*> SceneManager::GetMeshesToLoad() {
+	std::vector<const Mesh*> meshList;
+	meshList.reserve(mMeshesToLoad.size());
+
+	for (auto const& pair : mMeshesToLoad) {
+		meshList.push_back(pair.second);
+	}
+
+	return meshList;
 }
 
 bool SceneManager::LoadScene() {
@@ -37,8 +52,10 @@ bool SceneManager::LoadScene() {
 }
 
 bool SceneManager::GenerateCubeEntity() {
-	std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>();
-	cubeEntity->SetMesh(mResourceManager->GetMesh(MeshID::Cube));
+	std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(++mMostRecenttlyCreatedID);
+	const Mesh* cubeMesh = mResourceManager->GetMesh(MeshID::Cube);
+	cubeEntity->SetMesh(cubeMesh);
+	mMeshesToLoad[cubeMesh->meshID] = cubeMesh;
 
 	mEntities.push_back(std::move(cubeEntity));
 

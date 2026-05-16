@@ -24,13 +24,16 @@ Engine::~Engine() {}
 bool Engine::Initialize(HWND mainHwnd) {
 	mhMainWnd = mainHwnd;
 
-	if (!mRenderer->Initialize(mhMainWnd)) { return false; }
+	if (!mRenderer->Initialize(mhMainWnd, Engine::NumberOfFrameResources)) { return false; }
 
 	if (!mSceneManager->Initialize()) { return false; }
 
+	if (!InitializeCamera()) { return false; }
+
 	if (!mSceneManager->LoadScene()) { return false; }
 
-	if (!InitializeCamera()) { return false; }
+	// set all entities to dity so they are updated
+	mNumberOfDirtyFramesPerEntity.resize(mSceneManager->GetEntityCount()); mNumberOfDirtyFramesPerEntity.assign(mSceneManager->GetEntityCount(), 3);
 
 	if (!SetupPipeline()) { return false; }
 
@@ -44,7 +47,8 @@ bool Engine::Initialize(HWND mainHwnd) {
 bool Engine::SetupPipeline() {
 	return mRenderer->SetupPipeline(
 		(uint32_t)mSceneManager->GetEntityCount(),
-		mSceneManager->GetConstantBufferDataByteSizeOfEachEntity()
+		mSceneManager->GetConstantBufferDataByteSizeOfEachEntity(),
+		mSceneManager->GetConstantBufferDataByteSizeOfEachPerPassObject()
 	);
 }
 
@@ -60,30 +64,56 @@ void Engine::Update(const GameTimer* const mTimer) {
 	CalculateFrameStats(mTimer);
 
 	//controller update
+	//mController->Update();
 	
-	//mCamera->Update();
+	mCamera->Update();
 
 	// update the scene manager
-	DirectX::XMFLOAT4X4 viewProj = mCamera->GetViewProjection();
+	const DirectX::XMFLOAT4X4* viewProj = mCamera->GetViewProjection();
 	mSceneManager->Update(viewProj);
 
-	// update constant buffers of all entities after they have been updated
-	for (auto& entity : mSceneManager->GetEntities()) {
-		mRenderer->Update(
-			(uint32_t)entity->GetMesh()->meshID,
-			entity->GetConstantBufferData(),
-			sizeof(EntityConstantBufferData)
-		);
+	// prepare the renderer for updates
+	mRenderer->PrepareForUpdate();
+
+	// update per pass cbs, always send transpose of matrices
+	DirectX::XMMATRIX viewProjTranspose = DirectX::XMLoadFloat4x4(viewProj);
+	viewProjTranspose = DirectX::XMMatrixTranspose(viewProjTranspose);
+	DirectX::XMFLOAT4X4 viewProjTranspose44;
+	DirectX::XMStoreFloat4x4(
+		&viewProjTranspose44,
+		viewProjTranspose
+	);
+	mRenderer->UpdatePerPassCb(&viewProjTranspose44, sizeof(DirectX::XMFLOAT4X4));
+
+	// update per entity cb
+
+	for (auto& entity : *mSceneManager->GetEntities()) {
+		if (entity->GetIsDirty()) {
+			mNumberOfDirtyFramesPerEntity[entity->GetID()] = 3;
+			entity->SetIsDirty(false);
+		}
+
+		if (mNumberOfDirtyFramesPerEntity[entity->GetID()] > 0) {
+			auto transposedData = entity->GetConstantBufferDataTransposeIfNecessray();
+			mRenderer->UpdatePerRenderItemCb(
+				entity->GetID(),
+				&transposedData,
+				mSceneManager->GetConstantBufferDataByteSizeOfEachEntity()
+			);
+			mNumberOfDirtyFramesPerEntity[entity->GetID()]--;
+		}
 	}
 }
 
 void Engine::Draw() {
 	mRenderer->BeginFrame();
 
-	for (auto& entity : mSceneManager->GetEntities()) {
+	for (auto& entity : *mSceneManager->GetEntities()) {
 		mRenderer->Draw(
 			(uint32_t)entity->GetMesh()->meshID,
-			(uint32_t)entity->GetMesh()->GetIndices().size()
+			(uint32_t)entity->GetMesh()->GetIndices().size(),
+			entity->GetID(),
+			mSceneManager->GetEntityCount()
 		);
 	}
 	mRenderer->EndFrame();
@@ -127,9 +157,9 @@ bool Engine::InitializeCamera() {
 }
 
 void Engine::LoadGeometry() {
-	std::vector<const Mesh*> meshesToLoad;
+	const std::vector<std::unique_ptr<Entity>>* entitiesToLoad = mSceneManager->GetEntities();
 
-	for (auto& entity : mSceneManager->GetEntities()) {
-		mRenderer->LoadGeometry(entity->GetMesh());
+	for (auto& mesh : mSceneManager->GetMeshesToLoad()) {
+		mRenderer->LoadGeometry(mesh);
 	}
 }

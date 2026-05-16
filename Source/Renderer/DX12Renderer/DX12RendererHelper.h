@@ -44,7 +44,6 @@ public:
 		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer) {
 		Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 
-
 		auto heapPropsDefault = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 		auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
 		// Create the actual default buffer resource.
@@ -72,7 +71,6 @@ public:
 				IID_PPV_ARGS(uploadBuffer.GetAddressOf())
 			)
 		);
-
 
 		// Describe the data we want to copy into the default buffer.
 		D3D12_SUBRESOURCE_DATA subResourceData = {};
@@ -122,9 +120,30 @@ public:
 
 		return defaultBuffer;
 	}
+
+	// copyright for below method: Frank Luna
+	static UINT CalculateAlignedConstantBufferByteSize(UINT byteSize)
+	{
+		// Constant buffers must be a multiple of the minimum hardware
+		// allocation size (usually 256 bytes).  So round up to nearest
+		// multiple of 256. We do this by adding 255 (DX12_CBV_ALIGNMENT_MINUS_ONE) and then masking off
+		// the lower 2 bytes which store all bits < 256.
+		// Example: Suppose byteSize = 300.
+		// (300 + 255) & ~255
+		// 555 & ~255
+		// 0x022B & ~0x00ff
+		// 0x022B & 0xff00
+		// 0x0200
+		// 512
+		return (byteSize + DX12_CBV_ALIGNMENT_MINUS_ONE) & ~DX12_CBV_ALIGNMENT_MINUS_ONE;
+	}
+
+	private:
+		static const size_t DX12_CBV_ALIGNMENT_MINUS_ONE = 255;
 };
 
-struct MeshResource
+// copyright for below struct: Frank Luna
+struct DX12MeshResource
 {
 	// Give it a name so we can look it up by name.
 	uint32_t id;

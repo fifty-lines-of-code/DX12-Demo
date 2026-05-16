@@ -130,7 +130,7 @@
     <ClInclude Include="Source\Engine\Engine.h" />
     <ClInclude Include="Source\Engine\MathHelper.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h" />
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\EntityConstantBufferData.h" />
+    <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h" />
@@ -139,9 +139,12 @@
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h" />
     <ClInclude Include="Source\Game Timer\GameTimer.h" />
     <ClInclude Include="Source\Helper\Helper.h" />
+    <ClInclude Include="Source\Helper\MathHelper.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12FrameResource.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h" />
-    <ClInclude Include="Source\Renderer\DX12Renderer\UploadBuffer.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RenderItem.h" />
+    <ClInclude Include="Source\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Renderer\Renderer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -157,8 +160,8 @@
     <ClCompile Include="Source\Game Timer\GameTimer.cpp" />
     <ClCompile Include="Source\Helper\Helper.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Renderer\DX12Renderer\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Renderer\DX12Renderer\DX12Renderer.cpp" />
-    <ClCompile Include="Source\Renderer\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="DX12 Demo.ico" />
