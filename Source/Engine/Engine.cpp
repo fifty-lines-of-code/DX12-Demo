@@ -1,11 +1,12 @@
 #include "Engine.h"
 
+#include "Camera/Camera.h"
 #include "../Renderer/DX12Renderer/DX12Renderer.h"
-#include "Scene Manager/SceneManager.h"
-#include "Scene Manager/Entities/Mesh/Mesh.h"
 #include "Scene Manager/Entities/Entity.h"
 #include "../Game Timer/GameTimer.h"
-#include "Camera/Camera.h"
+#include "Scene Manager/Entities/Mesh/Mesh.h"
+#include "Scene Manager/SceneManager.h"
+#include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 using namespace DirectX;
 
@@ -16,7 +17,8 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 	mClientHeight(clientHeight),
 	mRenderer(std::make_unique<DX12Renderer>(clientWidth, clientHeight)),
 	mSceneManager(std::make_unique<SceneManager>()),
-	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight))
+	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight)),
+	mInputSystem(std::make_unique<XBoxInputSystem>())
 {}
 
 Engine::~Engine() {}
@@ -63,8 +65,8 @@ void Engine::Update(const GameTimer* const mTimer) {
 	// update stats
 	CalculateFrameStats(mTimer);
 
-	//controller update
-	//mController->Update();
+	// input system update
+	mInputSystem->Update();
 	
 	mCamera->Update();
 

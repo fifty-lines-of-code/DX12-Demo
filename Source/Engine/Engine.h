@@ -5,10 +5,11 @@
 #include "../Helper/MathHelper.h"
 #include <vector>
 
-class DX12Renderer;
-class SceneManager;
 class Camera;
+class DX12Renderer;
 class GameTimer;
+class SceneManager;
+class XBoxInputSystem;
 
 class Engine {
 public:
@@ -34,6 +35,7 @@ private:
 	std::unique_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<Camera> mCamera;
 	std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
+	std::unique_ptr<XBoxInputSystem> mInputSystem;
 
 private:
 	bool InitializeCamera();
