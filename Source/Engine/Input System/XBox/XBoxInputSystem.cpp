@@ -40,11 +40,10 @@ void XBoxInputSystem::ProcessLeftJoystick() {
 	float squaredMagnitude = (rawX * rawX) + (rawY * rawY);
 
 	// 3. Check if stick is inside or outside the deadzone
-	if (squaredMagnitude > mSquareOfDeadzone) {
+	if (squaredMagnitude < mSquareOfDeadzone) {
 		mLeftStickX = 0.f;
 		mLeftStickY = 0.f;
-	}
-	else {
+	} else {
 		// stick is outside the deadzone, normalize rawX and Y
 		float magnitude = std::sqrt(squaredMagnitude);
 
