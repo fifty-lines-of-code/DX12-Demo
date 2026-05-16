@@ -30,7 +30,7 @@ void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 	if (stickX != 0.0f || stickY != 0.0f) {
 
 		// 2. Calculate the length of the input vector to check for diagonals
-		float length = std::sqrt((stickX * stickX) + (stickY * stickY));
+		float lengthSquared = (stickX * stickX) + (stickY * stickY);
 
 		float dirX = stickX;
 		// Mapping stick Y input over to our 3D world Z axis for now until
@@ -39,9 +39,12 @@ void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 		float dirZ = stickY; 
 
 		// 3. Normalize direction
-		if (length > 1.0f) {
-			dirX /= length;
-			dirZ /= length;
+		if (lengthSquared > 1.0f) {
+			// using the Quake3 copy-paste for the heck of it
+			float oneOverLengthSquared = MathHelper::FastInverseSqrt(lengthSquared);
+			// todo: switch back to oneOverLengthSquared = 1/lengthSquared;
+			dirX *= oneOverLengthSquared;
+			dirZ *= oneOverLengthSquared;
 		}
 
 		mCenter.x += dirX * speed * deltaTime;

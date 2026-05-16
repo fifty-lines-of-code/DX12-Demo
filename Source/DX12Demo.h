@@ -10,6 +10,7 @@
 #include <crtdbg.h>
 #endif
 
+class Game;
 class GameTimer;
 
 class DX12Demo {
@@ -28,23 +29,14 @@ public:
 
 private: 
     static DX12Demo* mDemo;
-    std::unique_ptr<Engine> mEngine;
-    GameTimer mTimer;
+    std::unique_ptr<Game> mGame;
 
     HINSTANCE mhAppInst = nullptr; // application instance handle
     HWND      mhMainWnd = nullptr; // main window handle
     UINT mClientWidth = 1280;
     UINT mClientHeight = 720;
-    std::wstring mMainWndCaption = L"DX12 Demo";
+    const std::wstring mMainWndCaption = L"DX12 Demo";
 
-    bool      mAppPaused = false;  // is the application paused?
-    bool      mMinimized = false;  // is the application minimized?
-    bool      mMaximized = false;  // is the application maximized?
-    bool      mResizing = false;   // are the resize bars being dragged?
-    bool      mFullscreenState = false;// fullscreen enabled
-
-    bool InitializeEngine();
+    bool InitializeGame();
     bool InitMainWindow();
-    void Update();
-    void Draw();
 };
