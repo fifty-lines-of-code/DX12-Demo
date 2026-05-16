@@ -1,8 +1,15 @@
 #include "Entity.h"
 
+#include <cmath>
 #include "Mesh/Mesh.h"
 
-Entity::Entity(uint32_t Id) : mID(Id), mMesh(nullptr) {}
+Entity::Entity(uint32_t Id) :
+	mID(Id), 
+	mCenter(DirectX::XMFLOAT3(0.f, 0.f, 2.f)),
+	mScale(1.f),
+	mMesh(nullptr) {
+	CalculateWorldMatrix();
+}
 
 Entity::~Entity() {}
 
@@ -18,25 +25,37 @@ const Mesh* Entity::GetMesh() const {
 	return mMesh;
 }
 
-void Entity::Update(const DirectX::XMFLOAT4X4* viewProj) {
-	DirectX::XMFLOAT4X4 identity = MathHelper::Identity4x4();
+void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
+	// 1. Check if the player is pushing the stick
+	if (stickX != 0.0f || stickY != 0.0f) {
 
-	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&identity);
-	DirectX::XMStoreFloat4x4(
-		&mConstantBufferData.World, 
-		world
-	);
+		// 2. Calculate the length of the input vector to check for diagonals
+		float length = std::sqrt((stickX * stickX) + (stickY * stickY));
 
-	//todo: for now we will set this once
-	// but later only set isDirty to true if we have changed any state
-	static bool hasRunOnce = false;
-	if (!hasRunOnce) {
+		float dirX = stickX;
+		// Mapping stick Y input over to our 3D world Z axis for now until
+		// we handle rotation
+		// todo
+		float dirZ = stickY; 
+
+		// 3. Normalize direction
+		if (length > 1.0f) {
+			dirX /= length;
+			dirZ /= length;
+		}
+
+		mCenter.x += dirX * speed * deltaTime;
+		mCenter.z += dirZ * speed * deltaTime;
+
+		// update the World matrix
+		CalculateWorldMatrix();
+
+		// set isDirty to true
 		mIsDirty = true;
-		hasRunOnce = false;
 	}
 }
 
-DirectX::XMFLOAT4X4 Entity::GetConstantBufferDataTransposeIfNecessray() {
+DirectX::XMFLOAT4X4 Entity::GetConstantBufferDataTransposed() {
 	DirectX::XMMATRIX worldTranspose = DirectX::XMMatrixTranspose(
 		DirectX::XMLoadFloat4x4(&mConstantBufferData.World)
 	);
@@ -60,4 +79,33 @@ bool Entity::GetIsDirty() const {
 
 void Entity::SetIsDirty(bool dirty) {
 	mIsDirty = dirty;
+}
+
+void Entity::CalculateWorldMatrix() {
+	DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();
+	// Row 0: Scale X
+	world.m[0][0] = mScale;
+	world.m[0][1] = 0.0f;
+	world.m[0][2] = 0.0f;
+	world.m[0][3] = 0.0f;
+
+	// Row 1: Scale Y
+	world.m[1][0] = 0.0f;
+	world.m[1][1] = mScale;
+	world.m[1][2] = 0.0f;
+	world.m[1][3] = 0.0f;
+
+	// Row 2: Scale Z
+	world.m[2][0] = 0.0f;
+	world.m[2][1] = 0.0f;
+	world.m[2][2] = mScale;
+	world.m[2][3] = 0.0f;
+
+	// Row 3: Translation
+	world.m[3][0] = mCenter.x;
+	world.m[3][1] = mCenter.y;
+	world.m[3][2] = mCenter.z;
+	world.m[3][3] = 1.0f;
+
+	mConstantBufferData.World = world;
 }

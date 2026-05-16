@@ -20,18 +20,22 @@ public:
 	uint32_t GetID() const;
 	void SetMesh(const Mesh* mesh);
 	const Mesh* GetMesh() const;
-	void Update(const DirectX::XMFLOAT4X4* viewProj);
 
-	DirectX::XMFLOAT4X4 GetConstantBufferDataTransposeIfNecessray();
+	void Update(float stickX, float stickY, float deltaTime, float speed);
+
+	DirectX::XMFLOAT4X4 GetConstantBufferDataTransposed();
 	const EntityAABBMinMax GetAABBMinMax() const;
 	bool GetIsDirty() const;
 	void SetIsDirty(bool dirty);
 
 private:
 	uint32_t mID;
-	DirectX::XMFLOAT3 mCenter = DirectX::XMFLOAT3(0.f, 0.f, 2.f);
-	float mScale = 1.f;
+	DirectX::XMFLOAT3 mCenter;
+	float mScale;
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
 	bool mIsDirty = true;
+
+private:
+	void CalculateWorldMatrix();
 };

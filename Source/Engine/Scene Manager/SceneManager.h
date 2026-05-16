@@ -8,6 +8,7 @@
 
 class Camera;
 class Entity;
+class IInputSystem;
 class ResourceManager;
 
 class SceneManager {
@@ -17,7 +18,7 @@ public:
 
 	bool Initialize();
 	bool LoadScene();
-	void Update(const DirectX::XMFLOAT4X4* viewProj);
+	void Update(const IInputSystem* inputSystem, float deltaTime, float animationSpeed);
 
 	uint32_t GetEntityCount() const;
 	uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
@@ -27,7 +28,7 @@ public:
 	std::vector<const Mesh*> GetMeshesToLoad();
 
 private:
-	uint32_t mMostRecenttlyCreatedID = -1;
+	uint32_t mIDOfNextEntityThatWillBeCreated = 0;
 	std::vector<std::unique_ptr<Entity>> mEntities;
 	std::unique_ptr<ResourceManager> mResourceManager;
 	std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;

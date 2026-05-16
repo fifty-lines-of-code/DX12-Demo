@@ -1,5 +1,7 @@
 #include "SceneManager.h"
+
 #include "Entities/Entity.h"
+#include "../../Engine/Input System/IInputSystem.h"
 #include "Resource Manager/ResourceManager.h"
 
 SceneManager::SceneManager() :
@@ -14,9 +16,14 @@ bool SceneManager::Initialize() {
 	return true;
 }
 
-void SceneManager::Update(const DirectX::XMFLOAT4X4* viewProj) {
-	for (auto& entity : mEntities) {
-		entity->Update(viewProj);
+void SceneManager::Update(const IInputSystem* inputSystem, float deltaTime, float animationSpeed) {
+	for (const auto& entity : mEntities) {
+		entity->Update(
+			inputSystem->GetLeftStickX(),
+			inputSystem->GetLeftStickY(),
+			deltaTime,
+			animationSpeed
+		);
 	}
 }
 
@@ -52,7 +59,7 @@ bool SceneManager::LoadScene() {
 }
 
 bool SceneManager::GenerateCubeEntity() {
-	std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(++mMostRecenttlyCreatedID);
+	std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(mIDOfNextEntityThatWillBeCreated++);
 	const Mesh* cubeMesh = mResourceManager->GetMesh(MeshID::Cube);
 	cubeEntity->SetMesh(cubeMesh);
 	mMeshesToLoad[cubeMesh->meshID] = cubeMesh;

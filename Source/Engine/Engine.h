@@ -30,6 +30,7 @@ private:
 	std::wstring mMainWndCaption;
 	int mClientWidth;
 	int mClientHeight;
+	const float mAnimationSpeed;
 
 	std::unique_ptr<DX12Renderer> mRenderer;
 	std::unique_ptr<SceneManager> mSceneManager;

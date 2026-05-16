@@ -15,6 +15,7 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 	mMainWndCaption(caption),
 	mClientWidth(clientWidth), 
 	mClientHeight(clientHeight),
+	mAnimationSpeed(.375f), // todo: move this out to somewhere else
 	mRenderer(std::make_unique<DX12Renderer>(clientWidth, clientHeight)),
 	mSceneManager(std::make_unique<SceneManager>()),
 	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight)),
@@ -35,7 +36,11 @@ bool Engine::Initialize(HWND mainHwnd) {
 	if (!mSceneManager->LoadScene()) { return false; }
 
 	// set all entities to dity so they are updated
-	mNumberOfDirtyFramesPerEntity.resize(mSceneManager->GetEntityCount()); mNumberOfDirtyFramesPerEntity.assign(mSceneManager->GetEntityCount(), 3);
+	mNumberOfDirtyFramesPerEntity.resize(mSceneManager->GetEntityCount()); 
+	mNumberOfDirtyFramesPerEntity.assign(
+		mSceneManager->GetEntityCount(), 
+		Engine::NumberOfFrameResources
+	);
 
 	if (!SetupPipeline()) { return false; }
 
@@ -71,13 +76,20 @@ void Engine::Update(const GameTimer* const mTimer) {
 	mCamera->Update();
 
 	// update the scene manager
-	const DirectX::XMFLOAT4X4* viewProj = mCamera->GetViewProjection();
-	mSceneManager->Update(viewProj);
+	mSceneManager->Update(
+		mInputSystem.get(),
+		mTimer->DeltaTime(),
+		mAnimationSpeed
+	);
 
 	// prepare the renderer for updates
 	mRenderer->PrepareForUpdate();
 
-	// update per pass cbs, always send transpose of matrices
+	// Update per-pass constant buffers.
+	// DirectXMath uses row-major alignment in CPU memory, but 
+	// HLSL defaults to column-major storage for matrix packing. 
+	// We transpose here to prevent skewed vector transformations on the GPU.
+	const DirectX::XMFLOAT4X4* viewProj = mCamera->GetViewProjection();
 	DirectX::XMMATRIX viewProjTranspose = DirectX::XMLoadFloat4x4(viewProj);
 	viewProjTranspose = DirectX::XMMatrixTranspose(viewProjTranspose);
 	DirectX::XMFLOAT4X4 viewProjTranspose44;
@@ -88,15 +100,14 @@ void Engine::Update(const GameTimer* const mTimer) {
 	mRenderer->UpdatePerPassCb(&viewProjTranspose44, sizeof(DirectX::XMFLOAT4X4));
 
 	// update per entity cb
-
 	for (auto& entity : *mSceneManager->GetEntities()) {
 		if (entity->GetIsDirty()) {
-			mNumberOfDirtyFramesPerEntity[entity->GetID()] = 3;
+			mNumberOfDirtyFramesPerEntity[entity->GetID()] = Engine::NumberOfFrameResources;
 			entity->SetIsDirty(false);
 		}
 
 		if (mNumberOfDirtyFramesPerEntity[entity->GetID()] > 0) {
-			auto transposedData = entity->GetConstantBufferDataTransposeIfNecessray();
+			auto transposedData = entity->GetConstantBufferDataTransposed();
 			mRenderer->UpdatePerRenderItemCb(
 				entity->GetID(),
 				&transposedData,
