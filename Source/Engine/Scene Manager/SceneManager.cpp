@@ -16,7 +16,7 @@ bool SceneManager::Initialize() {
 	return true;
 }
 
-void SceneManager::Update(const IInputSystem* inputSystem, float deltaTime, float animationSpeed) {
+void SceneManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed) {
 	for (const auto& entity : mEntities) {
 		entity->Update(
 			inputSystem->GetLeftStickX(),

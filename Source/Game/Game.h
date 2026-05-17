@@ -6,32 +6,34 @@
 #include <string>
 
 class Engine;
+class GameState;
+class XBoxInputSystem;
 
 class Game {
 public:
 	Game(HINSTANCE hInstance, int clientWidth, int clientHeight, std::wstring caption);
-	bool Initialize(HWND hwnd);
+	Game(const Game& rhs) = delete;
+	Game& operator=(const Game& rhs) = delete;
 	~Game();
 
-	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	bool Initialize(HWND hwnd);
 	int Run();
+
+	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
 	HWND mMainHwnd;
+	const std::wstring mMainWndCaption;
 	UINT mClientWidth;
 	UINT mClientHeight;
-	const std::wstring mMainWndCaption;
+
 	std::unique_ptr<Engine> mEngine;
 	GameTimer mTimer;
-
-	// todo: move below to GameState
-	bool      mAppPaused = false;  // is the application paused?
-	bool      mMinimized = false;  // is the application minimized?
-	bool      mMaximized = false;  // is the application maximized?
-	bool      mResizing = false;   // are the resize bars being dragged?
-	bool      mFullscreenState = false;// fullscreen enabled
+	std::unique_ptr<XBoxInputSystem> mInputSystem;
+	std::unique_ptr<GameState> mGameState;
 
 private:
+	void CalculateFrameStats();
 	void Update();
 	void Draw();
 };

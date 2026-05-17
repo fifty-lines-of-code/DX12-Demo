@@ -1,12 +1,16 @@
 #include "Game.h"
 
 #include "../Engine/Engine.h"
+#include "Game State/GameState.h"
+#include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) : 
 	mMainHwnd(nullptr),
 	mClientWidth(clientWidth),
 	mClientHeight(clientHeight),
-	mMainWndCaption(caption) {
+	mMainWndCaption(caption),
+	mInputSystem(std::make_unique<XBoxInputSystem>()),
+	mGameState(std::make_unique<GameState>()) {
 	mEngine = std::make_unique<Engine>(
 		hInstance, mMainWndCaption, clientWidth, clientHeight
 	);
@@ -38,7 +42,7 @@ int Game::Run() {
 		mTimer.Tick();
 
 		// 3. Handle Paused State
-		if (mAppPaused) {
+		if (mGameState->GetIsPaused()) {
 			Sleep(100);
 			continue; // Skip the rest of the loop
 		}
@@ -56,11 +60,49 @@ int Game::Run() {
 }
 
 void Game::Update() {
-	mEngine->Update(&mTimer);
+	// update stats
+	CalculateFrameStats();
+
+	// input system update
+	mInputSystem->Update();
+
+	// update the engine
+	mEngine->Update(&mTimer, mInputSystem.get());
 }
 
 void Game::Draw() {
 	mEngine->Draw();
+}
+
+void Game::CalculateFrameStats() {
+	// Code computes the average frames per second, and also the 
+	// average time it takes to render one frame.  These stats 
+	// are appended to the window caption bar.
+
+	static int frameCnt = 0;
+	static float timeElapsed = 0.0f;
+
+	frameCnt++;
+
+	// Compute averages over one second period.
+	if ((mTimer.TotalTime() - timeElapsed) >= 1.0f)
+	{
+		float fps = (float)frameCnt; // fps = frameCnt / 1
+		float mspf = 1000.0f / fps;
+
+		std::wstring fpsStr = std::to_wstring(fps);
+		std::wstring mspfStr = std::to_wstring(mspf);
+
+		std::wstring windowText = mMainWndCaption +
+			L"  fps: " + fpsStr +
+			L"  mspf: " + mspfStr;
+
+		SetWindowText(mMainHwnd, windowText.c_str());
+
+		// Reset for next average.
+		frameCnt = 0;
+		timeElapsed += 1.0f;
+	}
 }
 
 LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -72,12 +114,12 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
-			mAppPaused = true;
+			mGameState->SetIsPaused(true);
 			mTimer.Stop();
 		}
 		else
 		{
-			mAppPaused = false;
+			mGameState->SetIsPaused(false);
 			mTimer.Start();
 		}
 		return 0;
@@ -90,36 +132,36 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		if (wParam == SIZE_MINIMIZED)
 		{
-			mAppPaused = true;
-			mMinimized = true;
-			mMaximized = false;
+			mGameState->SetIsPaused(true);
+			mGameState->SetIsMinimized(true);
+			mGameState->SetIsMaximized(false);
 		}
 		else if (wParam == SIZE_MAXIMIZED)
 		{
-			mAppPaused = false;
-			mMinimized = false;
-			mMaximized = true;
+			mGameState->SetIsPaused(false);
+			mGameState->SetIsMinimized(false);
+			mGameState->SetIsMaximized(true);
+			
 			mEngine->OnResize(mClientWidth, mClientHeight);
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
 
 			// Restoring from minimized state?
-			if (mMinimized)
+			if (mGameState->GetIsMinimized())
 			{
-				mAppPaused = false;
-				mMinimized = false;
+				mGameState->SetIsPaused(false);
+				mGameState->SetIsMinimized(false);
 				mEngine->OnResize(mClientWidth, mClientHeight);
 			}
-
 			// Restoring from maximized state?
-			else if (mMaximized)
+			else if (mGameState->GetIsMaximized())
 			{
-				mAppPaused = false;
-				mMaximized = false;
+				mGameState->SetIsPaused(false);
+				mGameState->SetIsMaximized(false);
 				mEngine->OnResize(mClientWidth, mClientHeight);
 			}
-			else if (mResizing)
+			else if (mGameState->GetIsResizing())
 			{
 				// If user is dragging the resize bars, we do not resize 
 				// the buffers here because as the user continuously 
@@ -139,16 +181,16 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		// WM_EXITSIZEMOVE is sent when the user grabs the resize bars.
 	case WM_ENTERSIZEMOVE:
-		mAppPaused = true;
-		mResizing = true;
+		mGameState->SetIsPaused(true);
+		mGameState->SetIsResizing(true);
 		mTimer.Stop();
 		return 0;
 
 		// WM_EXITSIZEMOVE is sent when the user releases the resize bars.
 		// Here we reset everything based on the new window dimensions.
 	case WM_EXITSIZEMOVE:
-		mAppPaused = false;
-		mResizing = false;
+		mGameState->SetIsPaused(false);
+		mGameState->SetIsResizing(false);
 		mTimer.Start();
 		mEngine->OnResize(mClientWidth, mClientHeight);
 		return 0;

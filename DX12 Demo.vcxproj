@@ -141,6 +141,7 @@
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree.h" />
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h" />
     <ClInclude Include="Source\Game Timer\GameTimer.h" />
+    <ClInclude Include="Source\Game\Game State\GameState.h" />
     <ClInclude Include="Source\Game\Game.h" />
     <ClInclude Include="Source\Helper\Helper.h" />
     <ClInclude Include="Source\Helper\MathHelper.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\World Manager\World Manager.cpp" />
     <ClCompile Include="Source\Game Timer\GameTimer.cpp" />
+    <ClCompile Include="Source\Game\Game State\GameState.cpp" />
     <ClCompile Include="Source\Game\Game.cpp" />
     <ClCompile Include="Source\Helper\Helper.cpp" />
     <ClCompile Include="Source\main.cpp" />

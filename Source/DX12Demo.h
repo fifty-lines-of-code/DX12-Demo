@@ -28,15 +28,15 @@ public:
     LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private: 
-    static DX12Demo* mDemo;
-    std::unique_ptr<Game> mGame;
-
     HINSTANCE mhAppInst = nullptr; // application instance handle
     HWND      mhMainWnd = nullptr; // main window handle
     UINT mClientWidth = 1280;
     UINT mClientHeight = 720;
     const std::wstring mMainWndCaption = L"DX12 Demo";
 
-    bool InitializeGame();
+    static DX12Demo* mDemo;
+    std::unique_ptr<Game> mGame;
+
     bool InitMainWindow();
+    bool InitializeGame();
 };

@@ -6,7 +6,6 @@
 #include "../Game Timer/GameTimer.h"
 #include "Scene Manager/Entities/Mesh/Mesh.h"
 #include "Scene Manager/SceneManager.h"
-#include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 using namespace DirectX;
 
@@ -18,8 +17,7 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 	mAnimationSpeed(.375f), // todo: move this out to somewhere else
 	mRenderer(std::make_unique<DX12Renderer>(clientWidth, clientHeight)),
 	mSceneManager(std::make_unique<SceneManager>()),
-	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight)),
-	mInputSystem(std::make_unique<XBoxInputSystem>())
+	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight))
 {}
 
 Engine::~Engine() {}
@@ -59,25 +57,14 @@ bool Engine::SetupPipeline() {
 	);
 }
 
-void Engine::OnResize(UINT newClientWidth, UINT newClientHeight) {
-	mRenderer->OnResize(newClientWidth, newClientHeight);
-	mCamera->OnResize(newClientWidth, newClientHeight);
-}
-
-void Engine::Update(const GameTimer* const mTimer) {
+void Engine::Update(const GameTimer* const mTimer, const IInputSystem* const inputSystem) {
 	// todo: 
-
-	// update stats
-	CalculateFrameStats(mTimer);
-
-	// input system update
-	mInputSystem->Update();
-	
+	//update the camera
 	mCamera->Update();
 
 	// update the scene manager
 	mSceneManager->Update(
-		mInputSystem.get(),
+		inputSystem,
 		mTimer->DeltaTime(),
 		mAnimationSpeed
 	);
@@ -132,46 +119,17 @@ void Engine::Draw() {
 	mRenderer->EndFrame();
 }
 
-void Engine::CalculateFrameStats(const GameTimer* const timer) {
-	// Code computes the average frames per second, and also the 
-	// average time it takes to render one frame.  These stats 
-	// are appended to the window caption bar.
-
-	static int frameCnt = 0;
-	static float timeElapsed = 0.0f;
-
-	frameCnt++;
-
-	// Compute averages over one second period.
-	if ((timer->TotalTime() - timeElapsed) >= 1.0f)
-	{
-		float fps = (float)frameCnt; // fps = frameCnt / 1
-		float mspf = 1000.0f / fps;
-
-		std::wstring fpsStr = std::to_wstring(fps);
-		std::wstring mspfStr = std::to_wstring(mspf);
-
-		std::wstring windowText = mMainWndCaption +
-			L"  fps: " + fpsStr +
-			L"  mspf: " + mspfStr;
-
-		SetWindowText(mhMainWnd, windowText.c_str());
-
-		// Reset for next average.
-		frameCnt = 0;
-		timeElapsed += 1.0f;
-	}
+void Engine::OnResize(UINT newClientWidth, UINT newClientHeight) {
+	mRenderer->OnResize(newClientWidth, newClientHeight);
+	mCamera->OnResize(newClientWidth, newClientHeight);
 }
 
 bool Engine::InitializeCamera() {
 	// do something, maybe
-
 	return true;
 }
 
 void Engine::LoadGeometry() {
-	const std::vector<std::unique_ptr<Entity>>* entitiesToLoad = mSceneManager->GetEntities();
-
 	for (auto& mesh : mSceneManager->GetMeshesToLoad()) {
 		mRenderer->LoadGeometry(mesh);
 	}

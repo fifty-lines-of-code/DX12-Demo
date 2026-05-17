@@ -18,7 +18,7 @@ public:
 
 	bool Initialize();
 	bool LoadScene();
-	void Update(const IInputSystem* inputSystem, float deltaTime, float animationSpeed);
+	void Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed);
 
 	uint32_t GetEntityCount() const;
 	uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
