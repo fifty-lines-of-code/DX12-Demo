@@ -5,8 +5,8 @@ Features to implement:
 1. ~~Basic Camera~~
 2. ~~Per frame resources, 3 frames, to keep gpu and cpu busy at almost all times~~
 3. ~~Xbox controller support to move player (cube)~~
-4. A plane "floor"
-5. A plane "wall"
+4. ~~A plane "floor"~~
+5. ~~A plane "wall"~~
 6. Camera rotation around player
 7. FromSoft style movement of camera when player moves
 8. Rotate player based on controller input
