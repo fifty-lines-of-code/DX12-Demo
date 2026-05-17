@@ -3,9 +3,17 @@
 #include "../../Engine/Scene Manager/Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 
-Player::Player(Entity* entity) : mEntity(entity) {}
+Player::Player() {}
 
 Player::~Player() { mEntity = nullptr; }
+
+void Player::SetEntity(Entity* entity) {
+	if (entity == nullptr) { return; }
+
+	mEntity = entity;
+
+	UpdateEntityCenterAndSetItToDirty();
+}
 
 void Player::Update(float deltaTime, const IInputSystem* const inputSystem) {
 	// move the player if controller demands it
@@ -15,10 +23,8 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem) {
 }
 
 void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY) {
-
 	if (leftStickX != 0.0f || leftStickY != 0.0f) {
-
-		// 2. Calculate the length of the input vector to check for diagonals
+		// 1. Calculate the length of the input vector to check for diagonals
 		float lengthSquared = (leftStickX * leftStickX) + (leftStickY * leftStickY);
 
 		float dirX = leftStickX;
@@ -27,7 +33,7 @@ void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY) {
 		// todo
 		float dirZ = leftStickY;
 
-		// 3. Normalize direction
+		// 2. Normalize direction
 		if (lengthSquared > 1.0f) {
 			// using the Quake3 copy-paste for the heck of it
 			float oneOverLengthSquared = MathHelper::FastInverseSqrt(lengthSquared);
@@ -36,15 +42,22 @@ void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY) {
 			dirZ *= oneOverLengthSquared;
 		}
 
-		DirectX::XMFLOAT3 center = mEntity->GetCenter();
+		mCenter.x += dirX * mPlayerMovementSpeed * deltaTime;
+		mCenter.z += dirZ * mPlayerMovementSpeed * deltaTime;
 
-		center.x += dirX * mPlayerMovementSpeed * deltaTime;
-		center.z += dirZ * mPlayerMovementSpeed * deltaTime;
-
-		// update the center in entity
-		mEntity->SetCenter(center);
-
-		// set isDirty to true
-		mEntity->SetIsDirty(true);
+		UpdateEntityCenterAndSetItToDirty();
 	}
+}
+
+DirectX::XMFLOAT4 Player::GetCenter() const {
+	return DirectX::XMFLOAT4(mCenter.x, mCenter.y, mCenter.z, 1.f);
+}
+
+void Player::UpdateEntityCenterAndSetItToDirty() {
+	// update the center in entity
+	mEntity->SetCenter(mCenter);
+
+	// set isDirty to true
+	mEntity->SetIsDirty(true);
+
 }

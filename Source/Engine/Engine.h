@@ -20,10 +20,10 @@ public:
 	Engine& operator=(const Engine& rhs) = delete;
 	~Engine();
 
-	bool Initialize(HWND mainWnd);
+	bool Initialize(HWND mainWnd, DirectX::XMFLOAT4 playerPosition);
 	bool SetupPipeline();
 
-	void Update(float deltaTime);
+	void Update(float deltaTime, DirectX::XMFLOAT4 playerPosition);
 	void Draw();
 
 	const IInputSystem* const GetInputSystem() const;
@@ -47,6 +47,6 @@ private:
 	std::unique_ptr<XBoxInputSystem> mInputSystem;
 
 private:
-	bool InitializeCamera();
+	bool InitializeCamera(DirectX::XMFLOAT4 playerPosition);
 	void LoadGeometry();
 };

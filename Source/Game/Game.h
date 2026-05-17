@@ -34,7 +34,6 @@ private:
 	std::unique_ptr<Player> mPlayer;
 
 private:
-	bool InitializePlayer(Entity* entity);
 	void CalculateFrameStats();
 	void Update();
 	void Draw();

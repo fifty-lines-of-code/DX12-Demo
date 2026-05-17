@@ -21,9 +21,13 @@ Game::~Game() {}
 bool Game::Initialize(HWND hwnd) {
 	mMainHwnd = hwnd;
 
-	if (!mEngine->Initialize(hwnd)) { return false; }
+	mPlayer = std::make_unique<Player>();
 
-	return InitializePlayer(mEngine->GetPlayerEntity());
+	if (!mEngine->Initialize(hwnd, mPlayer->GetCenter())) { return false; }
+
+	mPlayer->SetEntity(mEngine->GetPlayerEntity());
+
+	return true;
  }
 
 int Game::Run() {
@@ -59,14 +63,6 @@ int Game::Run() {
 	}
 
 	return (int)msg.wParam;
-}
-
-bool Game::InitializePlayer(Entity* entity) {
-	if (entity == nullptr) { return false; }
-
-	mPlayer = std::make_unique<Player>(entity);
-
-	return true;
 }
 
 void Game::CalculateFrameStats() {
@@ -242,7 +238,7 @@ void Game::Update() {
 	mPlayer->Update(deltaTime, mEngine->GetInputSystem());
 
 	// update the engine
-	mEngine->Update(deltaTime);
+	mEngine->Update(deltaTime, mPlayer->GetCenter());
 }
 
 void Game::Draw() {
