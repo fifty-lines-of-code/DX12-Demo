@@ -5,22 +5,26 @@
 #include "../Helper/MathHelper.h"
 #include <vector>
 
-class DX12Renderer;
-class SceneManager;
 class Camera;
+class DX12Renderer;
 class GameTimer;
+class IInputSystem;
+class SceneManager;
 
 class Engine {
 public:
 	Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int clientHeight);
+	Engine(const Engine& rhs) = delete;
+	Engine& operator=(const Engine& rhs) = delete;
 	~Engine();
 
 	bool Initialize(HWND mainWnd);
 	bool SetupPipeline();
-	void OnResize(UINT newClientWidth, UINT newClientHeight);
-	void Update(const GameTimer* const mTimer);
+
+	void Update(const GameTimer* const mTimer, const IInputSystem* const inputSystem);
 	void Draw();
-	void CalculateFrameStats(const GameTimer* const timer);
+
+	void OnResize(UINT newClientWidth, UINT newClientHeight);
 
 private:
 	static const int NumberOfFrameResources = 3;
@@ -29,6 +33,7 @@ private:
 	std::wstring mMainWndCaption;
 	int mClientWidth;
 	int mClientHeight;
+	const float mAnimationSpeed;
 
 	std::unique_ptr<DX12Renderer> mRenderer;
 	std::unique_ptr<SceneManager> mSceneManager;
