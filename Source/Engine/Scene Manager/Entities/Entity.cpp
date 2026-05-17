@@ -3,10 +3,12 @@
 #include <cmath>
 #include "Mesh/Mesh.h"
 
-Entity::Entity(uint32_t Id) :
+Entity::Entity(uint32_t Id, DirectX::XMFLOAT3 center, float scaleX, float scaleY, float scaleZ) :
 	mID(Id), 
-	mCenter(DirectX::XMFLOAT3(0.f, 0.f, 2.f)),
-	mScale(1.f),
+	mCenter(center),
+	mScaleX(scaleX),
+	mScaleY(scaleY),
+	mScaleZ(scaleZ),
 	mMesh(nullptr) {
 	CalculateWorldMatrix();
 }
@@ -42,7 +44,7 @@ DirectX::XMFLOAT4X4 Entity::GetConstantBufferDataTransposed() {
 }
 
 const EntityAABBMinMax Entity::GetAABBMinMax() const {
-	float halfSize = mScale *.5f;
+	float halfSize = mScaleX *.5f;
 
 	DirectX::XMFLOAT3 min = DirectX::XMFLOAT3(mCenter.x - halfSize, mCenter.y - halfSize, mCenter.z - halfSize);
 	DirectX::XMFLOAT3 max = DirectX::XMFLOAT3(mCenter.x + halfSize, mCenter.y + halfSize, mCenter.z + halfSize);
@@ -61,21 +63,21 @@ void Entity::SetCenter(DirectX::XMFLOAT3 center) { mCenter = center; }
 void Entity::CalculateWorldMatrix() {
 	DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();
 	// Row 0: Scale X
-	world.m[0][0] = mScale;
+	world.m[0][0] = mScaleX;
 	world.m[0][1] = 0.0f;
 	world.m[0][2] = 0.0f;
 	world.m[0][3] = 0.0f;
 
 	// Row 1: Scale Y
 	world.m[1][0] = 0.0f;
-	world.m[1][1] = mScale;
+	world.m[1][1] = mScaleY;
 	world.m[1][2] = 0.0f;
 	world.m[1][3] = 0.0f;
 
 	// Row 2: Scale Z
 	world.m[2][0] = 0.0f;
 	world.m[2][1] = 0.0f;
-	world.m[2][2] = mScale;
+	world.m[2][2] = mScaleZ;
 	world.m[2][3] = 0.0f;
 
 	// Row 3: Translation

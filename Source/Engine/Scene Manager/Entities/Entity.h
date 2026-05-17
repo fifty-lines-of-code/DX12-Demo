@@ -14,7 +14,7 @@ struct EntityAABBMinMax {
 
 class Entity {
 public:
-	Entity(uint32_t Id);
+	Entity(uint32_t Id, DirectX::XMFLOAT3 center, float scaleX, float scaleY, float scaleZ);
 	~Entity();
 
 	uint32_t GetID() const;
@@ -35,7 +35,9 @@ public:
 private:
 	uint32_t mID;
 	DirectX::XMFLOAT3 mCenter;
-	float mScale;
+	float mScaleX;
+	float mScaleY;
+	float mScaleZ;
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
 	bool mIsDirty = true;
