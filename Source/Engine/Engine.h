@@ -7,9 +7,11 @@
 
 class Camera;
 class DX12Renderer;
+class Entity;
 class GameTimer;
-class IInputSystem;
 class SceneManager;
+class IInputSystem;
+class XBoxInputSystem;
 
 class Engine {
 public:
@@ -21,8 +23,11 @@ public:
 	bool Initialize(HWND mainWnd);
 	bool SetupPipeline();
 
-	void Update(const GameTimer* const mTimer, const IInputSystem* const inputSystem);
+	void Update(float deltaTime);
 	void Draw();
+
+	const IInputSystem* const GetInputSystem() const;
+	Entity* GetPlayerEntity() const;
 
 	void OnResize(UINT newClientWidth, UINT newClientHeight);
 
@@ -39,6 +44,7 @@ private:
 	std::unique_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<Camera> mCamera;
 	std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
+	std::unique_ptr<XBoxInputSystem> mInputSystem;
 
 private:
 	bool InitializeCamera();

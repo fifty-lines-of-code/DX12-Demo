@@ -28,7 +28,7 @@ public:
         // interpret the integer bytes back as a float
         float x = *(float*)&i;
 
-        // One iteration of Newton's method to reduce error to ~1%
+        // One iteration of Newton-Raphson method to reduce error to ~1%
         x = x * (1.5f - xhalf * x * x);
 
         return x;

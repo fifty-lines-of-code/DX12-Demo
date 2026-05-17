@@ -26,35 +26,9 @@ const Mesh* Entity::GetMesh() const {
 }
 
 void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
-	// 1. Check if the player is pushing the stick
-	if (stickX != 0.0f || stickY != 0.0f) {
-
-		// 2. Calculate the length of the input vector to check for diagonals
-		float lengthSquared = (stickX * stickX) + (stickY * stickY);
-
-		float dirX = stickX;
-		// Mapping stick Y input over to our 3D world Z axis for now until
-		// we handle rotation
-		// todo
-		float dirZ = stickY; 
-
-		// 3. Normalize direction
-		if (lengthSquared > 1.0f) {
-			// using the Quake3 copy-paste for the heck of it
-			float oneOverLengthSquared = MathHelper::FastInverseSqrt(lengthSquared);
-			// todo: switch back to oneOverLengthSquared = 1/lengthSquared;
-			dirX *= oneOverLengthSquared;
-			dirZ *= oneOverLengthSquared;
-		}
-
-		mCenter.x += dirX * speed * deltaTime;
-		mCenter.z += dirZ * speed * deltaTime;
-
+	if (mIsDirty) {
 		// update the World matrix
 		CalculateWorldMatrix();
-
-		// set isDirty to true
-		mIsDirty = true;
 	}
 }
 
@@ -76,13 +50,13 @@ const EntityAABBMinMax Entity::GetAABBMinMax() const {
 	return EntityAABBMinMax{min, max , halfSize};
 }
 
-bool Entity::GetIsDirty() const {
-	return mIsDirty;
-}
+bool Entity::GetIsDirty() const { return mIsDirty; }
 
-void Entity::SetIsDirty(bool dirty) {
-	mIsDirty = dirty;
-}
+void Entity::SetIsDirty(bool dirty) { mIsDirty = dirty; }
+
+DirectX::XMFLOAT3 Entity::GetCenter() const { return mCenter; }
+
+void Entity::SetCenter(DirectX::XMFLOAT3 center) { mCenter = center; }
 
 void Entity::CalculateWorldMatrix() {
 	DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();

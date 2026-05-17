@@ -16,6 +16,10 @@ bool SceneManager::Initialize() {
 	return true;
 }
 
+bool SceneManager::LoadScene() {
+	return GenerateCubeEntity();
+}
+
 void SceneManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed) {
 	for (const auto& entity : mEntities) {
 		entity->Update(
@@ -54,8 +58,11 @@ std::vector<const Mesh*> SceneManager::GetMeshesToLoad() {
 	return meshList;
 }
 
-bool SceneManager::LoadScene() {
-	return GenerateCubeEntity();
+Entity* SceneManager::GetPlayerEntity() const {
+	if (mEntities.size() == 0) { return nullptr; }
+
+	// Player entities index is always 0
+	return mEntities[0].get();
 }
 
 bool SceneManager::GenerateCubeEntity() {

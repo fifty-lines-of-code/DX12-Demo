@@ -26,6 +26,7 @@ public:
 
 	const std::vector<std::unique_ptr<Entity>>* GetEntities() const;
 	std::vector<const Mesh*> GetMeshesToLoad();
+	Entity* GetPlayerEntity() const;
 
 private:
 	uint32_t mIDOfNextEntityThatWillBeCreated = 0;

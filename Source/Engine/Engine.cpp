@@ -6,6 +6,7 @@
 #include "../Game Timer/GameTimer.h"
 #include "Scene Manager/Entities/Mesh/Mesh.h"
 #include "Scene Manager/SceneManager.h"
+#include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 using namespace DirectX;
 
@@ -17,7 +18,8 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 	mAnimationSpeed(.375f), // todo: move this out to somewhere else
 	mRenderer(std::make_unique<DX12Renderer>(clientWidth, clientHeight)),
 	mSceneManager(std::make_unique<SceneManager>()),
-	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight))
+	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight)),
+	mInputSystem(std::make_unique<XBoxInputSystem>())
 {}
 
 Engine::~Engine() {}
@@ -57,15 +59,19 @@ bool Engine::SetupPipeline() {
 	);
 }
 
-void Engine::Update(const GameTimer* const mTimer, const IInputSystem* const inputSystem) {
+void Engine::Update(float deltaTime) {
 	// todo: 
+	
+	// update the input system
+	mInputSystem->Update();
+
 	//update the camera
 	mCamera->Update();
 
 	// update the scene manager
 	mSceneManager->Update(
-		inputSystem,
-		mTimer->DeltaTime(),
+		mInputSystem.get(),
+		deltaTime,
 		mAnimationSpeed
 	);
 
@@ -117,6 +123,14 @@ void Engine::Draw() {
 		);
 	}
 	mRenderer->EndFrame();
+}
+
+const IInputSystem* const Engine::GetInputSystem() const {
+	return mInputSystem.get();
+}
+
+Entity* Engine::GetPlayerEntity() const {
+	return mSceneManager->GetPlayerEntity();
 }
 
 void Engine::OnResize(UINT newClientWidth, UINT newClientHeight) {

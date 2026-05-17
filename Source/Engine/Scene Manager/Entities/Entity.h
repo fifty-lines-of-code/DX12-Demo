@@ -25,8 +25,12 @@ public:
 
 	DirectX::XMFLOAT4X4 GetConstantBufferDataTransposed();
 	const EntityAABBMinMax GetAABBMinMax() const;
+
 	bool GetIsDirty() const;
 	void SetIsDirty(bool dirty);
+
+	DirectX::XMFLOAT3 GetCenter() const;
+	void SetCenter(DirectX::XMFLOAT3 center);
 
 private:
 	uint32_t mID;
@@ -37,5 +41,5 @@ private:
 	bool mIsDirty = true;
 
 private:
-	void CalculateWorldMatrix();
+	void CalculateWorldMatrix();	
 };

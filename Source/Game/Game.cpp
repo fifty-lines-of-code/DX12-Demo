@@ -1,15 +1,15 @@
 #include "Game.h"
 
 #include "../Engine/Engine.h"
+#include "../Engine/Scene Manager/Entities/Entity.h"
 #include "Game State/GameState.h"
-#include "../Engine/Input System/XBox/XBoxInputSystem.h"
+#include "Player/Player.h"
 
 Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) : 
 	mMainHwnd(nullptr),
 	mClientWidth(clientWidth),
 	mClientHeight(clientHeight),
 	mMainWndCaption(caption),
-	mInputSystem(std::make_unique<XBoxInputSystem>()),
 	mGameState(std::make_unique<GameState>()) {
 	mEngine = std::make_unique<Engine>(
 		hInstance, mMainWndCaption, clientWidth, clientHeight
@@ -21,7 +21,9 @@ Game::~Game() {}
 bool Game::Initialize(HWND hwnd) {
 	mMainHwnd = hwnd;
 
-	return mEngine->Initialize(hwnd);
+	if (!mEngine->Initialize(hwnd)) { return false; }
+
+	return InitializePlayer(mEngine->GetPlayerEntity());
  }
 
 int Game::Run() {
@@ -59,19 +61,12 @@ int Game::Run() {
 	return (int)msg.wParam;
 }
 
-void Game::Update() {
-	// update stats
-	CalculateFrameStats();
+bool Game::InitializePlayer(Entity* entity) {
+	if (entity == nullptr) { return false; }
 
-	// input system update
-	mInputSystem->Update();
+	mPlayer = std::make_unique<Player>(entity);
 
-	// update the engine
-	mEngine->Update(&mTimer, mInputSystem.get());
-}
-
-void Game::Draw() {
-	mEngine->Draw();
+	return true;
 }
 
 void Game::CalculateFrameStats() {
@@ -85,7 +80,7 @@ void Game::CalculateFrameStats() {
 	frameCnt++;
 
 	// Compute averages over one second period.
-	if ((mTimer.TotalTime() - timeElapsed) >= 1.0f)
+	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)
 	{
 		float fps = (float)frameCnt; // fps = frameCnt / 1
 		float mspf = 1000.0f / fps;
@@ -235,4 +230,21 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 
 	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void Game::Update() {
+	// update stats
+	CalculateFrameStats();
+
+	float deltaTime = mTimer.GetDeltaTime();
+
+	// update the player
+	mPlayer->Update(deltaTime, mEngine->GetInputSystem());
+
+	// update the engine
+	mEngine->Update(deltaTime);
+}
+
+void Game::Draw() {
+	mEngine->Draw();
 }

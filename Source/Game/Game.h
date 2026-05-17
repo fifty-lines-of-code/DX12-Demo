@@ -6,8 +6,9 @@
 #include <string>
 
 class Engine;
+class Entity;
 class GameState;
-class XBoxInputSystem;
+class Player;
 
 class Game {
 public:
@@ -29,10 +30,11 @@ private:
 
 	std::unique_ptr<Engine> mEngine;
 	GameTimer mTimer;
-	std::unique_ptr<XBoxInputSystem> mInputSystem;
 	std::unique_ptr<GameState> mGameState;
+	std::unique_ptr<Player> mPlayer;
 
 private:
+	bool InitializePlayer(Entity* entity);
 	void CalculateFrameStats();
 	void Update();
 	void Draw();
