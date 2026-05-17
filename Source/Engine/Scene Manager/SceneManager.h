@@ -35,5 +35,6 @@ private:
 	std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
 
 private:
-	bool GenerateCubeEntity();
+	bool GeneratePlayerEntity();
+	bool GenerateBasicScene();
 };
