@@ -7,8 +7,8 @@ Features to implement:
 3. ~~Xbox controller support to move player (cube)~~
 4. ~~A plane "floor"~~
 5. ~~A plane "wall"~~
-6. Camera rotation around player
-7. FromSoft style movement of camera when player moves
+6. ~~Camera rotation around player~~
+7. ~~FromSoft style movement of camera when player moves~~
 8. Rotate player based on controller input
 9. Full screen support
 10. Switch between fullscreen and windowed
@@ -20,5 +20,7 @@ Features to implement:
 16. Frustum Culling
 17. Dynamic loading and unloading of data as player moves/crosses a boundary
 18. Create and load height map
-19. 
+19. textures
+20. lighting
+21. 
 

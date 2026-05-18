@@ -1,8 +1,9 @@
 #include "Camera.h"
 
+#include <cmath>
+
 Camera::Camera(float aspectRatio) :
-	mAspectRatio(aspectRatio),
-	mTrackingOffset(DirectX::XMFLOAT3(0.0f, 2.5f, -4.0f)) {
+	mAspectRatio(aspectRatio) {
 	BuildProjectionMatrix();
 }
 
@@ -11,36 +12,16 @@ Camera::~Camera() {}
 void Camera::Initialize(DirectX::XMFLOAT4 playerPosition) {
 	mTarget = playerPosition;
 
-	mCenter.x = playerPosition.x + mTrackingOffset.x;
-	mCenter.y = playerPosition.y + mTrackingOffset.y;
-	mCenter.z = playerPosition.z + mTrackingOffset.z;
-	mCenter.w = 1.f;
+	UpdateCenter(0, 0, 0);
 
 	BuildViewMatrix();
 	BuildViewProjectionMatrix();
 }
 
-void Camera::Update(const DirectX::XMFLOAT4& playerPosition, float deltaTime) {
+void Camera::Update(const DirectX::XMFLOAT4& playerPosition, float deltaTime, float rightJoystickX, float rightJoystickY) {
 	mTarget = playerPosition;
 
-	// Since we want to track player Fromsoft style, update mPosition
-	// based on player position
-	DirectX::XMVECTOR idealTarget = DirectX::XMVectorSet(
-		playerPosition.x + mTrackingOffset.x,
-		playerPosition.y + mTrackingOffset.y,
-		playerPosition.z + mTrackingOffset.z,
-		1.0f
-	);
-
-	DirectX::XMVECTOR currentPos = DirectX::XMLoadFloat4(&mCenter);
-
-	// Smoothly interpolate from current position towards target position
-	// We clamp the blending factor to 1.0f max to prevent overshoot during severe lag spikes
-	float blendFactor = mTrackingSpeed * deltaTime;
-	if (blendFactor > 1.0f) { blendFactor = 1.0f; }
-
-	DirectX::XMVECTOR newPos = DirectX::XMVectorLerp(currentPos, idealTarget, blendFactor);
-	DirectX::XMStoreFloat4(&mCenter, newPos);
+	UpdateCenter(deltaTime, rightJoystickX, rightJoystickY);
 
 	BuildViewMatrix();
 	BuildViewProjectionMatrix();
@@ -55,6 +36,30 @@ void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
 
 	mAspectRatio = (float)newClientWidth / (float)newClientHeight;
 	BuildViewProjectionMatrix();
+}
+
+void Camera::UpdateCenter(float deltaTime, float rightJoystickX, float rightJoystickY) {
+	// calculate target yaw and pitch
+	mYaw = mYaw - (rightJoystickX * mYawSpeed * deltaTime);
+	mPitch = mPitch - (rightJoystickY * mPitchSpeed * deltaTime);
+	mPitch = std::fmin(mPitch, mPitchMax);
+	mPitch = std::fmax(mPitch, mPitchMin);
+
+	DirectX::XMFLOAT4 offset = DirectX::XMFLOAT4(0.f, 0.f, 0.f,1.f);
+
+	offset.y = mRadius * std::sin(mPitch);
+	// remember offset in -z cause we want the camera behind the player
+	offset.z = -(mRadius * std::cos(mPitch) * std::cos(mYaw));
+	offset.x = mRadius * std::cos(mPitch) * std::sin(mYaw);
+	offset.w = 1.f; // to be safe even though we initialized offset with 1 for w
+
+	DirectX::XMVECTOR targetVector = DirectX::XMLoadFloat4(&mTarget);
+	DirectX::XMVECTOR offsetVector = DirectX::XMLoadFloat4(&offset);
+
+	DirectX::XMStoreFloat4(
+		&mCenter,
+		DirectX::XMVectorAdd(targetVector, offsetVector)
+	);
 }
 
 void Camera::BuildViewMatrix() {

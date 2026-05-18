@@ -66,7 +66,12 @@ void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 	mInputSystem->Update();
 
 	//update the camera
-	mCamera->Update(playerPosition, deltaTime);
+	mCamera->Update(
+		playerPosition,
+		deltaTime,
+		mInputSystem->GetRightStickX(),
+		mInputSystem->GetRightStickY()
+	);
 
 	// update the scene manager
 	mSceneManager->Update(
