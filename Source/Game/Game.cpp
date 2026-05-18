@@ -1,5 +1,6 @@
 #include "Game.h"
 
+#include "../Engine/Camera/Camera.h"
 #include "../Engine/Engine.h"
 #include "../Engine/Scene Manager/Entities/Entity.h"
 #include "Game State/GameState.h"
@@ -234,8 +235,11 @@ void Game::Update() {
 
 	float deltaTime = mTimer.GetDeltaTime();
 
+	// ask engine to update the input system
+	mEngine->UpdateInputSystemAndCamera(deltaTime);
+
 	// update the player
-	mPlayer->Update(deltaTime, mEngine->GetInputSystem());
+	mPlayer->Update(deltaTime, mEngine->GetInputSystem(), mEngine->GetCameraForwardAndRightVectors());
 
 	// update the engine
 	mEngine->Update(deltaTime, mPlayer->GetCenter());

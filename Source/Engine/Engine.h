@@ -6,6 +6,7 @@
 #include <vector>
 
 class Camera;
+struct CameraForwardAndRightVectors;
 class DX12Renderer;
 class Entity;
 class GameTimer;
@@ -23,7 +24,10 @@ public:
 	bool Initialize(HWND mainWnd, DirectX::XMFLOAT4 playerPosition);
 	bool SetupPipeline();
 
+	void UpdateInputSystemAndCamera(float deltaTime);
 	void Update(float deltaTime, DirectX::XMFLOAT4 playerPosition);
+	CameraForwardAndRightVectors GetCameraForwardAndRightVectors() const;
+
 	void Draw();
 
 	const IInputSystem* const GetInputSystem() const;

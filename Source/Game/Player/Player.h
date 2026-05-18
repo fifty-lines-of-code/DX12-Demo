@@ -2,6 +2,7 @@
 
 #include <DirectXMath.h>
 
+struct CameraForwardAndRightVectors;
 class Entity;
 class IInputSystem;
 
@@ -11,7 +12,7 @@ public:
 	~Player();
 
 	void SetEntity(Entity* entity);
-	void Update(float deltaTime, const IInputSystem* const inputSystem);
+	void Update(float deltaTime, const IInputSystem* const inputSystem, CameraForwardAndRightVectors forwardAndRightVectors);
 
 	DirectX::XMFLOAT4 GetCenter() const;
 
@@ -22,6 +23,6 @@ private:
 	float mPlayerMovementSpeed = .375f;
 
 private:
-	void MovePlayer(float deltaTime, float leftStickX, float leftStickY);
+	void MovePlayer(float deltaTime, float leftStickX, float leftStickY, CameraForwardAndRightVectors forwardAndRightVectors);
 	void UpdateEntityCenterAndSetItToDirty();
 };

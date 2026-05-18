@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#include "../../Engine/Camera/Camera.h"
 #include "../../Engine/Scene Manager/Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 
@@ -15,35 +16,44 @@ void Player::SetEntity(Entity* entity) {
 	UpdateEntityCenterAndSetItToDirty();
 }
 
-void Player::Update(float deltaTime, const IInputSystem* const inputSystem) {
+void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraForwardAndRightVectors forwardAndRightVectors) {
 	// move the player if controller demands it
 	float leftStickX = inputSystem->GetLeftStickX();
 	float leftStickY = inputSystem->GetLeftStickY();
-	MovePlayer(deltaTime, leftStickX, leftStickY);
+	MovePlayer(deltaTime, leftStickX, leftStickY, forwardAndRightVectors);
 }
 
-void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY) {
+void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY, CameraForwardAndRightVectors forwardAndRightVectors) {
 	if (leftStickX != 0.0f || leftStickY != 0.0f) {
-		// 1. Calculate the length of the input vector to check for diagonals
-		float lengthSquared = (leftStickX * leftStickX) + (leftStickY * leftStickY);
 
-		float dirX = leftStickX;
-		// Mapping stick Y input over to our 3D world Z axis for now until
-		// we handle rotation
-		// todo
-		float dirZ = leftStickY;
+		DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
+		movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
+		movementForward.z = leftStickY * forwardAndRightVectors.forward.z;
 
-		// 2. Normalize direction
-		if (lengthSquared > 1.0f) {
-			// using the Quake3 copy-paste for the heck of it
-			float oneOverLengthSquared = MathHelper::FastInverseSqrt(lengthSquared);
-			// todo: switch back to oneOverLengthSquared = 1/lengthSquared;
-			dirX *= oneOverLengthSquared;
-			dirZ *= oneOverLengthSquared;
+		DirectX::XMFLOAT3 movementRight = DirectX::XMFLOAT3();
+		movementRight.x = leftStickX * forwardAndRightVectors.right.x;
+		movementRight.z = leftStickX * forwardAndRightVectors.right.z;
+
+		DirectX::XMFLOAT3 movement;
+		movement.x = movementForward.x + movementRight.x;
+		movement.y = 0.f;
+		movement.z = movementForward.z + movementRight.z;
+
+		// normalize movement
+		float movementLengthSquared = movement.x * movement.x + movement.z * movement.z;
+		if (movementLengthSquared > 1.f) {
+			// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
+			float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
+			// only update x and z for now
+			movement.x *= oneOverMovementLengthSquared;
+			movement.z *= oneOverMovementLengthSquared;
 		}
+		
+		float speedMultipliedByDelta = mPlayerMovementSpeed * deltaTime;
 
-		mCenter.x += dirX * mPlayerMovementSpeed * deltaTime;
-		mCenter.z += dirZ * mPlayerMovementSpeed * deltaTime;
+		mCenter.x += movement.x * speedMultipliedByDelta;
+		mCenter.y += movement.y * speedMultipliedByDelta;
+		mCenter.z += movement.z * speedMultipliedByDelta;
 
 		UpdateEntityCenterAndSetItToDirty();
 	}
