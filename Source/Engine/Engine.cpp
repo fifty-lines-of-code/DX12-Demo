@@ -24,14 +24,14 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 
 Engine::~Engine() {}
 
-bool Engine::Initialize(HWND mainHwnd) {
+bool Engine::Initialize(HWND mainHwnd, DirectX::XMFLOAT4 playerPosition) {
 	mhMainWnd = mainHwnd;
 
 	if (!mRenderer->Initialize(mhMainWnd, Engine::NumberOfFrameResources)) { return false; }
 
 	if (!mSceneManager->Initialize()) { return false; }
 
-	if (!InitializeCamera()) { return false; }
+	if (!InitializeCamera(playerPosition)) { return false; }
 
 	if (!mSceneManager->LoadScene()) { return false; }
 
@@ -59,14 +59,14 @@ bool Engine::SetupPipeline() {
 	);
 }
 
-void Engine::Update(float deltaTime) {
+void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 	// todo: 
 	
 	// update the input system
 	mInputSystem->Update();
 
 	//update the camera
-	mCamera->Update();
+	mCamera->Update(playerPosition, deltaTime);
 
 	// update the scene manager
 	mSceneManager->Update(
@@ -138,8 +138,8 @@ void Engine::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	mCamera->OnResize(newClientWidth, newClientHeight);
 }
 
-bool Engine::InitializeCamera() {
-	// do something, maybe
+bool Engine::InitializeCamera(DirectX::XMFLOAT4 playerPosition) {
+	mCamera->Initialize(playerPosition);
 	return true;
 }
 
