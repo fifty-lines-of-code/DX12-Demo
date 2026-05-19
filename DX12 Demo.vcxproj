@@ -127,7 +127,7 @@
     <ClInclude Include="Source\DX12Demo.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
     <ClInclude Include="Source\Engine\Engine.h" />
-    <ClInclude Include="Source\Engine\Input System\GameButtons.h" />
+    <ClInclude Include="Source\Engine\Input System\GameButton.h" />
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h" />
     <ClInclude Include="Source\Engine\Input System\XBox\XBoxInputSystem.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h" />

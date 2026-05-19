@@ -10,7 +10,8 @@ XBoxInputSystem::XBoxInputSystem(DWORD userIndex) :
     mLeftStickX(0.f),
     mLeftStickY(0.f),
     mRightStickX(0.f),
-    mRightStickY(0.f) {
+    mRightStickY(0.f),
+    mIsBPressed(false) {
 
     ZeroMemory(&mCurrentState, sizeof(XINPUT_STATE));
 
@@ -49,19 +50,23 @@ float XBoxInputSystem::GetRightStickY() const {
     return mRightStickY;
 }
 
-bool XBoxInputSystem::IsButtonDown(GameButtons button) const {
+bool XBoxInputSystem::IsButtonDown(GameButton button) const {
     // todo
     return false;
 }
 
-bool XBoxInputSystem::IsButtonPressed(GameButtons button) const {
+bool XBoxInputSystem::IsButtonPressed(GameButton button) const {
     // todo
     return false;
 }
 
-bool XBoxInputSystem::IsButtonReleased(GameButtons button) const {
+bool XBoxInputSystem::IsButtonReleased(GameButton button) const {
     // todo
     return false;
+}
+
+GameButtonState XBoxInputSystem::GetButtonState(GameButton button) const {
+    return (GameButtonState)(mCurrentState.Gamepad.wButtons & GetControllerMappingFor(button));
 }
 
 float XBoxInputSystem::GetLeftTrigger() const {
@@ -72,6 +77,16 @@ float XBoxInputSystem::GetLeftTrigger() const {
 float XBoxInputSystem::GetRightTrigger() const {
     // todo
     return 0.0f;
+}
+
+uint32_t XBoxInputSystem::GetControllerMappingFor(GameButton button) const {
+    switch (button) {
+    case GameButton::ActionEast:
+        return XINPUT_GAMEPAD_B;
+    }
+
+    // todo:
+    return 0;
 }
 
 void XBoxInputSystem::UpdateStateAndIsConnected() {
@@ -108,6 +123,7 @@ void XBoxInputSystem::ProcessRightJoystick() {
 
 void XBoxInputSystem::ProcessActionButtons() {
     // todo
+    mIsBPressed = (mCurrentState.Gamepad.wButtons & XINPUT_GAMEPAD_B);
 }
 
 void XBoxInputSystem::ProcessTriggers() {

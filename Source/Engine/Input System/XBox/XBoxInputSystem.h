@@ -28,13 +28,17 @@ public:
     virtual float GetRightStickX() const override;
     virtual float GetRightStickY() const override;
 
+    virtual GameButtonState GetButtonState(GameButton button) const override;
+
     // Stubs for the rest of the interface to compile cleanly
-    virtual bool IsButtonDown(GameButtons button) const override;
-    virtual bool IsButtonPressed(GameButtons button) const override;
-    virtual bool IsButtonReleased(GameButtons button) const override;
+    virtual bool IsButtonDown(GameButton button) const override;
+    virtual bool IsButtonPressed(GameButton button) const override;
+    virtual bool IsButtonReleased(GameButton button) const override;
 
     virtual float GetLeftTrigger() const override;
     virtual float GetRightTrigger() const override;
+
+    virtual uint32_t GetControllerMappingFor(GameButton button) const override;
 
 private:
     DWORD mUserIndex;
@@ -48,6 +52,8 @@ private:
     float mLeftStickY;
     float mRightStickX;
     float mRightStickY;
+
+    bool mIsBPressed;
 
     void UpdateStateAndIsConnected();
     void ProcessLeftJoystick();

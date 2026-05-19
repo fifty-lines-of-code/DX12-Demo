@@ -10,12 +10,12 @@ Features to implement:
 6. ~~Camera rotation around player~~
 7. ~~FromSoft style movement of camera behind player when player moves~~
 8. ~~Interpolate and Rotate the player to camera direction (if needed) based on controller input~~
-9. Full screen support
-10. Switch between fullscreen and windowed
-11. Player "breathing" animation when idle
-12. Smoothly interpolate from breathing into movement
-13. Rolling animation in the direction of controls - infinite direction dictated by controls
-14. Slow walk when controller held 50% or less, normal walk otherwise
+9. ~~Slow walk when controller held 50% or less, normal walk otherwise~~
+10. Full screen support
+11. Switch between fullscreen and windowed
+12. Player "breathing" animation when idle
+13. Smoothly interpolate from breathing into movement
+14. Rolling animation in the direction of controls - infinite direction dictated by controls
 15. Running when player holds B (Xbox) / Circle (PS) while walking
 16. Fromsoft style back dash when player is still and presses B/Circle
 17. Collision of player with the above wall

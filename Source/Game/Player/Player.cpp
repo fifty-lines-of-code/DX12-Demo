@@ -18,30 +18,69 @@ void Player::SetEntity(Entity* entity) {
 }
 
 void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraForwardAndRightVectors forwardAndRightVectors) {
+	// update the state of the action east (b or circle) button
+	UpdateActionEastButtonState(
+		deltaTime,
+		inputSystem->GetButtonState(GameButton::ActionEast)
+	);
+
 	// move the player if controller demands it
-	float leftStickX = inputSystem->GetLeftStickX();
-	float leftStickY = inputSystem->GetLeftStickY();
-	MoveAndRotatePlayer(deltaTime, leftStickX, leftStickY, forwardAndRightVectors);
+	MoveAndRotatePlayer(
+		deltaTime, 
+		inputSystem->GetLeftStickX(),
+		inputSystem->GetLeftStickY(),
+		forwardAndRightVectors
+	);
+}
+
+void Player::UpdateActionEastButtonState(float deltaTime, GameButtonState actionEastButtonState) {
+	if (actionEastButtonState == GameButtonState::Unpressed) {
+		mIsRunning = false;
+		if (mTotalTimeBWasHeldDown > 0) {
+			//we do nothing yet, but later perform backwards dash
+			mPerformBackwardsDashIfNotRunning = true;
+		}
+		mTotalTimeBWasHeldDown = -1;
+	}
+	else {
+		if (mTotalTimeBWasHeldDown == -1) {
+			mTotalTimeBWasHeldDown = 0.f;
+		}
+		else {
+			mTotalTimeBWasHeldDown += deltaTime;
+			if (mTotalTimeBWasHeldDown > mTotalDurationPlayerHasToRunAfterPressingB) {
+				mIsRunning = true;
+			}
+		}
+	}
 }
 
 void Player::MoveAndRotatePlayer(float deltaTime, float leftStickX, float leftStickY, CameraForwardAndRightVectors forwardAndRightVectors) {
+
+	DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
+	movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
+	movementForward.z = leftStickY * forwardAndRightVectors.forward.z;
+
+	DirectX::XMFLOAT3 movementRight = DirectX::XMFLOAT3();
+	movementRight.x = leftStickX * forwardAndRightVectors.right.x;
+	movementRight.z = leftStickX * forwardAndRightVectors.right.z;
+
+	DirectX::XMFLOAT3 movement;
+	movement.x = movementForward.x + movementRight.x;
+	movement.y = 0.f;
+	movement.z = movementForward.z + movementRight.z;
+
+	// normalize movement
+	float movementLengthSquared = movement.x * movement.x + movement.z * movement.z;
+
 	if (leftStickX != 0.0f || leftStickY != 0.0f) {
 
-		DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
-		movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
-		movementForward.z = leftStickY * forwardAndRightVectors.forward.z;
+		// check if walking slow or fast
+		bool isWalkingSlow = true;
+		if (movementLengthSquared >= 0.25f) {
+			isWalkingSlow = false;
+		}
 
-		DirectX::XMFLOAT3 movementRight = DirectX::XMFLOAT3();
-		movementRight.x = leftStickX * forwardAndRightVectors.right.x;
-		movementRight.z = leftStickX * forwardAndRightVectors.right.z;
-
-		DirectX::XMFLOAT3 movement;
-		movement.x = movementForward.x + movementRight.x;
-		movement.y = 0.f;
-		movement.z = movementForward.z + movementRight.z;
-
-		// normalize movement
-		float movementLengthSquared = movement.x * movement.x + movement.z * movement.z;
 		if (movementLengthSquared > 1.f) {
 			// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
 			float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
@@ -49,8 +88,14 @@ void Player::MoveAndRotatePlayer(float deltaTime, float leftStickX, float leftSt
 			movement.x *= oneOverMovementLengthSquared;
 			movement.z *= oneOverMovementLengthSquared;
 		}
+
+		float walkingSpeed = isWalkingSlow ? mPlayerSlowWalkingSpeed : mPlayerNormalWalkingSpeed;
 		
-		float speedMultipliedByDelta = mPlayerMovementSpeed * deltaTime;
+		// if isRunning and NOT walking slow (so normal walking)
+		// then run
+		// otherwise walk the computed walking speed
+		float speed = (mIsRunning && !isWalkingSlow) ? mPlayerRunningSpeed : walkingSpeed;
+		float speedMultipliedByDelta = speed * deltaTime;
 
 		// update center
 		mCenter.x += movement.x * speedMultipliedByDelta;
@@ -61,6 +106,46 @@ void Player::MoveAndRotatePlayer(float deltaTime, float leftStickX, float leftSt
 		RotatePlayer(deltaTime, movement);
 
 		UpdateEntityCenterAndRotationAndSetItToDirty();
+	}
+	else {
+		// only perform backwards dash if we are idle
+		if (!mIsPerformingBackwardsDash) {
+			if (mPerformBackwardsDashIfNotRunning) {
+				mPerformBackwardsDashIfNotRunning = false;
+
+				// normalize movement vector
+				if (movementLengthSquared > 1.f) {
+					// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
+					float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
+					// only update x and z for now
+					movement.x *= oneOverMovementLengthSquared;
+					movement.z *= oneOverMovementLengthSquared;
+				}
+				mIsPerformingBackwardsDash = true;
+				mDashStartPosition = mCenter;
+
+				mDashTargetPosition.x = mCenter.x;
+				mDashTargetPosition.y = .6f;
+				// todo: for now we're dashing in the -z direction at all times
+				// update to dash in the -FWD direction
+				mDashTargetPosition.z = mCenter.z - mBackwardsDashDistance;
+
+				mDashAnimationTimer = 0.f;
+			}
+		}
+		else {
+			mDashAnimationTimer += deltaTime;
+			float t = std::fmin(mDashAnimationTimer/mBackwardsDashAnimationDuration, 1.f);
+			mCenter.x = mDashStartPosition.x + (mDashTargetPosition.x - mDashStartPosition.x) * t;
+			mCenter.z = mDashStartPosition.z + (mDashTargetPosition.z - mDashStartPosition.z) * t;
+
+			if (mDashAnimationTimer >= mBackwardsDashAnimationDuration) {
+				mIsPerformingBackwardsDash = false;
+				mDashAnimationTimer = 0.f;
+			}
+
+			UpdateEntityCenterAndRotationAndSetItToDirty();
+		}
 	}
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameButtons.h"
+#include "GameButton.h"
 
 class IInputSystem {
 public:
@@ -13,9 +13,10 @@ public:
     virtual void ProcessTriggers() = 0;
 
     virtual bool IsConnected() const = 0;
-    virtual bool IsButtonDown(GameButtons button) const = 0;
-    virtual bool IsButtonPressed(GameButtons button) const = 0;
-    virtual bool IsButtonReleased(GameButtons button) const = 0;
+    virtual GameButtonState GetButtonState(GameButton button) const = 0;
+    virtual bool IsButtonDown(GameButton button) const = 0;
+    virtual bool IsButtonPressed(GameButton button) const = 0;
+    virtual bool IsButtonReleased(GameButton button) const = 0;
 
     virtual float GetLeftStickX() const = 0;
     virtual float GetLeftStickY() const = 0;
@@ -23,4 +24,6 @@ public:
     virtual float GetRightStickY() const = 0;
     virtual float GetLeftTrigger() const = 0;
     virtual float GetRightTrigger() const = 0;
+
+    virtual uint32_t GetControllerMappingFor(GameButton button) const = 0;
 };
