@@ -35,4 +35,5 @@ public:
     }
 
     static constexpr float Pi = 3.1415926535f;
+    static constexpr float Two_Pi = 2 * MathHelper::Pi;
 };

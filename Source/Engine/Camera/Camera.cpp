@@ -82,7 +82,7 @@ void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, floa
 	// Math uses a right hand coordinate system
 	// we have to use (-mYaw) to convert between the two systems
 	// thus sin(-mYaw) = -sin(mYaw) and cos(-mYaw) = cos(mYaw)
-	// and forward x and z come from simple tignometry
+	// and forward x and z come from simple trignometry
 	// if we draw x, z, and the pitch out on paper
 
 	mForwardAndRight.forward = DirectX::XMFLOAT3(-std::sin(mYaw), 0.f, std::cos(mYaw));

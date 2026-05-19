@@ -32,12 +32,15 @@ public:
 	DirectX::XMFLOAT3 GetCenter() const;
 	void SetCenter(DirectX::XMFLOAT3 center);
 
+	void SetRotation(float rotation);
+
 private:
 	uint32_t mID;
 	DirectX::XMFLOAT3 mCenter;
 	float mScaleX;
 	float mScaleY;
 	float mScaleZ;
+	float mRotation = DirectX::XMConvertToRadians(0);
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
 	bool mIsDirty = true;
