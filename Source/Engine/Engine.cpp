@@ -59,19 +59,21 @@ bool Engine::SetupPipeline() {
 	);
 }
 
-void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
-	// todo: 
-	
-	// update the input system
+void Engine::UpdateInputSystemAndCamera(float deltaTime) {
 	mInputSystem->Update();
 
-	//update the camera
-	mCamera->Update(
-		playerPosition,
+	mCamera->UpdateWithInputSystem(
 		deltaTime,
 		mInputSystem->GetRightStickX(),
 		mInputSystem->GetRightStickY()
 	);
+}
+
+void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
+	// todo: 
+
+	// update the camera with player pos
+	mCamera->UpdateWithTarget(playerPosition);
 
 	// update the scene manager
 	mSceneManager->Update(
@@ -84,6 +86,7 @@ void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 	mRenderer->PrepareForUpdate();
 
 	// Update per-pass constant buffers.
+	
 	// DirectXMath uses row-major alignment in CPU memory, but 
 	// HLSL defaults to column-major storage for matrix packing. 
 	// We transpose here to prevent skewed vector transformations on the GPU.
@@ -114,6 +117,10 @@ void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 			mNumberOfDirtyFramesPerEntity[entity->GetID()]--;
 		}
 	}
+}
+
+CameraForwardAndRightVectors Engine::GetCameraForwardAndRightVectors() const {
+	return mCamera->GetForwardAndRightVectors();
 }
 
 void Engine::Draw() {

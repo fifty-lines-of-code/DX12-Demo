@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include <cmath>
+#include "../../Engine/Camera/Camera.h"
 #include "../../Engine/Scene Manager/Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 
@@ -12,52 +14,89 @@ void Player::SetEntity(Entity* entity) {
 
 	mEntity = entity;
 
-	UpdateEntityCenterAndSetItToDirty();
+	UpdateEntityCenterAndRotationAndSetItToDirty();
 }
 
-void Player::Update(float deltaTime, const IInputSystem* const inputSystem) {
+void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraForwardAndRightVectors forwardAndRightVectors) {
 	// move the player if controller demands it
 	float leftStickX = inputSystem->GetLeftStickX();
 	float leftStickY = inputSystem->GetLeftStickY();
-	MovePlayer(deltaTime, leftStickX, leftStickY);
+	MoveAndRotatePlayer(deltaTime, leftStickX, leftStickY, forwardAndRightVectors);
 }
 
-void Player::MovePlayer(float deltaTime, float leftStickX, float leftStickY) {
+void Player::MoveAndRotatePlayer(float deltaTime, float leftStickX, float leftStickY, CameraForwardAndRightVectors forwardAndRightVectors) {
 	if (leftStickX != 0.0f || leftStickY != 0.0f) {
-		// 1. Calculate the length of the input vector to check for diagonals
-		float lengthSquared = (leftStickX * leftStickX) + (leftStickY * leftStickY);
 
-		float dirX = leftStickX;
-		// Mapping stick Y input over to our 3D world Z axis for now until
-		// we handle rotation
-		// todo
-		float dirZ = leftStickY;
+		DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
+		movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
+		movementForward.z = leftStickY * forwardAndRightVectors.forward.z;
 
-		// 2. Normalize direction
-		if (lengthSquared > 1.0f) {
-			// using the Quake3 copy-paste for the heck of it
-			float oneOverLengthSquared = MathHelper::FastInverseSqrt(lengthSquared);
-			// todo: switch back to oneOverLengthSquared = 1/lengthSquared;
-			dirX *= oneOverLengthSquared;
-			dirZ *= oneOverLengthSquared;
+		DirectX::XMFLOAT3 movementRight = DirectX::XMFLOAT3();
+		movementRight.x = leftStickX * forwardAndRightVectors.right.x;
+		movementRight.z = leftStickX * forwardAndRightVectors.right.z;
+
+		DirectX::XMFLOAT3 movement;
+		movement.x = movementForward.x + movementRight.x;
+		movement.y = 0.f;
+		movement.z = movementForward.z + movementRight.z;
+
+		// normalize movement
+		float movementLengthSquared = movement.x * movement.x + movement.z * movement.z;
+		if (movementLengthSquared > 1.f) {
+			// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
+			float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
+			// only update x and z for now
+			movement.x *= oneOverMovementLengthSquared;
+			movement.z *= oneOverMovementLengthSquared;
 		}
+		
+		float speedMultipliedByDelta = mPlayerMovementSpeed * deltaTime;
 
-		mCenter.x += dirX * mPlayerMovementSpeed * deltaTime;
-		mCenter.z += dirZ * mPlayerMovementSpeed * deltaTime;
+		// update center
+		mCenter.x += movement.x * speedMultipliedByDelta;
+		mCenter.y += movement.y * speedMultipliedByDelta;
+		mCenter.z += movement.z * speedMultipliedByDelta;
 
-		UpdateEntityCenterAndSetItToDirty();
+		// update rotation
+		RotatePlayer(deltaTime, movement);
+
+		UpdateEntityCenterAndRotationAndSetItToDirty();
 	}
+}
+
+void Player::RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement) {
+	// We have to send in x first and then z to conert again from 
+	// Math's RH rule to DX12's LH coordinate rule
+	// same with negating the result.
+	// Rotation in Math is CCW and DX12 is CW
+	float targetRotation = -std::atan2(movement.x, movement.z);
+	float deltaRotation = targetRotation - mCurrentRotation;
+
+	// we have to make sure we take the shortest rotation 
+	// so rotate -90 instead of 270
+	// to do that we subtract 2pi if delta is > pi
+	// and add 2pi if delta is < -pi
+	// since rotation values will accumulate, we do this over a loop
+
+	while (deltaRotation > MathHelper::Pi) { deltaRotation -= MathHelper::Two_Pi; }
+
+	while (deltaRotation < -MathHelper::Pi) { deltaRotation += MathHelper::Two_Pi; }
+
+	// now we smoothly interpolate to the targetRotation
+	mCurrentRotation += deltaRotation * mRotationSpeed * deltaTime;
 }
 
 DirectX::XMFLOAT4 Player::GetCenter() const {
 	return DirectX::XMFLOAT4(mCenter.x, mCenter.y, mCenter.z, 1.f);
 }
 
-void Player::UpdateEntityCenterAndSetItToDirty() {
+void Player::UpdateEntityCenterAndRotationAndSetItToDirty() {
 	// update the center in entity
 	mEntity->SetCenter(mCenter);
 
+	// update rotation in entity
+	mEntity->SetRotation(mCurrentRotation);
+
 	// set isDirty to true
 	mEntity->SetIsDirty(true);
-
 }

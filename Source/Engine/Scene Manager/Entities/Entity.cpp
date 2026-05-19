@@ -60,31 +60,44 @@ DirectX::XMFLOAT3 Entity::GetCenter() const { return mCenter; }
 
 void Entity::SetCenter(DirectX::XMFLOAT3 center) { mCenter = center; }
 
+void Entity::SetRotation(float rotation) { mRotation = rotation; }
+
 void Entity::CalculateWorldMatrix() {
-	DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();
-	// Row 0: Scale X
-	world.m[0][0] = mScaleX;
-	world.m[0][1] = 0.0f;
-	world.m[0][2] = 0.0f;
-	world.m[0][3] = 0.0f;
+	// todo: Use DX methods to build SRT and then W
+	// DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(mScaleX, mScaleY, mScaleZ);
+	DirectX::XMFLOAT4X4 scale = MathHelper::Identity4x4();
+	DirectX::XMFLOAT4X4 rotation = MathHelper::Identity4x4();
+	DirectX::XMFLOAT4X4 translation = MathHelper::Identity4x4();
 
-	// Row 1: Scale Y
-	world.m[1][0] = 0.0f;
-	world.m[1][1] = mScaleY;
-	world.m[1][2] = 0.0f;
-	world.m[1][3] = 0.0f;
+	// Set Scale
+	scale.m[0][0] = mScaleX;
+	scale.m[1][1] = mScaleY;
+	scale.m[2][2] = mScaleZ;
 
-	// Row 2: Scale Z
-	world.m[2][0] = 0.0f;
-	world.m[2][1] = 0.0f;
-	world.m[2][2] = mScaleZ;
-	world.m[2][3] = 0.0f;
+	// Set Rotation
+	rotation.m[0][0] = std::cos(mRotation);
+	rotation.m[0][2] = std::sin(mRotation);
+	rotation.m[2][0] = -std::sin(mRotation);
+	rotation.m[2][2] = std::cos(mRotation);
 
-	// Row 3: Translation
-	world.m[3][0] = mCenter.x;
-	world.m[3][1] = mCenter.y;
-	world.m[3][2] = mCenter.z;
-	world.m[3][3] = 1.0f;
+	// Set Translation
+	translation.m[3][0] = mCenter.x;
+	translation.m[3][1] = mCenter.y;
+	translation.m[3][2] = mCenter.z;
+	translation.m[3][3] = 1.0f;
 
-	mConstantBufferData.World = world;
+	DirectX::XMMATRIX scaleRotation = DirectX::XMMatrixMultiply(
+		DirectX::XMLoadFloat4x4(&scale),
+		DirectX::XMLoadFloat4x4(&rotation)
+	);
+
+	DirectX::XMMATRIX world = DirectX::XMMatrixMultiply(
+		scaleRotation,
+		DirectX::XMLoadFloat4x4(&translation)
+	);
+
+	DirectX::XMStoreFloat4x4(
+		&mConstantBufferData.World,
+		world
+	);
 }
