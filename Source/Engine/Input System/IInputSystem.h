@@ -9,14 +9,10 @@ public:
 	virtual void Update() = 0;
     virtual void ProcessLeftJoystick() = 0;
     virtual void ProcessRightJoystick() = 0;
-    virtual void ProcessActionButtons() = 0;
     virtual void ProcessTriggers() = 0;
 
     virtual bool IsConnected() const = 0;
     virtual GameButtonState GetButtonState(GameButton button) const = 0;
-    virtual bool IsButtonDown(GameButton button) const = 0;
-    virtual bool IsButtonPressed(GameButton button) const = 0;
-    virtual bool IsButtonReleased(GameButton button) const = 0;
 
     virtual float GetLeftStickX() const = 0;
     virtual float GetLeftStickY() const = 0;
@@ -25,5 +21,6 @@ public:
     virtual float GetLeftTrigger() const = 0;
     virtual float GetRightTrigger() const = 0;
 
+private:
     virtual uint32_t GetControllerMappingFor(GameButton button) const = 0;
 };

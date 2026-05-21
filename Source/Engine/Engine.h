@@ -12,7 +12,7 @@ class Entity;
 class GameTimer;
 class SceneManager;
 class IInputSystem;
-class XBoxInputSystem;
+class XboxInputSystem;
 
 class Engine {
 public:
@@ -48,7 +48,7 @@ private:
 	std::unique_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<Camera> mCamera;
 	std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
-	std::unique_ptr<XBoxInputSystem> mInputSystem;
+	std::unique_ptr<XboxInputSystem> mInputSystem;
 
 private:
 	bool InitializeCamera(DirectX::XMFLOAT4 playerPosition);

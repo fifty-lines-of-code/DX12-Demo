@@ -76,12 +76,27 @@
     <Filter Include="Source Files\Engine\Scene Manager\World Manager">
       <UniqueIdentifier>{9ae901d9-5468-4a34-9feb-d4dc1780e556}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Game">
+      <UniqueIdentifier>{27b8a46b-b870-41c2-9a77-1130931e073b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Player">
+      <UniqueIdentifier>{2053f30a-5b5a-4fa4-9be0-75be74a571e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Input System">
+      <UniqueIdentifier>{275c9819-8038-40d4-b701-d0513a6a1a29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game">
+      <UniqueIdentifier>{3a0234da-34b5-4e23-a5b1-7be4e1c682ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game\Player">
+      <UniqueIdentifier>{47407db7-5c21-4431-b332-b4d50f908647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Input System">
+      <UniqueIdentifier>{b5578723-5de1-47f3-96cd-3d8c76f7629c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\d3dx12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Renderer\Renderer.h">
@@ -120,12 +135,6 @@
     <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h">
       <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\MathHelper.h">
-      <Filter>Header Files\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h">
       <Filter>Header Files\Renderer\DX12Renderer</Filter>
     </ClInclude>
@@ -145,6 +154,36 @@
       <Filter>Header Files\Renderer\DX12Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Helper\MathHelper.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Helper\Logger.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Input System\GameButton.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game State\GameState.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Player\Player.h">
+      <Filter>Header Files\Game\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Player\Player Animator\PlayerAnimator.h">
+      <Filter>Header Files\Game\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Player\Player Logic\PlayerLogic.h">
+      <Filter>Header Files\Game\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Input System\IInputSystem.h">
+      <Filter>Header Files\Engine\Input System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h">
+      <Filter>Header Files\Engine\Input System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\d3dx12.h">
       <Filter>Header Files\Helper</Filter>
     </ClInclude>
   </ItemGroup>
@@ -190,6 +229,24 @@
     </ClCompile>
     <ClCompile Include="Source\Renderer\DX12Renderer\DX12FrameResource.cpp">
       <Filter>Source Files\Renderer\DX2Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Game.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Game State\GameState.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Player\Player.cpp">
+      <Filter>Source Files\Game\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Player\Player Animator\PlayerAnimator.cpp">
+      <Filter>Source Files\Game\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Player\Player Logic\PlayerLogic.cpp">
+      <Filter>Source Files\Game\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp">
+      <Filter>Source Files\Engine\Input System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

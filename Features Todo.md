@@ -11,21 +11,24 @@ Features to implement:
 7. ~~FromSoft style movement of camera behind player when player moves~~
 8. ~~Interpolate and Rotate the player to camera direction (if needed) based on controller input~~
 9. ~~Slow walk when controller held 50% or less, normal walk otherwise~~
-10. Full screen support
-11. Switch between fullscreen and windowed
-12. Player "breathing" animation when idle
-13. Smoothly interpolate from breathing into movement
-14. Rolling animation in the direction of controls - infinite direction dictated by controls
-15. Running when player holds B (Xbox) / Circle (PS) while walking
-16. Fromsoft style back dash when player is still and presses B/Circle
-17. Collision of player with the above wall
-18. PS controller support
-19. FromSoft style lockon
-20. Main menu
-21. Frustum Culling
-22. Dynamic loading and unloading of data as player moves/crosses a boundary
-23. Create and load height map
-24. textures
-25. lighting
-26. 
+10. ~~Running when player holds B (Xbox) / Circle (PS) while walking~~
+11. ~~Fromsoft style back dash when player is still and presses B/Circle~~
+12. Full screen support
+13. Switch between fullscreen and windowed
+14. Player "breathing" animation when idle
+15. Walking animation
+16. Running animation
+17. Smoothly interpolate from breathing into movement
+18. Rolling animation in the direction of controls - infinite direction dictated by controls
+19. Collision of player with the above wall
+20. PS controller support
+21. FromSoft style lockon
+22. Main menu
+23. Frustum Culling
+24. Dynamic loading and unloading of data as player moves/crosses a boundary
+25. Chunk, ChunkData, ChunksManager
+26. Create and load height map
+27. textures
+28. lighting
+29. 
 

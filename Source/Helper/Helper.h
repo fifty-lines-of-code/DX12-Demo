@@ -9,17 +9,32 @@
 #define ThrowIfFailed(x)                                              \
 {                                                                     \
     HRESULT hr__ = (x);                                               \
-    std::wstring wfn = AnsiToWString(__FILE__);                       \
+    std::wstring wfn = Helper::StringToWideString(__FILE__);                       \
     if(FAILED(hr__)) { throw DxException(hr__, L#x, wfn, __LINE__); } \
 }
 #endif
 
-inline std::wstring AnsiToWString(const std::string& str)
-{
-    WCHAR buffer[512];
-    MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, buffer, 512);
-    return std::wstring(buffer);
-}
+class Helper {
+public:
+    static std::wstring StringToWideString(const std::string& s) {
+        if (s.empty()) { return std::wstring(); }
+
+        int sLength = (int)s.length() + 1;
+
+        if (sLength < 512) {
+            // use fast local buffer
+            WCHAR stackBuffer[512];
+            MultiByteToWideChar(CP_ACP, 0, s.c_str(), sLength, stackBuffer, 512);
+            return std::wstring(stackBuffer);
+        }
+
+        // use slower heap
+        int len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), sLength, 0, 0);
+        std::wstring heapBuffer(len, L'\0');
+        MultiByteToWideChar(CP_ACP, 0, s.c_str(), sLength, &heapBuffer[0], len);
+        return heapBuffer;
+    }
+};
 
 class DxException {
 public: 

@@ -17,8 +17,8 @@ enum class GameButton {
     ActionNorth = 0x0008, // Xbox Y / PS Triangle
 
     // 2. Index Finger Shoulders
-    BumperLeft = 0x0010, // Xbox LT / PS L1 
-    BumperRight = 0x0020, // Xbox RT / PS R1
+    BumperLeft = 0x0010, // Xbox LB / PS L1 
+    BumperRight = 0x0020, // Xbox RB / PS R1
 
     // 3. Stick Click Modifiers (Physical Analogs as buttons)
     StickClickLeft = 0x0040, // Xbox LS  / PS L3
@@ -37,5 +37,7 @@ enum class GameButton {
 
 enum class GameButtonState {
     Unpressed = 0,
-    Pressed
+    Just_Pressed,
+    Held,
+    Just_Released
 };
