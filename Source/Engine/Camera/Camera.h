@@ -34,8 +34,8 @@ private:
 	float mPitchMin = DirectX::XMConvertToRadians(-1);
 	float mPitchMax = DirectX::XMConvertToRadians(45);
 	float mRadius = 4.f;
-	float mYawSpeed = .5f;
-	float mPitchSpeed = .25f;
+	float mYawSpeed = .75f;
+	float mPitchSpeed = .5f;
 
 	DirectX::XMFLOAT4 mCenter = DirectX::XMFLOAT4(0, 0, 0, 1.f);
 	DirectX::XMFLOAT4 mTarget = DirectX::XMFLOAT4(0, 0, 0, 1.f);

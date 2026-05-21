@@ -3,15 +3,11 @@
 #include "../../../Engine/Camera/Camera.h"
 #include <cmath>
 
-PlayerAnimator::PlayerAnimator(float currentRotation) :
-	mCurrentRotation(currentRotation)
-{}
+PlayerAnimator::PlayerAnimator() {}
 
 PlayerAnimator::~PlayerAnimator() {}
 
-bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, DirectX::XMFLOAT3* center, float walkingRunningSpeed, float rotationSpeed) {
-	// get the square so we can normalize movement if need be
-	float movementLengthSquared = movement.x * movement.x + movement.z * movement.z;
+bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, DirectX::XMFLOAT3* center, float* currentRotation, float walkingRunningSpeed, float rotationSpeed, float movementLengthSquared) {
 
 	// check if walking slow or fast
 	bool isWalkingSlow = true;
@@ -31,12 +27,12 @@ bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 move
 
 	// update center
 	center->x += movement.x * speedMultipliedByDelta;
-	// todo: hardcoded for now. will need to take y into consideration when ready
+	// todo: hardcoded for now. will take y into consideration when ready
 	center->y = 0.6f;
 	center->z += movement.z * speedMultipliedByDelta;
 
 	// update rotation
-	RotatePlayer(deltaTime, movement, rotationSpeed);
+	RotatePlayer(deltaTime, movement, rotationSpeed, currentRotation);
 
 	return true;
 }
@@ -45,7 +41,7 @@ bool PlayerAnimator::PerformBackwardsDash(float deltaTime, DirectX::XMFLOAT3* ce
 	if (!mIsPerformingBackwardsDash) {
 
 		mIsPerformingBackwardsDash = true;
-		mBackwardsDashAnimationHasCompleted = false;
+		mIsBackwardsDashAnimationComplete = false;
 		mDashStartPosition.x = center->x;
 		mDashStartPosition.y = center->y;
 		mDashStartPosition.z = center->z;
@@ -69,7 +65,7 @@ bool PlayerAnimator::PerformBackwardsDash(float deltaTime, DirectX::XMFLOAT3* ce
 
 		if (mDashAnimationTimer >= animationDuration) {
 			mIsPerformingBackwardsDash = false;
-			mBackwardsDashAnimationHasCompleted = true;
+			mIsBackwardsDashAnimationComplete = true;
 			mDashAnimationTimer = 0.f;
 		}
 
@@ -78,16 +74,16 @@ bool PlayerAnimator::PerformBackwardsDash(float deltaTime, DirectX::XMFLOAT3* ce
 }
 
 bool PlayerAnimator::IsBackwardsDashAnimationComplete() const {
-	return mBackwardsDashAnimationHasCompleted;
+	return mIsBackwardsDashAnimationComplete;
 }
 
-void PlayerAnimator::RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, float rotationSpeed) {
+void PlayerAnimator::RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, float rotationSpeed, float* currentRotation) {
 	// We have to send in x first and then z to conert again from 
 	// Math's RH rule to DX12's LH coordinate rule
 	// same with negating the result.
 	// Rotation in Math is CCW and DX12 is CW
 	float targetRotation = -std::atan2(movement.x, movement.z);
-	float deltaRotation = targetRotation - mCurrentRotation;
+	float deltaRotation = targetRotation - *currentRotation;
 
 	// we have to make sure we take the shortest rotation 
 	// so rotate -90 instead of 270
@@ -100,5 +96,5 @@ void PlayerAnimator::RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, f
 	while (deltaRotation < -MathHelper::Pi) { deltaRotation += MathHelper::Two_Pi; }
 
 	// now we smoothly interpolate to the targetRotation
-	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime;
+	*currentRotation += deltaRotation * rotationSpeed * deltaTime;
 }

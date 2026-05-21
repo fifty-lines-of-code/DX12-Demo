@@ -5,7 +5,7 @@
 #include "../../Engine/Scene Manager/Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 
-Player::Player() : mPlayerAnimator(mCurrentRotation) {}
+Player::Player() : mPlayerAnimator() {}
 
 Player::~Player() { mEntity = nullptr; }
 
@@ -22,9 +22,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Came
 	// update player's state
 	mPlayerLogic.Update(deltaTime, inputSystem);
 
-	// perform animation, if any
-	float leftStickX = inputSystem->GetLeftStickX();
-	float leftStickY = inputSystem->GetLeftStickY();
+	// now handle the new state
 	bool result = false;
 
 	switch (mPlayerLogic.GetPlayerState()) {
@@ -33,19 +31,28 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Came
 	case PlayerState::Walking:
 	case PlayerState::Running:
 	{
-		DirectX::XMFLOAT3 movement = CalculateMovementVectorFrom(
+		float leftStickX = inputSystem->GetLeftStickX();
+		float leftStickY = inputSystem->GetLeftStickY();
+		DirectX::XMFLOAT3 movement;
+
+		CalculateMovementVectorFrom(
 			forwardAndRightVectors,
 			leftStickX,
-			leftStickY
+			leftStickY,
+			movement
 		);
+
 		float square = movement.x * movement.x + movement.y * movement.y;
 		float speed = mPlayerLogic.GetWalkingRunningSpeed(square);
+
 		result = mPlayerAnimator.MoveAndRotatePlayer(
 			deltaTime,
 			movement,
 			&mCenter,
+			&mCurrentRotation,
 			speed,
-			mPlayerLogic.mRotationSpeed
+			mPlayerLogic.mRotationSpeed,
+			square
 		);
 		break;
 	}
@@ -73,7 +80,7 @@ DirectX::XMFLOAT4 Player::GetCenter() const {
 }
 
 
-DirectX::XMFLOAT3 Player::CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY) {
+DirectX::XMFLOAT3 Player::CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY, DirectX::XMFLOAT3& movement) {
 	// calculate movement vector
 	DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
 	movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
@@ -83,11 +90,10 @@ DirectX::XMFLOAT3 Player::CalculateMovementVectorFrom(CameraForwardAndRightVecto
 	movementRight.x = leftStickX * forwardAndRightVectors.right.x;
 	movementRight.z = leftStickX * forwardAndRightVectors.right.z;
 
-	DirectX::XMFLOAT3 movement;
 	movement.x = movementForward.x + movementRight.x;
-	// todo: for now y is 0.6 (const), but possible we may go up or down hill
+	// todo: for now y is 0.0 (const), but possible we may go up or down hill
 	// so update when ready to handle shift in y
-	movement.y = 0.6f;
+	movement.y = 0.0f;
 	movement.z = movementForward.z + movementRight.z;
 
 	return movement;

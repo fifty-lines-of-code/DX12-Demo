@@ -27,6 +27,6 @@ private:
 	float mCurrentRotation = DirectX::XMConvertToRadians(0);
 
 private:
-	DirectX::XMFLOAT3 CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY);
+	DirectX::XMFLOAT3 CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY, DirectX::XMFLOAT3& movement);
 	void UpdateEntityCenterAndRotationAndSetItToDirty();
 };
