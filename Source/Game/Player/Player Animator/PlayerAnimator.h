@@ -9,8 +9,22 @@ public:
 	PlayerAnimator();
 	~PlayerAnimator();
 
-	bool MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, DirectX::XMFLOAT3* center, float* currentRotation, float walkingRunningSpeed, float rotationSpeed, float movementLengthSquared);
-	bool PerformBackwardsDash(float deltaTime, DirectX::XMFLOAT3* center, float backwardsDashDistance, float animationDuration);
+	bool MoveAndRotatePlayer(
+		float deltaTime,
+		DirectX::XMFLOAT3 movement,
+		DirectX::XMFLOAT3* center, 
+		float* currentRotation,
+		float walkingRunningSpeed,
+		float rotationSpeed, 
+		float movementLengthSquared
+	);
+	bool PerformBackwardsDash(
+		float deltaTime, 
+		DirectX::XMFLOAT3* center, 
+		DirectX::XMFLOAT3* const forward,
+		float backwardsDashDistance,
+		float animationDuration
+	);
 	bool IsBackwardsDashAnimationComplete() const;
 
 private:
@@ -20,6 +34,8 @@ private:
 	float mDashAnimationTimer = 0.5f;
 	float mIsPerformingBackwardsDash = false;
 	float mIsBackwardsDashAnimationComplete = true;
+	DirectX::XMFLOAT3 mDashDirection;
+	
 
 private:
 	DirectX::XMFLOAT3 CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY);

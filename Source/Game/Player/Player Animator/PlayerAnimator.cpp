@@ -9,12 +9,6 @@ PlayerAnimator::~PlayerAnimator() {}
 
 bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, DirectX::XMFLOAT3* center, float* currentRotation, float walkingRunningSpeed, float rotationSpeed, float movementLengthSquared) {
 
-	// check if walking slow or fast
-	bool isWalkingSlow = true;
-	if (movementLengthSquared >= 0.25f) {
-		isWalkingSlow = false;
-	}
-
 	if (movementLengthSquared > 1.f) {
 		// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
 		float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
@@ -37,31 +31,34 @@ bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 move
 	return true;
 }
 
-bool PlayerAnimator::PerformBackwardsDash(float deltaTime, DirectX::XMFLOAT3* center, float backwardsDashDistance, float animationDuration) {
+bool PlayerAnimator::PerformBackwardsDash(
+	float deltaTime, 
+	DirectX::XMFLOAT3* center, 
+	DirectX::XMFLOAT3* const forward,
+	float backwardsDashVelocity,
+	float animationDuration
+) {
 	if (!mIsPerformingBackwardsDash) {
-
+		// Frame 1: Setup the trajectory
 		mIsPerformingBackwardsDash = true;
 		mIsBackwardsDashAnimationComplete = false;
-		mDashStartPosition.x = center->x;
-		mDashStartPosition.y = center->y;
-		mDashStartPosition.z = center->z;
-
-		mDashTargetPosition.x = center->x;
-		mDashTargetPosition.y = .6f;
-		// todo: for now we're dashing in the -z direction at all times
-		// update to dash in the -FWD direction
-		mDashTargetPosition.z = center->z - backwardsDashDistance;
-
 		mDashAnimationTimer = 0.f;
+
+		// Calculate and store the direction once (flipped forward vector)
+		// We flatten the Y axis to keep the dash strictly horizontal
+		mDashDirection.x = -forward->x;
+		mDashDirection.y = 0.0f;
+		mDashDirection.z = -forward->z;
 
 		return false;
 	}
 	else {
+		// update the timer
 		mDashAnimationTimer += deltaTime;
-		float t = std::fmin(mDashAnimationTimer / animationDuration, 1.f);
 
-		center->x = mDashStartPosition.x + (mDashTargetPosition.x - mDashStartPosition.x) * t;
-		center->z = mDashStartPosition.z + (mDashTargetPosition.z - mDashStartPosition.z) * t;
+		// position = position + (direction * speed * time)
+		center->x += mDashDirection.x * backwardsDashVelocity * deltaTime;
+		center->z += mDashDirection.z * backwardsDashVelocity * deltaTime;
 
 		if (mDashAnimationTimer >= animationDuration) {
 			mIsPerformingBackwardsDash = false;

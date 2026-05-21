@@ -25,6 +25,9 @@ private:
 
 	DirectX::XMFLOAT3 mCenter = DirectX::XMFLOAT3(0.f, 0.6f, .5f);
 	float mCurrentRotation = DirectX::XMConvertToRadians(0);
+	DirectX::XMFLOAT3 mForward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
+	DirectX::XMFLOAT3 mRight = DirectX::XMFLOAT3(1.f, 0.f, 0.f);
+	DirectX::XMFLOAT3 mUp = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
 
 private:
 	DirectX::XMFLOAT3 CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY, DirectX::XMFLOAT3& movement);

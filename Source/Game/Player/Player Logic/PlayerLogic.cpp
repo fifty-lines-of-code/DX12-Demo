@@ -20,14 +20,6 @@ void PlayerLogic::Update(float deltaTime, const IInputSystem* const inputSystem)
 }
 
 float PlayerLogic::GetWalkingRunningSpeed(float squareOfMovement) {
-	if (mState != PlayerState::Walking && mState != PlayerState::Running) {
-		return 0;
-	}
-
-	if (squareOfMovement <= 0.25) {
-		return mPlayerSlowWalkingSpeed;
-	}
-
 	return mState == PlayerState::Walking ? mPlayerNormalWalkingSpeed : mPlayerRunningSpeed;
 }
 

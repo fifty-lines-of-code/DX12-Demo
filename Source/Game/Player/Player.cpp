@@ -60,7 +60,8 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Came
 		result = mPlayerAnimator.PerformBackwardsDash(
 			deltaTime, 
 			&mCenter,
-			mPlayerLogic.mBackwardsDashDistance,
+			&mForward,
+			mPlayerLogic.mBackwardsDashVelocity,
 			mPlayerLogic.mBackwardsDashAnimationDuration
 		);
 		// after animation finishes, set player state to idle

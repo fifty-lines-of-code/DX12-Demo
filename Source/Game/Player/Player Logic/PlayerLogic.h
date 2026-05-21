@@ -29,7 +29,10 @@ public:
 	const float mRotationSpeed = 9.21f;
 	// backwards dash animation data
 	const float mBackwardsDashAnimationDuration = .85f;
-	const float mBackwardsDashDistance = 1.f;
+	// speed = distance / time
+	// dash distance is 1
+	// so (1 / .85)
+	const float mBackwardsDashVelocity = 1.18f; 
 
 private:
 	// total duration between holding action east (b or circle) 
