@@ -2,7 +2,7 @@
 
 #include <DirectXMath.h>
 
-struct CameraBasisVectors;
+struct BasisVectors;
 
 class PlayerAnimator {
 public:

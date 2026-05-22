@@ -60,7 +60,11 @@ DirectX::XMFLOAT3 Entity::GetCenter() const { return mCenter; }
 
 void Entity::SetCenter(DirectX::XMFLOAT3 center) { mCenter = center; }
 
-void Entity::SetRotation(float rotation) { mRotation = rotation; }
+void Entity::SetBasisVectors(const BasisVectors* const basisVectors) { 
+	mBasisVectors.forward = basisVectors->forward;
+	mBasisVectors.up = basisVectors->up;
+	mBasisVectors.right = basisVectors->right;
+}
 
 void Entity::CalculateWorldMatrix() {
 	// todo: Use DX methods to build SRT and then W
@@ -75,10 +79,20 @@ void Entity::CalculateWorldMatrix() {
 	scale.m[2][2] = mScaleZ;
 
 	// Set Rotation
-	rotation.m[0][0] = std::cos(mRotation);
-	rotation.m[0][2] = -std::sin(mRotation);
-	rotation.m[2][0] = std::sin(mRotation);
-	rotation.m[2][2] = std::cos(mRotation);
+	// row 0 mapped to right
+	rotation.m[0][0] = mBasisVectors.right.x;
+	rotation.m[0][1] = mBasisVectors.right.y;
+	rotation.m[0][2] = mBasisVectors.right.z;
+
+	// Row 1: mapped to up
+	rotation.m[1][0] = mBasisVectors.up.x;
+	rotation.m[1][1] = mBasisVectors.up.y;
+	rotation.m[1][2] = mBasisVectors.up.z;
+
+	// Row 2: Mapped directly to your Forward vector
+	rotation.m[2][0] = mBasisVectors.forward.x;
+	rotation.m[2][1] = mBasisVectors.forward.y;
+	rotation.m[2][2] = mBasisVectors.forward.z;
 
 	// Set Translation
 	translation.m[3][0] = mCenter.x;

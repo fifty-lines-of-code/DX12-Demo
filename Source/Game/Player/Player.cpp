@@ -1,7 +1,6 @@
 #include "Player.h"
 
 #include <cmath>
-#include "../../Engine/Camera/Camera.h"
 #include "../../Engine/Scene Manager/Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 
@@ -17,7 +16,7 @@ void Player::SetEntity(Entity* entity) {
 	UpdateEntityCenterAndRotationAndSetItToDirty();
 }
 
-void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraBasisVectors cameraBasisVectors) {
+void Player::Update(float deltaTime, const IInputSystem* const inputSystem, BasisVectors cameraBasisVectors) {
 
 	// update player's state
 	mPlayerLogic.Update(deltaTime, inputSystem);
@@ -102,7 +101,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Came
 		shouldUpdateEntity = mPlayerAnimator.PerformBackwardsDash(
 			deltaTime,
 			&mCenter,
-			&mForward,
+			&mBasisVectors.forward,
 			mPlayerLogic.mBackwardsDashVelocity,
 			mPlayerLogic.mBackwardsDashAnimationDuration
 		);
@@ -124,19 +123,19 @@ DirectX::XMFLOAT4 Player::GetCenter() const {
 }
 
 void Player::UpdateForwardAndRightVectorsFromCurrentRotation() {
-	mForward.x = std::sin(mCurrentRotation);
-	mForward.y = 0.0f;
-	mForward.z = std::cos(mCurrentRotation);
+	mBasisVectors.forward.x = std::sin(mCurrentRotation);
+	mBasisVectors.forward.y = 0.0f;
+	mBasisVectors.forward.z = std::cos(mCurrentRotation);
 
-	mRight.x = std::cos(mCurrentRotation);
-	mRight.y = 0.0f;
-	mRight.z = -std::sin(mCurrentRotation);
+	mBasisVectors.right.x = std::cos(mCurrentRotation);
+	mBasisVectors.right.y = 0.0f;
+	mBasisVectors.right.z = -std::sin(mCurrentRotation);
 }
 
 void Player::CalculateMovementVector(
 	float leftStickX, 
 	float leftStickY, 
-	CameraBasisVectors basisVectors, 
+	BasisVectors basisVectors, 
 	DirectX::XMFLOAT3& movement
 ) {
 	// 1. Isolate and flatten the camera's forward vector to the 2D ground plane
@@ -180,7 +179,7 @@ void Player::UpdateEntityCenterAndRotationAndSetItToDirty() {
 	mEntity->SetCenter(mCenter);
 
 	// update rotation in entity
-	mEntity->SetRotation(mCurrentRotation);
+	mEntity->SetBasisVectors(&mBasisVectors);
 
 	// set isDirty to true
 	mEntity->SetIsDirty(true);

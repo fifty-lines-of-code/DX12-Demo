@@ -36,7 +36,6 @@ void PlayerAnimator::RotatePlayer(
 ) {
 	// We have to send in x first and then z to convert from 
 	// Math's RH rule to DX12's LH coordinate rule
-	// same with negating the result.
 	// Rotation in Math is CCW and DX12 is CW
 	float targetRotation = std::atan2(movement->x, movement->z);
 	float deltaRotation = targetRotation - *currentRotation;
@@ -86,14 +85,14 @@ bool PlayerAnimator::PerformBackwardsDash(
 		mDashDirection.y = 0.0f;
 		mDashDirection.z = -forward->z;
 
-		float flatSqLength = (mDashDirection.x * mDashDirection.x) + (mDashDirection.z * mDashDirection.z);
+		float square = (mDashDirection.x * mDashDirection.x) + (mDashDirection.z * mDashDirection.z);
 
 		// Normalize defensively to ensure the vector snaps back to a perfect length of 1.0
-		if (flatSqLength > 0.0001f) {
-			float invLen = MathHelper::FastInverseSqrt(flatSqLength);
-			mDashDirection.x = mDashDirection.x * invLen;
+		if (square > 0.0001f) {
+			float oneOverSquareRoot = MathHelper::FastInverseSqrt(square);
+			mDashDirection.x = mDashDirection.x * oneOverSquareRoot;
 			mDashDirection.y = 0.0f;
-			mDashDirection.z = mDashDirection.z * invLen;
+			mDashDirection.z = mDashDirection.z * oneOverSquareRoot;
 		}
 		else {
 			// Fallback: If forward is somehow pure vertical (0, 1, 0), 

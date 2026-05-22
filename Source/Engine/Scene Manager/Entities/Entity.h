@@ -2,6 +2,7 @@
 
 #include "PerPassAndPerEntityConstantBufferData.h"
 
+struct BasisVectors;
 class Mesh;
 
 // width because our aabb will always be a cube
@@ -32,7 +33,7 @@ public:
 	DirectX::XMFLOAT3 GetCenter() const;
 	void SetCenter(DirectX::XMFLOAT3 center);
 
-	void SetRotation(float rotation);
+	void SetBasisVectors(const BasisVectors* const basisVectors);
 
 private:
 	uint32_t mID;
@@ -40,7 +41,7 @@ private:
 	float mScaleX;
 	float mScaleY;
 	float mScaleZ;
-	float mRotation = DirectX::XMConvertToRadians(0);
+	BasisVectors mBasisVectors;
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
 	bool mIsDirty = true;

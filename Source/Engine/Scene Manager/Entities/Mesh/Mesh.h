@@ -3,7 +3,6 @@
 #include "Geometry.h"
 #include <vector>
 #include <wrl.h>
-#include <d3d12.h>
 
 enum class MeshID : uint32_t {
 	Cube = 0,
