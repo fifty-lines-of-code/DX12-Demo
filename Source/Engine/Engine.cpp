@@ -19,7 +19,7 @@ Engine::Engine(HINSTANCE hInstance, std::wstring caption, int clientWidth, int c
 	mRenderer(std::make_unique<DX12Renderer>(clientWidth, clientHeight)),
 	mSceneManager(std::make_unique<SceneManager>()),
 	mCamera(std::make_unique<Camera>(clientWidth / (float) clientHeight)),
-	mInputSystem(std::make_unique<XBoxInputSystem>())
+	mInputSystem(std::make_unique<XboxInputSystem>())
 {}
 
 Engine::~Engine() {}
@@ -119,7 +119,7 @@ void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 	}
 }
 
-CameraForwardAndRightVectors Engine::GetCameraForwardAndRightVectors() const {
+BasisVectors Engine::GetCameraForwardAndRightVectors() const {
 	return mCamera->GetForwardAndRightVectors();
 }
 

@@ -6,13 +6,13 @@
 #include <vector>
 
 class Camera;
-struct CameraForwardAndRightVectors;
+struct BasisVectors;
 class DX12Renderer;
 class Entity;
 class GameTimer;
 class SceneManager;
 class IInputSystem;
-class XBoxInputSystem;
+class XboxInputSystem;
 
 class Engine {
 public:
@@ -26,7 +26,7 @@ public:
 
 	void UpdateInputSystemAndCamera(float deltaTime);
 	void Update(float deltaTime, DirectX::XMFLOAT4 playerPosition);
-	CameraForwardAndRightVectors GetCameraForwardAndRightVectors() const;
+	BasisVectors GetCameraForwardAndRightVectors() const;
 
 	void Draw();
 
@@ -48,7 +48,7 @@ private:
 	std::unique_ptr<SceneManager> mSceneManager;
 	std::unique_ptr<Camera> mCamera;
 	std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
-	std::unique_ptr<XBoxInputSystem> mInputSystem;
+	std::unique_ptr<XboxInputSystem> mInputSystem;
 
 private:
 	bool InitializeCamera(DirectX::XMFLOAT4 playerPosition);

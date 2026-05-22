@@ -757,6 +757,9 @@ bool DX12Renderer::CreateConstantBufferDescriptor(
 }
 
 bool DX12Renderer::CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t alignedSizeOfPerPassCb, uint32_t alignedSizeOfPerEntityCb) {
+	// per pass CB are laid out First, then all the per object cbs
+	// so PPCB(F0), PPCB(F1), PPCB(F2), POCB1(F0), POCB2(F0), ..., POCBN(FN-1)
+
 	// per pass CB are laid out first, currently only a single per pass cb
 	// (alignedPerPassCBSize * numberOfFrames) 
 	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
@@ -969,7 +972,7 @@ void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
 		meshResource->IndexBufferUploader
 	);
 
-	// store metadata in mesh rsoure that we'll use during rendering
+	// store metadata in mesh resource that we'll use during rendering
 	meshResource->VertexByteStride = sizeof(Vertex);
 	meshResource->VertexBufferByteSize = mesh->vbByteSize;
 	meshResource->IndexFormat = DXGI_FORMAT_R16_UINT;

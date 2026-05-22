@@ -1,5 +1,6 @@
 #pragma once
-#include <cstdint>	
+
+#include <cstdint>
 
 // The values use specific hexadecimal bitmasks so that multiple buttons 
 // can be packed into a single integer and queried simultaneously.
@@ -8,7 +9,7 @@
 // If (currentState & superMoveCombo) == superMoveCombo (which evaluates to 0x0003),
 // it means both buttons are being held down at the exact same millisecond.
 
-enum class GameButtons : uint32_t {
+enum class GameButton {
     // 1. Right-Hand Action Cluster
     ActionSouth = 0x0001, // Xbox A / PS Cross
     ActionEast = 0x0002, // Xbox B / PS Circle
@@ -16,8 +17,8 @@ enum class GameButtons : uint32_t {
     ActionNorth = 0x0008, // Xbox Y / PS Triangle
 
     // 2. Index Finger Shoulders
-    BumperLeft = 0x0010, // Xbox LT / PS L1 
-    BumperRight = 0x0020, // Xbox RT / PS R1
+    BumperLeft = 0x0010, // Xbox LB / PS L1 
+    BumperRight = 0x0020, // Xbox RB / PS R1
 
     // 3. Stick Click Modifiers (Physical Analogs as buttons)
     StickClickLeft = 0x0040, // Xbox LS  / PS L3
@@ -32,4 +33,11 @@ enum class GameButtons : uint32_t {
     // 5. System Administration Controls
     CenterRight = 0x1000, // Xbox Start / PS Options
     CenterLeft = 0x2000  // Xbox Back  / PS Share
+};
+
+enum class GameButtonState {
+    Unpressed = 0,
+    Just_Pressed,
+    Held,
+    Just_Released
 };

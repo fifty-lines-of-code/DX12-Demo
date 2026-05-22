@@ -1,20 +1,21 @@
-#include "XBoxInputSystem.h"
+#include "XboxInputSystem.h"
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
-XBoxInputSystem::XBoxInputSystem(DWORD userIndex) :
+XboxInputSystem::XboxInputSystem(DWORD userIndex) :
     mUserIndex(userIndex),
     mIsConnected(false),
     mLeftStickX(0.f),
     mLeftStickY(0.f),
     mRightStickX(0.f),
-    mRightStickY(0.f) {
+    mRightStickY(0.f),
+    mIsBPressed(false) {
 
     ZeroMemory(&mCurrentState, sizeof(XINPUT_STATE));
 
-    // Calculate square of raw deadzones to prevent sqrt calls per frame
+    // Calculate squares of raw deadzones to prevent sqrt calls per frame
     float rawLeftDeadzone = static_cast<float>(XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
     mSquareOfLeftJoystickDeadzone = rawLeftDeadzone * rawLeftDeadzone;
 
@@ -22,65 +23,70 @@ XBoxInputSystem::XBoxInputSystem(DWORD userIndex) :
     mSquareOfRightJoystickDeadzone = rawRightDeadzone * rawRightDeadzone;
 }
 
-void XBoxInputSystem::Update() {
+void XboxInputSystem::Update() {
+    mPreviousState = mCurrentState;
     UpdateStateAndIsConnected();
     ProcessLeftJoystick();
     ProcessRightJoystick();
-    ProcessActionButtons();
 }
 
-bool XBoxInputSystem::IsConnected() const {
+bool XboxInputSystem::IsConnected() const {
     return mIsConnected;
 }
 
-float XBoxInputSystem::GetLeftStickX() const {
+float XboxInputSystem::GetLeftStickX() const {
     return mLeftStickX;
 }
 
-float XBoxInputSystem::GetLeftStickY() const {
+float XboxInputSystem::GetLeftStickY() const {
     return mLeftStickY;
 }
 
-float XBoxInputSystem::GetRightStickX() const {
+float XboxInputSystem::GetRightStickX() const {
     return mRightStickX;
 }
 
-float XBoxInputSystem::GetRightStickY() const {
+float XboxInputSystem::GetRightStickY() const {
     return mRightStickY;
 }
 
-bool XBoxInputSystem::IsButtonDown(GameButtons button) const {
-    // todo
-    return false;
+GameButtonState XboxInputSystem::GetButtonState(GameButton button) const {
+    uint32_t mapping = GetControllerMappingFor(button);
+    uint32_t buttonStateRawThisFrame = mCurrentState.Gamepad.wButtons & mapping;
+    uint32_t buttonStateRawPreviousFrame = mPreviousState.Gamepad.wButtons & mapping;
+
+    if (buttonStateRawThisFrame == 0 && buttonStateRawPreviousFrame == 0) {
+        return GameButtonState::Unpressed;
+    }
+
+    if (buttonStateRawThisFrame != 0 && buttonStateRawPreviousFrame == 0) {
+        return GameButtonState::Just_Pressed;
+    }
+
+    if (buttonStateRawThisFrame != 0 && buttonStateRawPreviousFrame != 0) {
+        return GameButtonState::Held;
+    }
+
+    return GameButtonState::Just_Released;
 }
 
-bool XBoxInputSystem::IsButtonPressed(GameButtons button) const {
-    // todo
-    return false;
-}
-
-bool XBoxInputSystem::IsButtonReleased(GameButtons button) const {
-    // todo
-    return false;
-}
-
-float XBoxInputSystem::GetLeftTrigger() const {
+float XboxInputSystem::GetLeftTrigger() const {
     // todp
     return 0.0f;
 }
 
-float XBoxInputSystem::GetRightTrigger() const {
+float XboxInputSystem::GetRightTrigger() const {
     // todo
     return 0.0f;
 }
 
-void XBoxInputSystem::UpdateStateAndIsConnected() {
+void XboxInputSystem::UpdateStateAndIsConnected() {
     ZeroMemory(&mCurrentState, sizeof(mCurrentState));
     DWORD result = XInputGetState(mUserIndex, &mCurrentState);
     mIsConnected = (result == ERROR_SUCCESS);
 }
 
-void XBoxInputSystem::ProcessLeftJoystick() {
+void XboxInputSystem::ProcessLeftJoystick() {
     if (!mIsConnected) {
         mLeftStickX = 0.f;
         mLeftStickY = 0.f;
@@ -93,7 +99,7 @@ void XBoxInputSystem::ProcessLeftJoystick() {
     ProcessXYForJoystick(rawX, rawY, &mLeftStickX, &mLeftStickY, mSquareOfLeftJoystickDeadzone);
 }
 
-void XBoxInputSystem::ProcessRightJoystick() {
+void XboxInputSystem::ProcessRightJoystick() {
     if (!mIsConnected) {
         mRightStickX = 0.f;
         mRightStickY = 0.f;
@@ -106,15 +112,11 @@ void XBoxInputSystem::ProcessRightJoystick() {
     ProcessXYForJoystick(rawX, rawY, &mRightStickX, &mRightStickY, mSquareOfRightJoystickDeadzone);
 }
 
-void XBoxInputSystem::ProcessActionButtons() {
-    // todo
-}
-
-void XBoxInputSystem::ProcessTriggers() {
+void XboxInputSystem::ProcessTriggers() {
     //  todo
 }
 
-void XBoxInputSystem::ProcessXYForJoystick(int16_t rawX, int16_t rawY, float* stickX, float* stickY, float squaredDeadzone) {
+void XboxInputSystem::ProcessXYForJoystick(int16_t rawX, int16_t rawY, float* stickX, float* stickY, float squaredDeadzone) {
     float floatX = static_cast<float>(rawX);
     float floatY = static_cast<float>(rawY);
 
@@ -136,4 +138,14 @@ void XBoxInputSystem::ProcessXYForJoystick(int16_t rawX, int16_t rawY, float* st
         *stickX = std::max(-1.0f, std::min(normalizedX, 1.0f));
         *stickY = std::max(-1.0f, std::min(normalizedY, 1.0f));
     }
+}
+
+uint32_t XboxInputSystem::GetControllerMappingFor(GameButton button) const {
+    switch (button) {
+    case GameButton::ActionEast:
+        return XINPUT_GAMEPAD_B;
+    }
+
+    // todo:
+    return 0;
 }

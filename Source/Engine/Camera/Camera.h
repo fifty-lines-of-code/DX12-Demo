@@ -3,11 +3,6 @@
 #include "../../Helper/MathHelper.h"
 #include <wtypes.h>
 
-struct CameraForwardAndRightVectors {
-	DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
-	DirectX::XMFLOAT3 right = DirectX::XMFLOAT3(1.f, 0.f, 0.f);
-};
-
 class Camera {
 public:
 	Camera(float aspectRatio);
@@ -19,7 +14,7 @@ public:
 	void UpdateWithTarget(DirectX::XMFLOAT4 target);
 
 	const DirectX::XMFLOAT4X4* GetViewProjection() const;
-	CameraForwardAndRightVectors GetForwardAndRightVectors() const;
+	BasisVectors GetForwardAndRightVectors() const;
 
 	void OnResize(UINT newClientWidth, UINT newClientHeight);
 
@@ -34,8 +29,8 @@ private:
 	float mPitchMin = DirectX::XMConvertToRadians(-1);
 	float mPitchMax = DirectX::XMConvertToRadians(45);
 	float mRadius = 4.f;
-	float mYawSpeed = .5f;
-	float mPitchSpeed = .25f;
+	float mYawSpeed = .75f;
+	float mPitchSpeed = .5f;
 
 	DirectX::XMFLOAT4 mCenter = DirectX::XMFLOAT4(0, 0, 0, 1.f);
 	DirectX::XMFLOAT4 mTarget = DirectX::XMFLOAT4(0, 0, 0, 1.f);
@@ -46,7 +41,7 @@ private:
 	DirectX::XMFLOAT4X4 mView = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 mViewProjection = MathHelper::Identity4x4();
 	const float mTrackingSpeed = 4.f;
-	CameraForwardAndRightVectors mForwardAndRight;
+	BasisVectors mForwardAndRight;
 
 private:
 	void UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, float rightJoystickY);

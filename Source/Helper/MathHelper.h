@@ -2,6 +2,12 @@
 
 #include <DirectXMath.h>
 
+struct BasisVectors {
+    DirectX::XMFLOAT3 forward = DirectX::XMFLOAT3(0.f, 0.f, 1.f);
+    DirectX::XMFLOAT3 right = DirectX::XMFLOAT3(1.f, 0.f, 0.f);
+    DirectX::XMFLOAT3 up = DirectX::XMFLOAT3(0.f, 1.f, 0.f);
+};
+
 class MathHelper {
 public:
     static DirectX::XMFLOAT4X4 Identity4x4()
