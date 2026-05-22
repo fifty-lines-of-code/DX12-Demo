@@ -76,8 +76,8 @@ void Entity::CalculateWorldMatrix() {
 
 	// Set Rotation
 	rotation.m[0][0] = std::cos(mRotation);
-	rotation.m[0][2] = std::sin(mRotation);
-	rotation.m[2][0] = -std::sin(mRotation);
+	rotation.m[0][2] = -std::sin(mRotation);
+	rotation.m[2][0] = std::sin(mRotation);
 	rotation.m[2][2] = std::cos(mRotation);
 
 	// Set Translation

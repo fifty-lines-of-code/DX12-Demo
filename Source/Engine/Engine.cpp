@@ -119,7 +119,7 @@ void Engine::Update(float deltaTime, DirectX::XMFLOAT4 playerPosition) {
 	}
 }
 
-CameraForwardAndRightVectors Engine::GetCameraForwardAndRightVectors() const {
+CameraBasisVectors Engine::GetCameraForwardAndRightVectors() const {
 	return mCamera->GetForwardAndRightVectors();
 }
 

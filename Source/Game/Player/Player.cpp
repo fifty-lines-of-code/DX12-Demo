@@ -17,61 +17,104 @@ void Player::SetEntity(Entity* entity) {
 	UpdateEntityCenterAndRotationAndSetItToDirty();
 }
 
-void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraForwardAndRightVectors forwardAndRightVectors) {
+void Player::Update(float deltaTime, const IInputSystem* const inputSystem, CameraBasisVectors cameraBasisVectors) {
 
 	// update player's state
 	mPlayerLogic.Update(deltaTime, inputSystem);
 
 	// now handle the new state
-	bool result = false;
+	bool shouldUpdateEntity = false;
 
 	switch (mPlayerLogic.GetPlayerState()) {
 	case PlayerState::Idle: 
 	case PlayerState::PendingActionEast: return;
+	case PlayerState::BeginRotating:
+	{
+		mPlayerAnimator.SetIsRotationComplete(false);
+		mPlayerLogic.SetPlayerState(PlayerState::Rotating);
+		break;
+	}
+	case PlayerState::Rotating:
+	{
+		shouldUpdateEntity = true;
+
+		float leftStickX = inputSystem->GetLeftStickX();
+		float leftStickY = inputSystem->GetLeftStickY();
+		
+		float movementSqLength = (leftStickX * leftStickX) + (leftStickY * leftStickY);
+		if (movementSqLength <= 0.01f) {
+			mPlayerLogic.SetPlayerState(PlayerState::Idle);
+			break;
+		}
+
+		DirectX::XMFLOAT3 movement;
+		CalculateMovementVector(
+			leftStickX,
+			leftStickY,
+			cameraBasisVectors,
+			movement
+		);
+
+		mPlayerAnimator.RotatePlayer(
+			deltaTime,
+			&movement,
+			mPlayerLogic.mRotationSpeed,
+			&mCurrentRotation
+		);
+
+		UpdateForwardAndRightVectorsFromCurrentRotation();
+
+		if (mPlayerAnimator.GetIsRotationComplete()) {
+			mPlayerLogic.SetPlayerState(PlayerState::EndRotating);
+		}
+		break;
+	}
 	case PlayerState::Walking:
 	case PlayerState::Running:
 	{
 		float leftStickX = inputSystem->GetLeftStickX();
 		float leftStickY = inputSystem->GetLeftStickY();
-		DirectX::XMFLOAT3 movement;
 
-		CalculateMovementVectorFrom(
-			forwardAndRightVectors,
+		DirectX::XMFLOAT3 movement;
+		CalculateMovementVector(
 			leftStickX,
 			leftStickY,
+			cameraBasisVectors,
 			movement
 		);
 
-		float square = movement.x * movement.x + movement.y * movement.y;
-		float speed = mPlayerLogic.GetWalkingRunningSpeed(square);
+		float speed = mPlayerLogic.GetWalkingRunningSpeed();
 
-		result = mPlayerAnimator.MoveAndRotatePlayer(
+		shouldUpdateEntity = mPlayerAnimator.MoveAndRotatePlayer(
 			deltaTime,
-			movement,
+			&movement,
 			&mCenter,
 			&mCurrentRotation,
 			speed,
-			mPlayerLogic.mRotationSpeed,
-			square
+			mPlayerLogic.mRotationSpeed
 		);
+
+		UpdateForwardAndRightVectorsFromCurrentRotation();
+
 		break;
 	}
 	case PlayerState::BackwardsDashing:
-		result = mPlayerAnimator.PerformBackwardsDash(
-			deltaTime, 
+		shouldUpdateEntity = mPlayerAnimator.PerformBackwardsDash(
+			deltaTime,
 			&mCenter,
 			&mForward,
 			mPlayerLogic.mBackwardsDashVelocity,
 			mPlayerLogic.mBackwardsDashAnimationDuration
 		);
+
 		// after animation finishes, set player state to idle
-		if (mPlayerAnimator.IsBackwardsDashAnimationComplete()) {
+		if (mPlayerAnimator.GetIsBackwardsDashAnimationComplete()) {
 			mPlayerLogic.SetPlayerState(PlayerState::Idle);
 		}
 		break;
 	}
 
-	if (result) {
+	if (shouldUpdateEntity) {
 		UpdateEntityCenterAndRotationAndSetItToDirty();
 	}
 }
@@ -80,24 +123,56 @@ DirectX::XMFLOAT4 Player::GetCenter() const {
 	return DirectX::XMFLOAT4(mCenter.x, mCenter.y, mCenter.z, 1.f);
 }
 
+void Player::UpdateForwardAndRightVectorsFromCurrentRotation() {
+	mForward.x = std::sin(mCurrentRotation);
+	mForward.y = 0.0f;
+	mForward.z = std::cos(mCurrentRotation);
 
-DirectX::XMFLOAT3 Player::CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY, DirectX::XMFLOAT3& movement) {
-	// calculate movement vector
-	DirectX::XMFLOAT3 movementForward = DirectX::XMFLOAT3();
-	movementForward.x = leftStickY * forwardAndRightVectors.forward.x;
-	movementForward.z = leftStickY * forwardAndRightVectors.forward.z;
+	mRight.x = std::cos(mCurrentRotation);
+	mRight.y = 0.0f;
+	mRight.z = -std::sin(mCurrentRotation);
+}
 
-	DirectX::XMFLOAT3 movementRight = DirectX::XMFLOAT3();
-	movementRight.x = leftStickX * forwardAndRightVectors.right.x;
-	movementRight.z = leftStickX * forwardAndRightVectors.right.z;
+void Player::CalculateMovementVector(
+	float leftStickX, 
+	float leftStickY, 
+	CameraBasisVectors basisVectors, 
+	DirectX::XMFLOAT3& movement
+) {
+	// 1. Isolate and flatten the camera's forward vector to the 2D ground plane
+	DirectX::XMFLOAT3 flatCamFwd = { basisVectors.forward.x, 0.0f, basisVectors.forward.z };
+	float fwdSqLen = (flatCamFwd.x * flatCamFwd.x) + (flatCamFwd.z * flatCamFwd.z);
 
-	movement.x = movementForward.x + movementRight.x;
-	// todo: for now y is 0.0 (const), but possible we may go up or down hill
-	// so update when ready to handle shift in y
-	movement.y = 0.0f;
-	movement.z = movementForward.z + movementRight.z;
+	// Re-normalize it so "Forward" is always a full 1.0 magnitude along the dirt
+	if (fwdSqLen > 0.0001f) {
+		float invLen = MathHelper::FastInverseSqrt(fwdSqLen);
+		flatCamFwd.x *= invLen;
+		flatCamFwd.z *= invLen;
+	}
 
-	return movement;
+	// 2. Isolate and flatten the camera's right vector to the 2D ground plane
+	DirectX::XMFLOAT3 flatCamRight = { basisVectors.right.x, 0.0f, basisVectors.right.z };
+	float rgtSqLen = (flatCamRight.x * flatCamRight.x) + (flatCamRight.z * flatCamRight.z);
+
+	// Re-normalize it right away
+	if (rgtSqLen > 0.0001f) {
+		float invLen = MathHelper::FastInverseSqrt(rgtSqLen);
+		flatCamRight.x *= invLen;
+		flatCamRight.z *= invLen;
+	}
+
+	// 3. Now safely blend your pristine, full-strength horizontal basis vectors by the stick inputs
+	movement.x = (leftStickY * flatCamFwd.x) + (leftStickX * flatCamRight.x);
+	movement.y = 0.0f; // Stable flat ground line
+	movement.z = (leftStickY * flatCamFwd.z) + (leftStickX * flatCamRight.z);
+
+	// 4. Smooth out the diagonal corner speed boost if stick is pushed into a corner (e.g., 1.414 length)
+	float squared = (movement.x * movement.x) + (movement.z * movement.z);
+	if (squared > 1.0f) {
+		float oneOverSquareRoot = MathHelper::FastInverseSqrt(squared);
+		movement.x *= oneOverSquareRoot;
+		movement.z *= oneOverSquareRoot;
+	}
 }
 
 void Player::UpdateEntityCenterAndRotationAndSetItToDirty() {

@@ -2,7 +2,7 @@
 
 #include <DirectXMath.h>
 
-struct CameraForwardAndRightVectors;
+struct CameraBasisVectors;
 
 class PlayerAnimator {
 public:
@@ -11,21 +11,28 @@ public:
 
 	bool MoveAndRotatePlayer(
 		float deltaTime,
-		DirectX::XMFLOAT3 movement,
-		DirectX::XMFLOAT3* center, 
+		const DirectX::XMFLOAT3* const movement,
+		DirectX::XMFLOAT3* const center, 
 		float* currentRotation,
 		float walkingRunningSpeed,
-		float rotationSpeed, 
-		float movementLengthSquared
+		float rotationSpeed
+	);
+	void RotatePlayer(
+		float deltaTime,
+		const DirectX::XMFLOAT3* const movement,
+		float rotationSpeed,
+		float* currentRotation
 	);
 	bool PerformBackwardsDash(
 		float deltaTime, 
-		DirectX::XMFLOAT3* center, 
-		DirectX::XMFLOAT3* const forward,
+		DirectX::XMFLOAT3* const center, 
+		const DirectX::XMFLOAT3* const forward,
 		float backwardsDashDistance,
 		float animationDuration
 	);
-	bool IsBackwardsDashAnimationComplete() const;
+	bool GetIsBackwardsDashAnimationComplete() const;
+	bool GetIsRotationComplete() const;
+	void SetIsRotationComplete(bool value);
 
 private:
 	// dash animation data
@@ -34,10 +41,8 @@ private:
 	float mDashAnimationTimer = 0.5f;
 	float mIsPerformingBackwardsDash = false;
 	float mIsBackwardsDashAnimationComplete = true;
-	DirectX::XMFLOAT3 mDashDirection;
-	
+	DirectX::XMFLOAT3 mDashDirection = DirectX::XMFLOAT3(0, 0, 0);
+	bool mIsRotationComplete = false;
 
 private:
-	DirectX::XMFLOAT3 CalculateMovementVectorFrom(CameraForwardAndRightVectors forwardAndRightVectors, float leftStickX, float leftStickY);
-	void RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, float rotationSpeed, float* currentRotation);
 };

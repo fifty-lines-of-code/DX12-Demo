@@ -44,7 +44,7 @@ const DirectX::XMFLOAT4X4* Camera::GetViewProjection() const {
 	return &mViewProjection;
 }
 
-CameraForwardAndRightVectors Camera::GetForwardAndRightVectors() const {
+CameraBasisVectors Camera::GetForwardAndRightVectors() const {
 	return mForwardAndRight;
 }
 

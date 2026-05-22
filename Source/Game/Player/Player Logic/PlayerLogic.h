@@ -5,6 +5,9 @@
 
 enum class PlayerState {
 	Idle,
+	BeginRotating,
+	Rotating,
+	EndRotating,
 	Walking,
 	Running,
 	PendingActionEast,
@@ -20,9 +23,9 @@ public:
 	void SetPlayerState(PlayerState state);
 	void Update(float deltaTime, const IInputSystem* const inputSystem);
 
-	float GetWalkingRunningSpeed(float squreOfMovement);
+	float GetWalkingRunningSpeed();
 
-	// traversal and rotation speeds
+	// traversal and rotation speeds, achieved by trial and error
 	const float mPlayerSlowWalkingSpeed = 0.2f;
 	const float mPlayerNormalWalkingSpeed = .375f;
 	const float mPlayerRunningSpeed = .65f;

@@ -2,28 +2,25 @@
 
 #include "../../../Engine/Camera/Camera.h"
 #include <cmath>
+#include "../../../Helper/Logger.h"
 
 PlayerAnimator::PlayerAnimator() {}
 
 PlayerAnimator::~PlayerAnimator() {}
 
-bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, DirectX::XMFLOAT3* center, float* currentRotation, float walkingRunningSpeed, float rotationSpeed, float movementLengthSquared) {
-
-	if (movementLengthSquared > 1.f) {
-		// Use the Legendary Quake 3 Inverse Sq Root for the heck of it
-		float oneOverMovementLengthSquared = MathHelper::FastInverseSqrt(movementLengthSquared);
-		// only update x and z for now
-		movement.x *= oneOverMovementLengthSquared;
-		movement.z *= oneOverMovementLengthSquared;
-	}
-
-	float speedMultipliedByDelta = walkingRunningSpeed * deltaTime;
-
+bool PlayerAnimator::MoveAndRotatePlayer(
+	float deltaTime,
+	const DirectX::XMFLOAT3* const movement, 
+	DirectX::XMFLOAT3* const center,
+	float* currentRotation,
+	float walkingRunningSpeed,
+	float rotationSpeed
+) {
 	// update center
-	center->x += movement.x * speedMultipliedByDelta;
+	center->x += movement->x * walkingRunningSpeed * deltaTime;
 	// todo: hardcoded for now. will take y into consideration when ready
 	center->y = 0.6f;
-	center->z += movement.z * speedMultipliedByDelta;
+	center->z += movement->z * walkingRunningSpeed * deltaTime;
 
 	// update rotation
 	RotatePlayer(deltaTime, movement, rotationSpeed, currentRotation);
@@ -31,10 +28,49 @@ bool PlayerAnimator::MoveAndRotatePlayer(float deltaTime, DirectX::XMFLOAT3 move
 	return true;
 }
 
+void PlayerAnimator::RotatePlayer(
+	float deltaTime,
+	const DirectX::XMFLOAT3* const movement,
+	float rotationSpeed,
+	float* currentRotation
+) {
+	// We have to send in x first and then z to convert from 
+	// Math's RH rule to DX12's LH coordinate rule
+	// same with negating the result.
+	// Rotation in Math is CCW and DX12 is CW
+	float targetRotation = std::atan2(movement->x, movement->z);
+	float deltaRotation = targetRotation - *currentRotation;
+
+	// we have to make sure we take the shortest rotation 
+	// so rotate -90 instead of 270
+	// to do that we subtract 2pi if delta is > pi
+	// and add 2pi if delta is < -pi
+	// since rotation values will accumulate, we do this over a loop
+
+	while (deltaRotation > MathHelper::Pi) { deltaRotation -= MathHelper::Two_Pi; }
+
+	while (deltaRotation < -MathHelper::Pi) { deltaRotation += MathHelper::Two_Pi; }
+
+	Logger::PRINT(
+		L"Delta Rotation is: " +
+		std::to_wstring(deltaRotation) +
+		L"\n"
+	);
+
+	if (std::abs(deltaRotation) < 0.01f) {
+		*currentRotation = targetRotation;
+		mIsRotationComplete = true;
+		return;
+	}
+
+	// now we smoothly interpolate to the targetRotation
+	*currentRotation += deltaRotation * rotationSpeed * deltaTime;
+}
+
 bool PlayerAnimator::PerformBackwardsDash(
 	float deltaTime, 
-	DirectX::XMFLOAT3* center, 
-	DirectX::XMFLOAT3* const forward,
+	DirectX::XMFLOAT3* const center, 
+	const DirectX::XMFLOAT3* const forward,
 	float backwardsDashVelocity,
 	float animationDuration
 ) {
@@ -44,11 +80,26 @@ bool PlayerAnimator::PerformBackwardsDash(
 		mIsBackwardsDashAnimationComplete = false;
 		mDashAnimationTimer = 0.f;
 
-		// Calculate and store the direction once (flipped forward vector)
-		// We flatten the Y axis to keep the dash strictly horizontal
+		// Calculate and store the direction (flipped forward vector)
+		// We flatten the Y axis to keep the dash strictly in the xz plane for now
 		mDashDirection.x = -forward->x;
 		mDashDirection.y = 0.0f;
 		mDashDirection.z = -forward->z;
+
+		float flatSqLength = (mDashDirection.x * mDashDirection.x) + (mDashDirection.z * mDashDirection.z);
+
+		// Normalize defensively to ensure the vector snaps back to a perfect length of 1.0
+		if (flatSqLength > 0.0001f) {
+			float invLen = MathHelper::FastInverseSqrt(flatSqLength);
+			mDashDirection.x = mDashDirection.x * invLen;
+			mDashDirection.y = 0.0f;
+			mDashDirection.z = mDashDirection.z * invLen;
+		}
+		else {
+			// Fallback: If forward is somehow pure vertical (0, 1, 0), 
+			// default to a safe world-space backwards direction
+			mDashDirection = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+		}
 
 		return false;
 	}
@@ -70,28 +121,14 @@ bool PlayerAnimator::PerformBackwardsDash(
 	}
 }
 
-bool PlayerAnimator::IsBackwardsDashAnimationComplete() const {
+bool PlayerAnimator::GetIsBackwardsDashAnimationComplete() const {
 	return mIsBackwardsDashAnimationComplete;
 }
 
-void PlayerAnimator::RotatePlayer(float deltaTime, DirectX::XMFLOAT3 movement, float rotationSpeed, float* currentRotation) {
-	// We have to send in x first and then z to conert again from 
-	// Math's RH rule to DX12's LH coordinate rule
-	// same with negating the result.
-	// Rotation in Math is CCW and DX12 is CW
-	float targetRotation = -std::atan2(movement.x, movement.z);
-	float deltaRotation = targetRotation - *currentRotation;
+bool PlayerAnimator::GetIsRotationComplete() const {
+	return mIsRotationComplete;
+}
 
-	// we have to make sure we take the shortest rotation 
-	// so rotate -90 instead of 270
-	// to do that we subtract 2pi if delta is > pi
-	// and add 2pi if delta is < -pi
-	// since rotation values will accumulate, we do this over a loop
-
-	while (deltaRotation > MathHelper::Pi) { deltaRotation -= MathHelper::Two_Pi; }
-
-	while (deltaRotation < -MathHelper::Pi) { deltaRotation += MathHelper::Two_Pi; }
-
-	// now we smoothly interpolate to the targetRotation
-	*currentRotation += deltaRotation * rotationSpeed * deltaTime;
+void PlayerAnimator::SetIsRotationComplete(bool value) {
+	mIsRotationComplete = value;
 }
