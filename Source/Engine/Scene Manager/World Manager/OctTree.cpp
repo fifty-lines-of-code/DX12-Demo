@@ -90,8 +90,6 @@ void OctTree::Subdivide(OctTreeNode* node, float childrenHalfWidth) {
 }
 
 bool OctTree::DoesEntityFitInNode(EntityAABBMinMax entityAABB, float nodeHalfSize, DirectX::XMFLOAT3 nodeCenter, DirectX::XMFLOAT3 nodeMin, DirectX::XMFLOAT3 nodeMax) {
-	// todo
-
 	return
 		// nodeMin has to be less than or equal to entity min
 		(nodeMin.x <= entityAABB.Min.x) &&
@@ -105,11 +103,13 @@ bool OctTree::DoesEntityFitInNode(EntityAABBMinMax entityAABB, float nodeHalfSiz
 
 void OctTree::CalculateMinAndMax(OctTreeNode* node) {
 	DirectX::XMFLOAT3 center = node->GetCenter();
-	DirectX::XMFLOAT3 nodeMin = center;
 	float halfWidth = node->GetHalfWidth();
+
+	DirectX::XMFLOAT3 nodeMin = center;
 	nodeMin.x = center.x - halfWidth;
 	nodeMin.y = center.y - halfWidth;
 	nodeMin.z = center.z - halfWidth;
+
 	DirectX::XMFLOAT3 nodeMax = center;
 	nodeMax.x = center.x + halfWidth;
 	nodeMax.y = center.y + halfWidth;

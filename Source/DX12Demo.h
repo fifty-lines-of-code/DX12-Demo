@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Engine.h"
 #include <memory>
+#include "Game/Game.h"
 #include "Game Timer/GameTimer.h"
 
 // in debug mode let's us know about any memory we are leaking
@@ -35,7 +35,7 @@ private:
     const std::wstring mMainWndCaption = L"DX12 Demo";
 
     static DX12Demo* mDemo;
-    std::unique_ptr<Game> mGame;
+    Game mGame;
 
     bool InitMainWindow();
     bool InitializeGame();

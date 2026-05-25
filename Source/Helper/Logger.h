@@ -20,6 +20,7 @@ public:
 			msg +
 			L"(File: " + Helper::StringToWideString(__FILE__) +
 			L", Line: " + std::to_wstring(__LINE__);
+		OutputDebugString(output.c_str());
 #endif
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "../../../Engine/Math/EngineMath.h"
 
 struct BasisVectors;
 
@@ -11,22 +11,22 @@ public:
 
 	bool MoveAndRotatePlayer(
 		float deltaTime,
-		const DirectX::XMFLOAT3* const movement,
-		DirectX::XMFLOAT3* const center, 
+		const Engine::Vector3* const movement,
+		Engine::Vector3* const center, 
 		float* currentRotation,
 		float walkingRunningSpeed,
 		float rotationSpeed
 	);
 	void RotatePlayer(
 		float deltaTime,
-		const DirectX::XMFLOAT3* const movement,
+		const Engine::Vector3* const movement,
 		float rotationSpeed,
 		float* currentRotation
 	);
 	bool PerformBackwardsDash(
 		float deltaTime, 
-		DirectX::XMFLOAT3* const center, 
-		const DirectX::XMFLOAT3* const forward,
+		Engine::Vector3* const center, 
+		const Engine::Vector3* const forward,
 		float backwardsDashDistance,
 		float animationDuration
 	);
@@ -36,12 +36,12 @@ public:
 
 private:
 	// dash animation data
-	DirectX::XMFLOAT3 mDashStartPosition = DirectX::XMFLOAT3(0, 0, 0);
-	DirectX::XMFLOAT3 mDashTargetPosition = DirectX::XMFLOAT3(0, 0, 0);
+	Engine::Vector3 mDashStartPosition = Engine::Vector3(0, 0, 0);
+	Engine::Vector3 mDashTargetPosition = Engine::Vector3(0, 0, 0);
 	float mDashAnimationTimer = 0.5f;
 	float mIsPerformingBackwardsDash = false;
 	float mIsBackwardsDashAnimationComplete = true;
-	DirectX::XMFLOAT3 mDashDirection = DirectX::XMFLOAT3(0, 0, 0);
+	Engine::Vector3 mDashDirection = Engine::Vector3(0, 0, 0);
 	bool mIsRotationComplete = false;
 
 private:

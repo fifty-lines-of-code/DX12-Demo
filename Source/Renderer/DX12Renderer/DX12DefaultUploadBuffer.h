@@ -25,7 +25,9 @@ public:
         // UINT64 OffsetInBytes; // multiple of 256
         // UINT   SizeInBytes;   // multiple of 256
         // } D3D12_CONSTANT_BUFFER_VIEW_DESC;
-        if (isConstantBuffer) { mElementByteSize = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeof(T)); }
+        if (isConstantBuffer) {
+            mElementByteSize = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeof(T)); 
+        }
 
         auto uploadHepProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize * elementCount);
@@ -70,7 +72,11 @@ public:
 
     void CopyData(int elementIndex, const void* data)
     {
-        memcpy(&mCpuVirtualAddressHoldingGpuAddress[elementIndex * mElementByteSize], data, sizeof(T));
+        memcpy(
+            &mCpuVirtualAddressHoldingGpuAddress[elementIndex * mElementByteSize],
+            data,
+            sizeof(T)
+        );
     }
 
 private:

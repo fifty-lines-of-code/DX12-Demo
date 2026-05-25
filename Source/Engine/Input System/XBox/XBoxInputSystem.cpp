@@ -10,8 +10,7 @@ XboxInputSystem::XboxInputSystem(DWORD userIndex) :
     mLeftStickX(0.f),
     mLeftStickY(0.f),
     mRightStickX(0.f),
-    mRightStickY(0.f),
-    mIsBPressed(false) {
+    mRightStickY(0.f) {
 
     ZeroMemory(&mCurrentState, sizeof(XINPUT_STATE));
 
@@ -71,7 +70,7 @@ GameButtonState XboxInputSystem::GetButtonState(GameButton button) const {
 }
 
 float XboxInputSystem::GetLeftTrigger() const {
-    // todp
+    // todo
     return 0.0f;
 }
 

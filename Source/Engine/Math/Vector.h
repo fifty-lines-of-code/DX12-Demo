@@ -1,0 +1,66 @@
+#pragma once
+
+#include <DirectXMath.h>
+
+namespace Engine {
+    // Copyright below: Microsoft DirectX::XMFLOAT3
+    // 
+    // Pretty much copying the definition of XMFLOAT3
+    // this will be useful when reinterpreting Vector3 as an XMFLOAT3
+    // when sending data to the renderer
+    // (assuming DX12, but a quick search shows 
+    // Yes, this is brittle in the sense that if Microsoft changes the underlying 
+    // structure of XMFLOAT3, 4, 4x4, then we have to update ours
+    // to use methods like XMMAtrixMultiply, which will internally use XMLoadFloat4x4
+    // the only way around it is to write the SIMD operations that happen in
+    // XMMatrixMultiply, etc, ourselves
+
+    struct Vector3 {
+        float x;
+        float y;
+        float z;
+
+        Vector3() noexcept : x(0.f), y(0.f), z(0.f) {}
+        Vector3(float _x, float _y, float _z) noexcept : x(_x), y(_y), z(_z) {}
+        explicit Vector3(_In_reads_(3) const float* pArray) noexcept : x(pArray[0]), y(pArray[1]), z(pArray[2]) {}
+        Vector3(const Vector3&) noexcept = default;
+        Vector3& operator=(const Vector3&) noexcept = default;
+
+        inline static Vector3 Zero() noexcept {
+            return Vector3(0.f, 0.f, 0.f);
+        }
+
+        const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {
+            return *reinterpret_cast<const DirectX::XMFLOAT3*>(this);
+        }
+
+        DirectX::XMFLOAT3& AsXMFLOAT3() noexcept {
+            return *reinterpret_cast<DirectX::XMFLOAT3*>(this);
+        }
+    };
+
+    struct Vector4 {
+        union {
+            struct { float x, y, z, w; };
+            float v[4];
+        };
+
+        Vector4() noexcept : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
+        Vector4(float _x, float _y, float _z, float _w) noexcept : x(_x), y(_y), z(_z), w(_w) {}
+        explicit Vector4(_In_reads_(4) const float* pArray) noexcept : x(pArray[0]), y(pArray[1]), z(pArray[2]), w(pArray[3]) {}
+        Vector4(const Vector4&) noexcept = default;
+        Vector4& operator=(const Vector4&) noexcept = default;
+
+        inline static Vector4 Zero() noexcept {
+            return Vector4(0.f, 0.f, 0.f, 0.f);
+        }
+
+        const DirectX::XMFLOAT4& AsXMFLOAT4() const noexcept {
+            return *reinterpret_cast<const DirectX::XMFLOAT4*>(this);
+        }
+
+        DirectX::XMFLOAT4& AsXMFLOAT4() noexcept {
+            return *reinterpret_cast<DirectX::XMFLOAT4*>(this);
+        }
+    };
+}

@@ -5,6 +5,7 @@
 #include <WindowsX.h>
 #include <DirectXColors.h>
 #include "../../Helper/Helper.h"
+#include "../../Helper/Logger.h"
 #include "DX12DefaultUploadBuffer.h"
 #include "../../Engine/Scene Manager/Entities/Mesh/Mesh.h"
 #include "DX12FrameResource.h"
@@ -138,7 +139,7 @@ bool DX12Renderer::InitializeDevice() {
 	m4xMsaaQuality = msQualityLevels.NumQualityLevels;
 	assert(m4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
 
-#ifdef _DEBUG
+#if defined(DEBUG) || defined(_DEBUG)
 	LogAdapters();
 #endif
 
@@ -198,16 +199,12 @@ void DX12Renderer::PrepareForUpdate() {
 
 
 void DX12Renderer::UpdatePerPassCb(void* data, size_t dataSize) {
-	auto currPassCB = mCurrentFrameResource->mPerPassCB.get();
-	currPassCB->CopyData(0, data);
+	mCurrentFrameResource->mPerPassCB.CopyData(0, data);
 }
 
 void DX12Renderer::UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) {
-	uint32_t alignedPerRenderItemCbSize = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(perRenderItemCbSize);
-
 	// update per render item cb
-	auto currPassCB = mCurrentFrameResource->mPerRenderItemCB.get();
-	currPassCB->CopyData(renderItemIndex, data);
+	mCurrentFrameResource->mPerRenderItemCB.CopyData(renderItemIndex, data);
 }
 
 void DX12Renderer::BeginFrame() {
@@ -518,7 +515,7 @@ void DX12Renderer::LogAdapters() {
 		text += desc.Description;
 		text += L"\n";
 
-		OutputDebugString(text.c_str());
+		Logger::PRINT(text);
 
 		adapterList.push_back(adapter);
 
@@ -545,7 +542,7 @@ void DX12Renderer::LogAdapterOutputs(IDXGIAdapter* adapter)
 		std::wstring text = L"***Output: ";
 		text += desc.DeviceName;
 		text += L"\n";
-		OutputDebugString(text.c_str());
+		Logger::PRINT(text);
 
 		LogOutputDisplayModes(output, mBackBufferFormat);
 
@@ -577,7 +574,7 @@ void DX12Renderer::LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format
 			L"Refresh = " + std::to_wstring(n) + L"/" + std::to_wstring(d) +
 			L"\n";
 
-		::OutputDebugString(text.c_str());
+		Logger::PRINT(text);
 	}
 }
 
@@ -764,7 +761,7 @@ bool DX12Renderer::CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t
 	// (alignedPerPassCBSize * numberOfFrames) 
 	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
-		auto passCB = mFrameResources[frameIndex]->mPerPassCB->Resource();
+		auto passCB = mFrameResources[frameIndex]->mPerPassCB.Resource();
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = passCB->GetGPUVirtualAddress();
 
 		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCBVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -782,7 +779,7 @@ bool DX12Renderer::CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t
 
 	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
-		auto renderItemCB = mFrameResources[frameIndex]->mPerRenderItemCB->Resource();
+		auto renderItemCB = mFrameResources[frameIndex]->mPerRenderItemCB.Resource();
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = renderItemCB->GetGPUVirtualAddress();
 
 		for (uint32_t i = 0; i < numberOfEntities; ++i) {
@@ -839,6 +836,7 @@ bool DX12Renderer::CreateRootSignature() {
 
 	if (errorBlob != nullptr)
 	{
+		// todo: Move to Logger
 		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
 	}
 	ThrowIfFailed(hr);
@@ -920,15 +918,15 @@ void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities) {
 	}
 }
 
-void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
+void DX12Renderer::LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) {
 	// create mesh resource
 	std::unique_ptr<DX12MeshResource> meshResource = std::make_unique<DX12MeshResource>();
-	meshResource->id = (uint32_t)mesh->meshID;
+	meshResource->id = meshID;
 
 	// create blob of vbByteSize and store address in vertex buffer cpu address
 	ThrowIfFailed(
 		D3DCreateBlob(
-			mesh->vbByteSize,
+			vertexBufferByteSize,
 			&meshResource->VertexBufferCPU
 		)
 	);
@@ -936,22 +934,22 @@ void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
 	// copy vertices into vertex buffer cpu address
 	CopyMemory(
 		meshResource->VertexBufferCPU->GetBufferPointer(),
-		mesh->GetVertices().data(),
-		mesh->vbByteSize
+		vertices,
+		vertexBufferByteSize
 	);
 
 	// create blob and copy indices into blob at index buffer cpu address
 	ThrowIfFailed(
 		D3DCreateBlob(
-			mesh->ibByteSize,
+			indexBufferByteSize,
 			&meshResource->IndexBufferCPU
 		)
 	);
 
 	CopyMemory(
 		meshResource->IndexBufferCPU->GetBufferPointer(),
-		mesh->GetIndices().data(),
-		mesh->ibByteSize
+		indices,
+		indexBufferByteSize
 	);
 
 	// create default buffer on the gpu and upload vertices and indices
@@ -959,27 +957,27 @@ void DX12Renderer::LoadGeometry(const Mesh* const mesh) {
 	meshResource->VertexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
 		mDX12Device.Get(),
 		mCommandList.Get(),
-		mesh->GetVertices().data(),
-		mesh->vbByteSize,
+		vertices,
+		vertexBufferByteSize,
 		meshResource->VertexBufferUploader
 	);
 
 	meshResource->IndexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
 		mDX12Device.Get(),
 		mCommandList.Get(), 
-		mesh->GetIndices().data(),
-		mesh->ibByteSize,
+		indices,
+		indexBufferByteSize,
 		meshResource->IndexBufferUploader
 	);
 
 	// store metadata in mesh resource that we'll use during rendering
-	meshResource->VertexByteStride = sizeof(Vertex);
-	meshResource->VertexBufferByteSize = mesh->vbByteSize;
+	meshResource->VertexByteStride = sizeOfVertex;
+	meshResource->VertexBufferByteSize = vertexBufferByteSize;
 	meshResource->IndexFormat = DXGI_FORMAT_R16_UINT;
-	meshResource->IndexBufferByteSize = mesh->ibByteSize;
+	meshResource->IndexBufferByteSize = indexBufferByteSize;
 
 	// store it in our map
-	mMeshResourceMap[(uint64_t)mesh->meshID] = std::move(meshResource);
+	mMeshResourceMap[meshID] = std::move(meshResource);
 }
 
 void DX12Renderer::FinishInitialize() {

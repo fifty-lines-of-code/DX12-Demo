@@ -1,11 +1,11 @@
 #include "SceneManager.h"
 
+#include "../Math/EngineMath.h"
 #include "Entities/Entity.h"
 #include "../../Engine/Input System/IInputSystem.h"
 #include "Resource Manager/ResourceManager.h"
 
-SceneManager::SceneManager() :
-	mResourceManager(std::make_unique<ResourceManager>()) 
+SceneManager::SceneManager() : mResourceManager(ResourceManager())
 {}
 
 SceneManager::~SceneManager() {}
@@ -72,15 +72,19 @@ Entity* SceneManager::GetPlayerEntity() const {
 bool SceneManager::GeneratePlayerEntity() {
 	// Player Entity is ALWAYS 0
 	// todo: find a better way to enforce this
-
-	DirectX::XMFLOAT3 center = DirectX::XMFLOAT3(0.f, 0.6f, .5f);
-	std::unique_ptr<Entity> playerEntity = std::make_unique<Entity>(0, center, 1.f, 1.f, 1.f);
+	std::unique_ptr<Entity> playerEntity = std::make_unique<Entity>(
+		0,
+		Engine::Vector3(0.f, 0.6f, .5f),
+		1.f,
+		1.f, 
+		1.f
+	);
 	mIDOfNextEntityThatWillBeCreated = 1;
 
-	const Mesh* cubeMesh = mResourceManager->GetMesh(MeshID::Cube);
+	const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
 	playerEntity->SetMesh(cubeMesh);
 
-	mMeshesToLoad[cubeMesh->meshID] = cubeMesh;
+	mMeshesToLoad[cubeMesh->GetMeshID()] = cubeMesh;
 	mEntities.push_back(std::move(playerEntity));
 
 	return true;
@@ -88,25 +92,23 @@ bool SceneManager::GeneratePlayerEntity() {
 
 bool SceneManager::GenerateBasicScene() {
 	// generate the floor
-	DirectX::XMFLOAT3 floorCenter = DirectX::XMFLOAT3(0.f, 0.f, 0.f);
 	std::unique_ptr<Entity> floorEntity = std::make_unique<Entity>(
 		mIDOfNextEntityThatWillBeCreated++,
-		floorCenter,
+		Engine::Vector3(0.f, 0.f, 0.f),
 		10.f,
 		.2f,
 		10.f
 	);
 	
-	const Mesh* cubeMesh = mResourceManager->GetMesh(MeshID::Cube);
+	const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
 	floorEntity->SetMesh(cubeMesh);
 
 	mEntities.push_back(std::move(floorEntity));
 
 	// generate the wall
-	DirectX::XMFLOAT3 wallCenter = DirectX::XMFLOAT3(0.f, 1.1f, 3.f);
 	std::unique_ptr<Entity> wallEntity = std::make_unique<Entity>(
 		mIDOfNextEntityThatWillBeCreated++,
-		wallCenter,
+		Engine::Vector3(0.f, 1.1f, 3.f),
 		1.5f,
 		2.f,
 		.2f

@@ -130,10 +130,15 @@
     <ClInclude Include="Source\d3dx12.h" />
     <ClInclude Include="Source\DX12Demo.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
-    <ClInclude Include="Source\Engine\Engine.h" />
+    <ClInclude Include="Source\Engine\EngineCore.h" />
     <ClInclude Include="Source\Engine\Input System\GameButton.h" />
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h" />
     <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h" />
+    <ClInclude Include="Source\Engine\Math\BasisVectors.h" />
+    <ClInclude Include="Source\Engine\Math\EngineMath.h" />
+    <ClInclude Include="Source\Engine\Math\MathHelper.h" />
+    <ClInclude Include="Source\Engine\Math\Matrix.h" />
+    <ClInclude Include="Source\Engine\Math\Vector.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h" />
@@ -150,7 +155,6 @@
     <ClInclude Include="Source\Game\Player\Player.h" />
     <ClInclude Include="Source\Helper\Helper.h" />
     <ClInclude Include="Source\Helper\Logger.h" />
-    <ClInclude Include="Source\Helper\MathHelper.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12FrameResource.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h" />
@@ -161,7 +165,7 @@
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
-    <ClCompile Include="Source\Engine\Engine.cpp" />
+    <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\Entities\Entity.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.cpp" />

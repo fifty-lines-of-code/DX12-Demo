@@ -1,14 +1,15 @@
 #pragma once
 
+#include "../Engine/EngineCore.h"
+#include "Game State/GameState.h"
 #include "../Game Timer/GameTimer.h"
+#include "Player/Player.h"
 #include <memory>
 #include <wtypes.h>
 #include <string>
 
-class Engine;
+class EngineCore;
 class Entity;
-class GameState;
-class Player;
 
 class Game {
 public:
@@ -28,10 +29,10 @@ private:
 	UINT mClientWidth;
 	UINT mClientHeight;
 
-	std::unique_ptr<Engine> mEngine;
+	Engine::EngineCore mEngineCore;
 	GameTimer mTimer;
-	std::unique_ptr<GameState> mGameState;
-	std::unique_ptr<Player> mPlayer;
+	GameState mGameState;
+	Player mPlayer;
 
 private:
 	void CalculateFrameStats();

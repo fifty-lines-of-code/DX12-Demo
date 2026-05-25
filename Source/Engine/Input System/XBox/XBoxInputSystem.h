@@ -47,10 +47,7 @@ private:
     float mRightStickX;
     float mRightStickY;
 
-    bool mIsBPressed;
-
 private:
-
     void UpdateStateAndIsConnected();
     void ProcessLeftJoystick();
     void ProcessRightJoystick();

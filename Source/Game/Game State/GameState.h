@@ -5,11 +5,11 @@ public:
 	GameState();
 	~GameState();
 
-	bool GetIsPaused();
-	bool GetIsMinimized();
-	bool GetIsMaximized();
-	bool GetIsResizing();
-	bool GetIsFullscreenEnabled();
+	bool GetIsPaused() const;
+	bool GetIsMinimized() const;
+	bool GetIsMaximized() const;
+	bool GetIsResizing() const;
+	bool GetIsFullscreenEnabled() const;
 
 	void SetIsPaused(bool paused);
 	void SetIsMinimized(bool minimized);
@@ -19,11 +19,9 @@ public:
 
 private:
 
-
-	// todo: move below to GameState
-	bool      mPaused = false;  // is the application paused?
-	bool      mMinimized = false;  // is the application minimized?
-	bool      mMaximized = false;  // is the application maximized?
-	bool      mResizing = false;   // are the resize bars being dragged?
-	bool      mFullscreenState = false;// fullscreen enabled
+	bool mPaused = false;  // is the application paused?
+	bool mMinimized = false;  // is the application minimized?
+	bool mMaximized = false;  // is the application maximized?
+	bool mResizing = false;   // are the resize bars being dragged?
+	bool mFullscreenState = false; // fullscreen enabled
 };

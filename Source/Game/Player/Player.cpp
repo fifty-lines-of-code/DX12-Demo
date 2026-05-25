@@ -16,7 +16,7 @@ void Player::SetEntity(Entity* entity) {
 	UpdateEntityCenterAndRotationAndSetItToDirty();
 }
 
-void Player::Update(float deltaTime, const IInputSystem* const inputSystem, BasisVectors cameraBasisVectors) {
+void Player::Update(float deltaTime, const IInputSystem* const inputSystem, const Engine::BasisVectors* cameraBasisVectors) {
 
 	// update player's state
 	mPlayerLogic.Update(deltaTime, inputSystem);
@@ -46,7 +46,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Basi
 			break;
 		}
 
-		DirectX::XMFLOAT3 movement;
+		Engine::Vector3 movement;
 		CalculateMovementVector(
 			leftStickX,
 			leftStickY,
@@ -74,7 +74,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Basi
 		float leftStickX = inputSystem->GetLeftStickX();
 		float leftStickY = inputSystem->GetLeftStickY();
 
-		DirectX::XMFLOAT3 movement;
+		Engine::Vector3 movement;
 		CalculateMovementVector(
 			leftStickX,
 			leftStickY,
@@ -118,8 +118,8 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, Basi
 	}
 }
 
-DirectX::XMFLOAT4 Player::GetCenter() const {
-	return DirectX::XMFLOAT4(mCenter.x, mCenter.y, mCenter.z, 1.f);
+const Engine::Vector3* Player::GetCenter() const {
+	return &mCenter;
 }
 
 void Player::UpdateForwardAndRightVectorsFromCurrentRotation() {
@@ -135,27 +135,27 @@ void Player::UpdateForwardAndRightVectorsFromCurrentRotation() {
 void Player::CalculateMovementVector(
 	float leftStickX, 
 	float leftStickY, 
-	BasisVectors basisVectors, 
-	DirectX::XMFLOAT3& movement
+	const Engine::BasisVectors* cameraBasisVectors, 
+	Engine::Vector3& movement
 ) {
 	// 1. Isolate and flatten the camera's forward vector to the 2D ground plane
-	DirectX::XMFLOAT3 flatCamFwd = { basisVectors.forward.x, 0.0f, basisVectors.forward.z };
+	Engine::Vector3 flatCamFwd = { cameraBasisVectors->forward.x, 0.0f, cameraBasisVectors->forward.z };
 	float fwdSqLen = (flatCamFwd.x * flatCamFwd.x) + (flatCamFwd.z * flatCamFwd.z);
 
 	// Re-normalize it so "Forward" is always a full 1.0 magnitude along the dirt
 	if (fwdSqLen > 0.0001f) {
-		float invLen = MathHelper::FastInverseSqrt(fwdSqLen);
+		float invLen = Engine::MathHelper::FastInverseSqrt(fwdSqLen);
 		flatCamFwd.x *= invLen;
 		flatCamFwd.z *= invLen;
 	}
 
 	// 2. Isolate and flatten the camera's right vector to the 2D ground plane
-	DirectX::XMFLOAT3 flatCamRight = { basisVectors.right.x, 0.0f, basisVectors.right.z };
+	DirectX::XMFLOAT3 flatCamRight = { cameraBasisVectors->right.x, 0.0f, cameraBasisVectors->right.z };
 	float rgtSqLen = (flatCamRight.x * flatCamRight.x) + (flatCamRight.z * flatCamRight.z);
 
 	// Re-normalize it right away
 	if (rgtSqLen > 0.0001f) {
-		float invLen = MathHelper::FastInverseSqrt(rgtSqLen);
+		float invLen = Engine::MathHelper::FastInverseSqrt(rgtSqLen);
 		flatCamRight.x *= invLen;
 		flatCamRight.z *= invLen;
 	}
@@ -168,7 +168,7 @@ void Player::CalculateMovementVector(
 	// 4. Smooth out the diagonal corner speed boost if stick is pushed into a corner (e.g., 1.414 length)
 	float squared = (movement.x * movement.x) + (movement.z * movement.z);
 	if (squared > 1.0f) {
-		float oneOverSquareRoot = MathHelper::FastInverseSqrt(squared);
+		float oneOverSquareRoot = Engine::MathHelper::FastInverseSqrt(squared);
 		movement.x *= oneOverSquareRoot;
 		movement.z *= oneOverSquareRoot;
 	}

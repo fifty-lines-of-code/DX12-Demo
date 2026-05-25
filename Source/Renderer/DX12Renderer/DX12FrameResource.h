@@ -4,19 +4,18 @@
 #include <wrl.h>
 #include <memory>
 #include "DX12DefaultUploadBuffer.h"
-#include "../../Helper/MathHelper.h"
 
 // Copyright: Frank Luna
 
 struct DX12RenderItemConstants
 {
-    DirectX::XMFLOAT4X4 World = MathHelper::Identity4x4();
+    DirectX::XMFLOAT4X4 World = DX12RendererHelper::Identity4X4();
 };
 
 struct DX12PerPassConstants
 {
-    DirectX::XMFLOAT4X4 View = MathHelper::Identity4x4();
-    DirectX::XMFLOAT4X4 Proj = MathHelper::Identity4x4();
+    DirectX::XMFLOAT4X4 View = DX12RendererHelper::Identity4X4();
+    DirectX::XMFLOAT4X4 Proj = DX12RendererHelper::Identity4X4();
 };
 
 // Stores the resources needed for the CPU to build the command lists
@@ -36,9 +35,8 @@ public:
 
     // We cannot update a cbuffer until the GPU is done processing the commands that reference it. 
     // So each frame needs their own cbuffers.
-    std::unique_ptr<DX12ConstantBuffersUploadBuffer<DX12PerPassConstants>> mPerPassCB = nullptr;
-    std::unique_ptr<DX12ConstantBuffersUploadBuffer<DX12RenderItemConstants>> mPerRenderItemCB = nullptr;
-
+    DX12ConstantBuffersUploadBuffer<DX12PerPassConstants> mPerPassCB;
+    DX12ConstantBuffersUploadBuffer<DX12RenderItemConstants> mPerRenderItemCB;
     // Fence value to mark commands up to this fence point.  This lets us
     // check if these frame resources are still in use by the GPU.
     UINT64 mFenceValue = 0;

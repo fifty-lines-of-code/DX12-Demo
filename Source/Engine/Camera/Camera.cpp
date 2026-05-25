@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 #include <cmath>
+#include <DirectXMath.h>
 
 Camera::Camera(float aspectRatio) :
 	mAspectRatio(aspectRatio) {
@@ -9,8 +10,8 @@ Camera::Camera(float aspectRatio) :
 
 Camera::~Camera() {}
 
-void Camera::Initialize(DirectX::XMFLOAT4 playerPosition) {
-	mTarget = playerPosition;
+void Camera::Initialize(const Engine::Vector3* target) {
+	UpdateTarget(target);
 
 	UpdateYawPitchAndOffset(0, 0, 0);
 
@@ -25,14 +26,14 @@ void Camera::UpdateWithInputSystem(float deltaTime, float rightJoystickX, float 
 	BuildViewProjectionMatrix();
 }
 
-void Camera::UpdateWithTarget(DirectX::XMFLOAT4 target) {
-	mTarget = target;
+void Camera::UpdateWithTarget(const Engine::Vector3* target) {
+	UpdateTarget(target);
 
-	DirectX::XMVECTOR targetVector = DirectX::XMLoadFloat4(&mTarget);
-	DirectX::XMVECTOR offsetVector = DirectX::XMLoadFloat4(&mOffset);
+	DirectX::XMVECTOR targetVector = DirectX::XMLoadFloat3(&mTarget.AsXMFLOAT3());
+	DirectX::XMVECTOR offsetVector = DirectX::XMLoadFloat3(&mOffset.AsXMFLOAT3());
 
-	DirectX::XMStoreFloat4(
-		&mCenter,
+	DirectX::XMStoreFloat3(
+		&mCenter.AsXMFLOAT3(),
 		DirectX::XMVectorAdd(targetVector, offsetVector)
 	);
 
@@ -40,12 +41,12 @@ void Camera::UpdateWithTarget(DirectX::XMFLOAT4 target) {
 	BuildViewProjectionMatrix();
 }
 
-const DirectX::XMFLOAT4X4* Camera::GetViewProjection() const {
+const Engine::Matrix4x4* Camera::GetViewProjection() const {
 	return &mViewProjection;
 }
 
-BasisVectors Camera::GetForwardAndRightVectors() const {
-	return mForwardAndRight;
+const Engine::BasisVectors* Camera::GetBasisVectors() const {
+	return &basisVectors;
 }
 
 void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
@@ -54,6 +55,12 @@ void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	mAspectRatio = (float)newClientWidth / (float)newClientHeight;
 	BuildProjectionMatrix();
 	BuildViewProjectionMatrix();
+}
+
+void Camera::UpdateTarget(const Engine::Vector3* target) {
+	mTarget.x = target->x;
+	mTarget.y = target->y;
+	mTarget.z = target->z;
 }
 
 void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, float rightJoystickY) {
@@ -69,8 +76,6 @@ void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, floa
 	// remember offset in -z cause we want the camera behind the player
 	mOffset.z = -(mRadius * std::cos(mPitch) * std::cos(mYaw));
 	mOffset.x = mRadius * std::cos(mPitch) * std::sin(mYaw);
-	// to be safe even though we initialized offset with 1 for w
-	mOffset.w = 1.f;
 
 	// Update forward and right vectors
 
@@ -85,17 +90,20 @@ void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, floa
 	// and forward x and z come from simple trignometry
 	// if we draw x, z, and the pitch out on paper
 
-	mForwardAndRight.forward = DirectX::XMFLOAT3(-std::sin(mYaw), 0.f, std::cos(mYaw));
-	mForwardAndRight.right = DirectX::XMFLOAT3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
+	basisVectors.forward = Engine::Vector3(-std::sin(mYaw), 0.f, std::cos(mYaw));
+	basisVectors.right = Engine::Vector3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
 }
 
 void Camera::BuildViewMatrix() {
-	DirectX::XMVECTOR pos = XMLoadFloat4(&mCenter);
-	DirectX::XMVECTOR target = XMLoadFloat4(&mTarget);
-	DirectX::XMVECTOR up = XMLoadFloat4(&mWorldUp);
+	DirectX::XMVECTOR pos = XMLoadFloat3(&mCenter.AsXMFLOAT3());
+	DirectX::XMVECTOR target = XMLoadFloat3(&mTarget.AsXMFLOAT3());
+	DirectX::XMVECTOR up = XMLoadFloat3(&mWorldUp.AsXMFLOAT3());
 
 	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(pos, target, up);
-	XMStoreFloat4x4(&mView, view);
+	XMStoreFloat4x4(
+		&mView.AsXMFLOAT4X4(),
+		view
+	);
 }
 
 void Camera::BuildProjectionMatrix() {
@@ -105,12 +113,18 @@ void Camera::BuildProjectionMatrix() {
 		mNearPlane,
 		mFarPlane
 	);
-	XMStoreFloat4x4(&mProjection, P);
+	XMStoreFloat4x4(
+		&mProjection.AsXMFLOAT4X4(),
+		P
+	);
 }
 
 void Camera::BuildViewProjectionMatrix() {
-	DirectX::XMMATRIX proj = XMLoadFloat4x4(&mProjection);
-	DirectX::XMMATRIX view = XMLoadFloat4x4(&mView);
+	DirectX::XMMATRIX proj = XMLoadFloat4x4(&mProjection.AsXMFLOAT4X4());
+	DirectX::XMMATRIX view = XMLoadFloat4x4(&mView.AsXMFLOAT4X4());
 	DirectX::XMMATRIX ViewProj = view * proj;
-	XMStoreFloat4x4(&mViewProjection, ViewProj);
+	XMStoreFloat4x4(
+		&mViewProjection.AsXMFLOAT4X4(),
+		ViewProj
+	);
 }

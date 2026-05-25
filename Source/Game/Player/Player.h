@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../../Helper/MathHelper.h"
-#include <DirectXMath.h>
+#include "../../Engine/Math/MathHelper.h"
 #include ".././../Engine/Input System/IInputSystem.h"
 #include "Player Animator/PlayerAnimator.h"
 #include "Player Logic/PlayerLogic.h"
@@ -15,28 +14,28 @@ public:
 	~Player();
 
 	void SetEntity(Entity* entity);
-	void Update(float deltaTime, const IInputSystem* const inputSystem, BasisVectors forwardAndRightVectors);
+	void Update(float deltaTime, const IInputSystem* const inputSystem, const Engine::BasisVectors* cameraBasisVectors);
 
-	DirectX::XMFLOAT4 GetCenter() const;
+	const Engine::Vector3* GetCenter() const;
 
 private:
 	Entity* mEntity = nullptr;
 	PlayerLogic mPlayerLogic;
 	PlayerAnimator mPlayerAnimator;
 
-	DirectX::XMFLOAT3 mCenter = DirectX::XMFLOAT3(0.f, 0.6f, .5f);
-	float mCurrentRotation = DirectX::XMConvertToRadians(0);
+	Engine::Vector3 mCenter = Engine::Vector3(0.f, 0.6f, .5f);
+	float mCurrentRotation = Engine::MathHelper::ConvertToRadians(0);
 
 	// basis vectors
-	BasisVectors mBasisVectors;
+	Engine::BasisVectors mBasisVectors;
 
 private:
 	void UpdateForwardAndRightVectorsFromCurrentRotation();
 	void CalculateMovementVector(
 		float leftStickX,
 		float leftStickY,
-		BasisVectors basisVectors,
-		DirectX::XMFLOAT3& movement
+		const Engine::BasisVectors* cameraBasisVectors,
+		Engine::Vector3& movement
 	);
 	void UpdateEntityCenterAndRotationAndSetItToDirty();
 };

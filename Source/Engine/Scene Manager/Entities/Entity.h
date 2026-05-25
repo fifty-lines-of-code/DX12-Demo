@@ -1,21 +1,27 @@
 #pragma once
 
+#include "../../Math/BasisVectors.h"
 #include "PerPassAndPerEntityConstantBufferData.h"
 
-struct BasisVectors;
 class Mesh;
 
 // width because our aabb will always be a cube
 // maybe we can optimize in the future
 struct EntityAABBMinMax {
-	DirectX::XMFLOAT3 Min;
-	DirectX::XMFLOAT3 Max;
+	Engine::Vector3 Min = Engine::Vector3::Zero();
+	Engine::Vector3 Max = Engine::Vector3::Zero();
 	float halfWidth;
 };
 
 class Entity {
 public:
-	Entity(uint32_t Id, DirectX::XMFLOAT3 center, float scaleX, float scaleY, float scaleZ);
+	Entity(
+		uint32_t Id, 
+		Engine::Vector3 center,
+		float scaleX, 
+		float scaleY,
+		float scaleZ
+	);
 	~Entity();
 
 	uint32_t GetID() const;
@@ -24,24 +30,24 @@ public:
 
 	void Update(float stickX, float stickY, float deltaTime, float speed);
 
-	DirectX::XMFLOAT4X4 GetConstantBufferDataTransposed();
+	void CopyConstantBufferDataTransposed(Engine::Matrix4x4* destination);
 	const EntityAABBMinMax GetAABBMinMax() const;
 
 	bool GetIsDirty() const;
 	void SetIsDirty(bool dirty);
 
-	DirectX::XMFLOAT3 GetCenter() const;
-	void SetCenter(DirectX::XMFLOAT3 center);
+	Engine::Vector3 GetCenter() const;
+	void SetCenter(Engine::Vector3 center);
 
-	void SetBasisVectors(const BasisVectors* const basisVectors);
+	void SetBasisVectors(const Engine::BasisVectors* const basisVectors);
 
 private:
 	uint32_t mID;
-	DirectX::XMFLOAT3 mCenter;
+	Engine::Vector3 mCenter;
 	float mScaleX;
 	float mScaleY;
 	float mScaleZ;
-	BasisVectors mBasisVectors;
+	Engine::BasisVectors mBasisVectors;
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
 	bool mIsDirty = true;

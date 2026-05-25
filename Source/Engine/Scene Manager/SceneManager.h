@@ -1,15 +1,14 @@
 #pragma once
 
-#include <vector>
 #include <memory>
-#include <DirectXMath.h>
-#include <unordered_map>
 #include "../Scene Manager/Entities/Mesh/Mesh.h"
+#include "Resource Manager/ResourceManager.h"
+#include <unordered_map>
+#include <vector>
 
 class Camera;
 class Entity;
 class IInputSystem;
-class ResourceManager;
 
 class SceneManager {
 public:
@@ -31,7 +30,7 @@ public:
 private:
 	uint32_t mIDOfNextEntityThatWillBeCreated = 0;
 	std::vector<std::unique_ptr<Entity>> mEntities;
-	std::unique_ptr<ResourceManager> mResourceManager;
+	ResourceManager mResourceManager;
 	std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
 
 private:

@@ -69,7 +69,7 @@ public:
 	
 private:
 	// why depth of 3? Because our scene is small and we don't have many entities, so we don't need a very deep tree, but helps to learn the idea
-	// in the real world it's usually between 5 and 8, but it really depends on the scene and the number of entities (or so copiolot syas)
+	// in the real world it's usually between 5 and 8, but it really depends on the scene and the number of entities (or so copiolot says)
 
 	static constexpr uint32_t MAX_DEPTH = 3;
 	std::unique_ptr<OctTreeNode> mRoot;

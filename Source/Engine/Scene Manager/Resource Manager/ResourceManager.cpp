@@ -5,7 +5,8 @@
 
 using namespace DirectX;
 
-ResourceManager::ResourceManager() {
+ResourceManager::ResourceManager() : mLoadedBitMask(0) {
+	mMeshes.resize(static_cast<size_t>(MeshID::Count));
 }
 
 ResourceManager::~ResourceManager() {
@@ -16,38 +17,38 @@ const Mesh* ResourceManager::GetMesh(MeshID id) {
 		return nullptr;
 	}
 
-	if (mMeshes[size_t(id)] == nullptr) {
+	size_t index = size_t(id);
+	Mesh* mesh = nullptr;
+
+	if (!GetIsLoaded(index)) {
 		switch (id) {
 		case MeshID::Cube:
-			return LoadMesh(id);
+			mesh = &mMeshes[index];
+			CreateCubeMesh(mesh);
+			SetIsLoaded(index);
 			break;
 
 		default:
 			return nullptr;
 		}
 	}
-
-	return mMeshes[size_t(id)].get();
-}
-
-Mesh* ResourceManager::LoadMesh(MeshID id) {
-	if (mMeshes[size_t(id)] == nullptr) {
-		mMeshes[size_t(id)] = std::move(CreateCubeMesh());
+	else {
+		mesh = &mMeshes[index];
 	}
-	
-	return mMeshes[size_t(id)].get();
+
+	return mesh;
 }
 
-std::unique_ptr<Mesh> ResourceManager::CreateCubeMesh() {
-	std::vector<Vertex> vertices = {
-		Vertex({ XMFLOAT3(-.5f, -.5f, -.5f), XMFLOAT4(Colors::White) }),
-		Vertex({ XMFLOAT3(-.5f, +.5f, -.5f), XMFLOAT4(Colors::Black) }),
-		Vertex({ XMFLOAT3(+.5f, +.5f, -.5f), XMFLOAT4(Colors::Red) }),
-		Vertex({ XMFLOAT3(+.5f, -.5f, -.5f), XMFLOAT4(Colors::Green) }),
-		Vertex({ XMFLOAT3(-.5f, -.5f, +.5f), XMFLOAT4(Colors::Blue) }),
-		Vertex({ XMFLOAT3(-.5f, +.5f, +.5f), XMFLOAT4(Colors::Yellow) }),
-		Vertex({ XMFLOAT3(+.5f, +.5f, +.5f), XMFLOAT4(Colors::Cyan) }),
-		Vertex({ XMFLOAT3(+.5f, -.5f, +.5f), XMFLOAT4(Colors::Magenta) })
+void ResourceManager::CreateCubeMesh(Mesh* mesh) {
+	std::vector<Engine::Vertex> vertices = {
+		Engine::Vertex({ Engine::Vector3(-.5f, -.5f, -.5f), Engine::Vector4(Colors::White.f) }),
+		Engine::Vertex({ Engine::Vector3(-.5f, +.5f, -.5f), Engine::Vector4(Colors::Black.f) }),
+		Engine::Vertex({ Engine::Vector3(+.5f, +.5f, -.5f), Engine::Vector4(Colors::Red.f) }),
+		Engine::Vertex({ Engine::Vector3(+.5f, -.5f, -.5f), Engine::Vector4(Colors::Green.f) }),
+		Engine::Vertex({ Engine::Vector3(-.5f, -.5f, +.5f), Engine::Vector4(Colors::Blue.f) }),
+		Engine::Vertex({ Engine::Vector3(-.5f, +.5f, +.5f), Engine::Vector4(Colors::Yellow.f) }),
+		Engine::Vertex({ Engine::Vector3(+.5f, +.5f, +.5f), Engine::Vector4(Colors::Cyan.f) }),
+		Engine::Vertex({ Engine::Vector3(+.5f, -.5f, +.5f), Engine::Vector4(Colors::Magenta.f) })
 	};
 
 	std::vector<uint16_t> indices = {
@@ -75,5 +76,27 @@ std::unique_ptr<Mesh> ResourceManager::CreateCubeMesh() {
 		4, 0, 3,
 		4, 3, 7
 	};
-	return std::make_unique<Mesh>(MeshID::Cube, vertices, indices);
+	mesh->Load(MeshID::Cube, vertices, indices);
+}
+
+bool ResourceManager::GetIsLoaded(size_t index) {
+	assert(index >= 0 && index < 64);
+
+	uint64_t mask = 1ULL << index;
+	return (mLoadedBitMask & mask) != 0;
+}
+
+void ResourceManager::SetIsLoaded(size_t index) {
+	assert(index >= 0 && index < 64);
+
+	uint64_t mask = 1ULL << index;
+	mLoadedBitMask |= mask;
+}
+
+void ResourceManager::SetIsUnloaded(size_t index) {
+	assert(index >= 0 && index < 64);
+
+	uint64_t mask = 1ULL << index;
+	uint64_t maskNegate = ~mask;
+	mLoadedBitMask &= maskNegate;
 }

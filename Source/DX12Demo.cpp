@@ -3,7 +3,6 @@
 #include "DX12Demo.h"
 
 #include <cassert>
-#include "Game/Game.h"
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -14,10 +13,10 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 DX12Demo* DX12Demo::mDemo = nullptr;
 
-DX12Demo::DX12Demo(HINSTANCE hInstance) : mhAppInst(hInstance) {
-    mGame = std::make_unique<Game>(
-        mhAppInst, mClientWidth, mClientHeight, mMainWndCaption
-    );
+DX12Demo::DX12Demo(HINSTANCE hInstance) : 
+    mhAppInst(hInstance),
+    mGame(mhAppInst, mClientWidth, mClientHeight, mMainWndCaption)
+{
     assert(mDemo == nullptr);
     mDemo = this;
 }
@@ -73,15 +72,15 @@ bool DX12Demo::InitMainWindow()
 }
 
 bool DX12Demo::InitializeGame() {
-    return mGame->Initialize(mhMainWnd);
+    return mGame.Initialize(mhMainWnd);
 }
 
 int DX12Demo::Run() {
-    return mGame->Run();
+    return mGame.Run();
 }
 
 DX12Demo* DX12Demo::GetDemo() { return mDemo; }
 
 LRESULT DX12Demo::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    return mGame->MsgProc(hwnd, msg, wParam, lParam);
+    return mGame.MsgProc(hwnd, msg, wParam, lParam);
 }

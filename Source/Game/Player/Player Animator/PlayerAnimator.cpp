@@ -10,8 +10,8 @@ PlayerAnimator::~PlayerAnimator() {}
 
 bool PlayerAnimator::MoveAndRotatePlayer(
 	float deltaTime,
-	const DirectX::XMFLOAT3* const movement, 
-	DirectX::XMFLOAT3* const center,
+	const Engine::Vector3* const movement,
+	Engine::Vector3* const center,
 	float* currentRotation,
 	float walkingRunningSpeed,
 	float rotationSpeed
@@ -30,7 +30,7 @@ bool PlayerAnimator::MoveAndRotatePlayer(
 
 void PlayerAnimator::RotatePlayer(
 	float deltaTime,
-	const DirectX::XMFLOAT3* const movement,
+	const Engine::Vector3* const movement,
 	float rotationSpeed,
 	float* currentRotation
 ) {
@@ -46,9 +46,13 @@ void PlayerAnimator::RotatePlayer(
 	// and add 2pi if delta is < -pi
 	// since rotation values will accumulate, we do this over a loop
 
-	while (deltaRotation > MathHelper::Pi) { deltaRotation -= MathHelper::Two_Pi; }
+	while (deltaRotation > Engine::MathHelper::Pi) { 
+		deltaRotation -= Engine::MathHelper::Two_Pi; 
+	}
 
-	while (deltaRotation < -MathHelper::Pi) { deltaRotation += MathHelper::Two_Pi; }
+	while (deltaRotation < -Engine::MathHelper::Pi) { 
+		deltaRotation += Engine::MathHelper::Two_Pi; 
+	}
 
 	Logger::PRINT(
 		L"Delta Rotation is: " +
@@ -68,8 +72,8 @@ void PlayerAnimator::RotatePlayer(
 
 bool PlayerAnimator::PerformBackwardsDash(
 	float deltaTime, 
-	DirectX::XMFLOAT3* const center, 
-	const DirectX::XMFLOAT3* const forward,
+	Engine::Vector3* const center,
+	const Engine::Vector3* const forward,
 	float backwardsDashVelocity,
 	float animationDuration
 ) {
@@ -89,7 +93,7 @@ bool PlayerAnimator::PerformBackwardsDash(
 
 		// Normalize defensively to ensure the vector snaps back to a perfect length of 1.0
 		if (square > 0.0001f) {
-			float oneOverSquareRoot = MathHelper::FastInverseSqrt(square);
+			float oneOverSquareRoot = Engine::MathHelper::FastInverseSqrt(square);
 			mDashDirection.x = mDashDirection.x * oneOverSquareRoot;
 			mDashDirection.y = 0.0f;
 			mDashDirection.z = mDashDirection.z * oneOverSquareRoot;
@@ -97,7 +101,7 @@ bool PlayerAnimator::PerformBackwardsDash(
 		else {
 			// Fallback: If forward is somehow pure vertical (0, 1, 0), 
 			// default to a safe world-space backwards direction
-			mDashDirection = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+			mDashDirection = Engine::Vector3(0.0f, 0.0f, -1.0f);
 		}
 
 		return false;

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../../Helper/Helper.h"
 #include <d3d12.h>
-#include <wrl.h>
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
+#include "../../Helper/Helper.h"
+#include <wrl.h>
 
 class DX12RendererHelper {
 public:
@@ -27,8 +28,9 @@ public:
 		hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 			entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
 
-		if (errors != nullptr)
+		if (errors != nullptr) {
 			OutputDebugStringA((char*)errors->GetBufferPointer());
+		}
 
 		ThrowIfFailed(hr);
 
@@ -136,6 +138,15 @@ public:
 		// 0x0200
 		// 512
 		return (byteSize + DX12_CBV_ALIGNMENT_MINUS_ONE) & ~DX12_CBV_ALIGNMENT_MINUS_ONE;
+	}
+
+	static DirectX::XMFLOAT4X4 Identity4X4() {
+		return DirectX::XMFLOAT4X4{
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		};
 	}
 
 	private:

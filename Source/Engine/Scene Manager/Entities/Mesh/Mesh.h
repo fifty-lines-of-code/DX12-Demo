@@ -11,17 +11,22 @@ enum class MeshID : uint32_t {
 
 class Mesh {
 public:
-	Mesh(MeshID id, std::vector<Vertex> vertices, std::vector<uint16_t> indices);
+	Mesh();
 	~Mesh();
 
-	const MeshID meshID;
-	const UINT vbByteSize;
-	const UINT ibByteSize;
+	void Load(MeshID id, std::vector<Engine::Vertex> vertices, std::vector<uint16_t> indices);
 
-	const std::vector<Vertex>& GetVertices() const;
+	const std::vector<Engine::Vertex>& GetVertices() const;
 	const std::vector<uint16_t>& GetIndices() const;
+	MeshID GetMeshID() const;
+	UINT GetVbByteSize() const;
+	UINT GetIbByteSize() const;
 
 private:
-	std::vector<Vertex> mVertices;
+	std::vector<Engine::Vertex> mVertices;
 	std::vector<uint16_t> mIndices;
+
+	MeshID mMeshID;
+	UINT mVbByteSize;
+	UINT mIbByteSize;
 };

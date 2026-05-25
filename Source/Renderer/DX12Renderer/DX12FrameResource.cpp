@@ -2,7 +2,9 @@
 
 #include "../../Helper/Helper.h"
 
-DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT objectCount)
+DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT objectCount) :
+    mPerPassCB(device, passCount, true),
+    mPerRenderItemCB(device, objectCount, true)
 {
     ThrowIfFailed(
         device->CreateCommandAllocator(
@@ -10,9 +12,6 @@ DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT 
             IID_PPV_ARGS(mCommandListAllocator.GetAddressOf())
         )
     );
-
-    mPerPassCB = std::make_unique<DX12ConstantBuffersUploadBuffer<DX12PerPassConstants>>(device, passCount, true);
-    mPerRenderItemCB = std::make_unique<DX12ConstantBuffersUploadBuffer<DX12RenderItemConstants>>(device, objectCount, true);
 }
 
 DX12FrameResource::~DX12FrameResource()

@@ -38,18 +38,18 @@ public:
 	~DX12Renderer();
 
 	bool Initialize(HWND mainHwnd, int numberOfFrameResources) override;
+	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
+	void FinishInitialize() override;
 	bool SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV);
 	void CreateFrameResources(uint32_t numberOfEntities);
-	void LoadGeometry(const Mesh* const mesh);
-	void Shutdown() override;
+	void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) override;
 	void PrepareForUpdate() override;
-	void UpdatePerPassCb(void* data, size_t dataSize);
-	void UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize);
+	void UpdatePerPassCb(void* data, size_t dataSize) override;
+	void UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) override;
 	void BeginFrame() override;
 	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
 	void EndFrame() override;
-	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
-	void FinishInitialize() override;
+	void Shutdown() override;
 
 private:
 	bool InitializeDevice();
