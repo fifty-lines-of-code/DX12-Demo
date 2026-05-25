@@ -65,7 +65,7 @@ float XboxInputSystem::GetRightStickY() const {
 
 GameButtonState XboxInputSystem::GetButtonState(GameButton button) const {
     uint32_t mapping = GetControllerMappingFor(button);
-    XboxInputState inputState = mInputStatePool[mRenderIndex];
+    const XboxInputState& inputState = mInputStatePool[mRenderIndex];
 
     uint32_t buttonStateRawThisFrame = inputState.CurrentState.Gamepad.wButtons & mapping;
     uint32_t buttonStateRawPreviousFrame = inputState.PreviousState.Gamepad.wButtons & mapping;
