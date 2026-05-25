@@ -103,6 +103,12 @@
     <Filter Include="Source Files\Game Timer">
       <UniqueIdentifier>{a87c741c-6bfc-4311-aeb6-03c3b68185e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Input System\Xbox">
+      <UniqueIdentifier>{7a96add6-8ca4-4cd9-8912-849d01cb8a26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Input System\Xbox">
+      <UniqueIdentifier>{dcffb177-00d3-4de0-b606-6f55adf64d9c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -159,9 +165,6 @@
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h">
       <Filter>Header Files\Engine\Input System</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h">
-      <Filter>Header Files\Engine\Input System</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
@@ -206,6 +209,9 @@
     </ClInclude>
     <ClInclude Include="Source\Game Timer\GameTimer.h">
       <Filter>Header Files\Game Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h">
+      <Filter>Header Files\Engine\Input System\Xbox</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -254,9 +260,6 @@
     <ClCompile Include="Source\Game\Player\Player Logic\PlayerLogic.cpp">
       <Filter>Source Files\Game\Player</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp">
-      <Filter>Source Files\Engine\Input System</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
     </ClCompile>
@@ -268,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="Source\Game Timer\GameTimer.cpp">
       <Filter>Source Files\Game Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp">
+      <Filter>Source Files\Engine\Input System\Xbox</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

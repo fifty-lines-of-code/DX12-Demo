@@ -6,13 +6,15 @@
 
 XboxInputSystem::XboxInputSystem(DWORD userIndex) :
     mUserIndex(userIndex),
-    mIsConnected(false),
-    mLeftStickX(0.f),
-    mLeftStickY(0.f),
-    mRightStickX(0.f),
-    mRightStickY(0.f) {
-
-    ZeroMemory(&mCurrentState, sizeof(XINPUT_STATE));
+    mIsRunning(true),
+    mStagingIndex(0),
+    mBackgroundIndex(1),
+    mRenderIndex(2)
+{
+    for (int i = 0; i < XboxInputSystem::Number_Of_Buffers; ++i) {
+        ZeroMemory(&mInputStatePool[i].CurrentState, sizeof(XINPUT_STATE));
+        ZeroMemory(&mInputStatePool[i].PreviousState, sizeof(XINPUT_STATE));
+    }
 
     // Calculate squares of raw deadzones to prevent sqrt calls per frame
     float rawLeftDeadzone = static_cast<float>(XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
@@ -20,39 +22,53 @@ XboxInputSystem::XboxInputSystem(DWORD userIndex) :
 
     float rawRightDeadzone = static_cast<float>(XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
     mSquareOfRightJoystickDeadzone = rawRightDeadzone * rawRightDeadzone;
+
+    // spin up the worker thread
+    mBackgroundUpdateThread = std::thread(&XboxInputSystem::BackgroundUpdateThreadTick, this);
+}
+
+XboxInputSystem::~XboxInputSystem() {
+    mIsRunning = false;
+    if (mBackgroundUpdateThread.joinable()) {
+        mBackgroundUpdateThread.join();
+    }
 }
 
 void XboxInputSystem::Update() {
-    mPreviousState = mCurrentState;
-    UpdateStateAndIsConnected();
-    ProcessLeftJoystick();
-    ProcessRightJoystick();
+    // first copy the "current" data into a temp var
+    XINPUT_STATE currentStateFromLastFrame = mInputStatePool[mRenderIndex].CurrentState;
+    // update the render index
+    mRenderIndex = mStagingIndex.exchange(mRenderIndex);
+    // restore the "current" data from last frame into previous state
+    mInputStatePool[mRenderIndex].PreviousState = currentStateFromLastFrame;
 }
 
 bool XboxInputSystem::IsConnected() const {
-    return mIsConnected;
+    return mInputStatePool[mRenderIndex].mIsConnected;
 }
 
 float XboxInputSystem::GetLeftStickX() const {
-    return mLeftStickX;
+    return mInputStatePool[mRenderIndex].mLeftStickX;
 }
 
 float XboxInputSystem::GetLeftStickY() const {
-    return mLeftStickY;
+    return mInputStatePool[mRenderIndex].mLeftStickY;
 }
 
 float XboxInputSystem::GetRightStickX() const {
-    return mRightStickX;
+    return mInputStatePool[mRenderIndex].mRightStickX;
 }
 
 float XboxInputSystem::GetRightStickY() const {
-    return mRightStickY;
+    return mInputStatePool[mRenderIndex].mRightStickY;
 }
 
 GameButtonState XboxInputSystem::GetButtonState(GameButton button) const {
     uint32_t mapping = GetControllerMappingFor(button);
-    uint32_t buttonStateRawThisFrame = mCurrentState.Gamepad.wButtons & mapping;
-    uint32_t buttonStateRawPreviousFrame = mPreviousState.Gamepad.wButtons & mapping;
+    XboxInputState inputState = mInputStatePool[mRenderIndex];
+
+    uint32_t buttonStateRawThisFrame = inputState.CurrentState.Gamepad.wButtons & mapping;
+    uint32_t buttonStateRawPreviousFrame = inputState.PreviousState.Gamepad.wButtons & mapping;
 
     if (buttonStateRawThisFrame == 0 && buttonStateRawPreviousFrame == 0) {
         return GameButtonState::Unpressed;
@@ -79,36 +95,71 @@ float XboxInputSystem::GetRightTrigger() const {
     return 0.0f;
 }
 
+void XboxInputSystem::BackgroundUpdateThreadTick() {
+    while (mIsRunning) {
+        // sleep for 8 milliseconds 
+        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+
+        // update the data
+        UpdateStateAndIsConnected();
+        ProcessLeftJoystick();
+        ProcessRightJoystick();
+
+        // exhange the background and staging buffers
+        mBackgroundIndex = mStagingIndex.exchange(mBackgroundIndex);
+    }
+}
+
 void XboxInputSystem::UpdateStateAndIsConnected() {
-    ZeroMemory(&mCurrentState, sizeof(mCurrentState));
-    DWORD result = XInputGetState(mUserIndex, &mCurrentState);
-    mIsConnected = (result == ERROR_SUCCESS);
+    ZeroMemory(
+        &mInputStatePool[mBackgroundIndex].CurrentState, 
+        sizeof(XboxInputState::CurrentState)
+    );
+    DWORD result = XInputGetState(
+        mUserIndex,
+        &mInputStatePool[mBackgroundIndex].CurrentState
+    );
+    mInputStatePool[mBackgroundIndex].mIsConnected = (result == ERROR_SUCCESS);
 }
 
 void XboxInputSystem::ProcessLeftJoystick() {
-    if (!mIsConnected) {
-        mLeftStickX = 0.f;
-        mLeftStickY = 0.f;
+    if (!mInputStatePool[mBackgroundIndex].mIsConnected) {
+        mInputStatePool[mBackgroundIndex].mLeftStickX = 0.f;
+        mInputStatePool[mBackgroundIndex].mLeftStickY = 0.f;
         return;
     }
 
-    auto rawX = mCurrentState.Gamepad.sThumbLX;
-    auto rawY = mCurrentState.Gamepad.sThumbLY;
+    auto gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
+    auto rawX = gamepad.sThumbLX;
+    auto rawY = gamepad.sThumbLY;
 
-    ProcessXYForJoystick(rawX, rawY, &mLeftStickX, &mLeftStickY, mSquareOfLeftJoystickDeadzone);
+    ProcessXYForJoystick(
+        rawX, 
+        rawY,
+        &mInputStatePool[mBackgroundIndex].mLeftStickX,
+        &mInputStatePool[mBackgroundIndex].mLeftStickY,
+        mSquareOfLeftJoystickDeadzone
+    );
 }
 
 void XboxInputSystem::ProcessRightJoystick() {
-    if (!mIsConnected) {
-        mRightStickX = 0.f;
-        mRightStickY = 0.f;
+    if (!mInputStatePool[mBackgroundIndex].mIsConnected) {
+        mInputStatePool[mBackgroundIndex].mRightStickX = 0.f;
+        mInputStatePool[mBackgroundIndex].mRightStickY = 0.f;
         return;
     }
 
-    auto rawX = mCurrentState.Gamepad.sThumbRX;
-    auto rawY = mCurrentState.Gamepad.sThumbRY;
+    auto gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
+    auto rawX = gamepad.sThumbRX;
+    auto rawY = gamepad.sThumbRY;
 
-    ProcessXYForJoystick(rawX, rawY, &mRightStickX, &mRightStickY, mSquareOfRightJoystickDeadzone);
+    ProcessXYForJoystick(
+        rawX,
+        rawY,
+        &mInputStatePool[mBackgroundIndex].mRightStickX,
+        &mInputStatePool[mBackgroundIndex].mRightStickY,
+        mSquareOfRightJoystickDeadzone
+    );
 }
 
 void XboxInputSystem::ProcessTriggers() {
@@ -127,7 +178,7 @@ void XboxInputSystem::ProcessXYForJoystick(int16_t rawX, int16_t rawY, float* st
     }
     else {
         // Automatically deduce the type directly from the hardware state struct
-        using MicrosoftAxisType = decltype(mCurrentState.Gamepad.sThumbLX);
+        using MicrosoftAxisType = decltype(mInputStatePool[mBackgroundIndex].CurrentState.Gamepad.sThumbLX);
         constexpr float maxPossibleValue = static_cast<float>(std::numeric_limits<MicrosoftAxisType>::max());
 
         // Perform the scaling completely free of magic numbers
