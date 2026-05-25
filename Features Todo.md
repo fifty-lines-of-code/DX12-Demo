@@ -14,7 +14,7 @@ Features to implement:
 10. ~~Running when player holds B (Xbox) / Circle (PS) while walking~~
 11. ~~Fromsoft style back dash when player is still and presses B/Circle~~
 12. ~~Refactor so that we use Vec3, Vec4, Matrix4x4. Also move Renderer inside Engine.~~
-13. Move polling of Xbox input to background thread
+13. ~~Move polling of Xbox input to background thread~~
 14. Full screen support
 15. Start in fullscreen
 16. Switch between fullscreen and windowed  - esc to go window, F for fullscreen
