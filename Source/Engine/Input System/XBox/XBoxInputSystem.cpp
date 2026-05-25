@@ -129,7 +129,7 @@ void XboxInputSystem::ProcessLeftJoystick() {
         return;
     }
 
-    auto gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
+    const auto& gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
     auto rawX = gamepad.sThumbLX;
     auto rawY = gamepad.sThumbLY;
 
@@ -149,7 +149,7 @@ void XboxInputSystem::ProcessRightJoystick() {
         return;
     }
 
-    auto gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
+    const auto& gamepad = mInputStatePool[mBackgroundIndex].CurrentState.Gamepad;
     auto rawX = gamepad.sThumbRX;
     auto rawY = gamepad.sThumbRY;
 
