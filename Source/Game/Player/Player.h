@@ -30,12 +30,12 @@ private:
 	Engine::BasisVectors mBasisVectors;
 
 private:
-	void UpdateForwardAndRightVectorsFromCurrentRotation();
+	void UpdateBasisVectorsFromCurrentRotation();
 	void CalculateMovementVector(
 		float leftStickX,
 		float leftStickY,
 		const Engine::BasisVectors* cameraBasisVectors,
 		Engine::Vector3& movement
 	);
-	void UpdateEntityCenterAndRotationAndSetItToDirty();
+	void UpdateEntityCenterAndBasisVectorsAndSetItToDirty();
 };

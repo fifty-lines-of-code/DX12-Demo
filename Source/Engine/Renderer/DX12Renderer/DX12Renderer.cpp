@@ -4,10 +4,9 @@
 #include <dxgidebug.h>
 #include <WindowsX.h>
 #include <DirectXColors.h>
-#include "../../Helper/Helper.h"
-#include "../../Helper/Logger.h"
+#include "../../../Helper/Helper.h"
+#include "../../../Helper/Logger.h"
 #include "DX12DefaultUploadBuffer.h"
-#include "../../Engine/Scene Manager/Entities/Mesh/Mesh.h"
 #include "DX12FrameResource.h"
 
 using namespace DirectX;

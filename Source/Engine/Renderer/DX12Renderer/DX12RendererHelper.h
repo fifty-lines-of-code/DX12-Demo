@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
-#include "../../Helper/Helper.h"
+#include "../../../Helper/Helper.h"
 #include <wrl.h>
 
 class DX12RendererHelper {

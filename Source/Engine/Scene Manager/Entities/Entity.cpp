@@ -36,7 +36,7 @@ void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 	}
 }
 
-void Entity::CopyConstantBufferDataTransposed(Engine::Matrix4x4* destination) {
+void Entity::CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* destination) {
 	DirectX::XMMATRIX worldTranspose = DirectX::XMMatrixTranspose(
 		DirectX::XMLoadFloat4x4(&mConstantBufferData.World.AsXMFLOAT4X4())
 	);
@@ -49,7 +49,7 @@ void Entity::CopyConstantBufferDataTransposed(Engine::Matrix4x4* destination) {
 const EntityAABBMinMax Entity::GetAABBMinMax() const {
 	float halfSize = mScaleX *.5f;
 
-	Engine::Vector3 min =Engine::Vector3(mCenter.x - halfSize, mCenter.y - halfSize, mCenter.z - halfSize);
+	Engine::Vector3 min = Engine::Vector3(mCenter.x - halfSize, mCenter.y - halfSize, mCenter.z - halfSize);
 	Engine::Vector3 max = Engine::Vector3(mCenter.x + halfSize, mCenter.y + halfSize, mCenter.z + halfSize);
 
 	return EntityAABBMinMax{min, max , halfSize};
@@ -72,9 +72,9 @@ void Entity::SetBasisVectors(const Engine::BasisVectors* const basisVectors) {
 void Entity::CalculateWorldMatrix() {
 	// todo: Use DX methods to build SRT and then W
 	// DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(mScaleX, mScaleY, mScaleZ);
-	Engine::Matrix4x4 scale = Engine::Matrix4x4::Identity();
-	Engine::Matrix4x4 rotation = Engine::Matrix4x4::Identity();
-	Engine::Matrix4x4 translation = Engine::Matrix4x4::Identity();
+	Engine::Matrix4x4 scale;
+	Engine::Matrix4x4 rotation;
+	Engine::Matrix4x4 translation;
 
 	// Set Scale
 	scale.m[0][0] = mScaleX;
@@ -86,16 +86,19 @@ void Entity::CalculateWorldMatrix() {
 	rotation.m[0][0] = mBasisVectors.right.x;
 	rotation.m[0][1] = mBasisVectors.right.y;
 	rotation.m[0][2] = mBasisVectors.right.z;
+	rotation.m[0][3] = 0.f;
 
 	// Row 1: Up
 	rotation.m[1][0] = mBasisVectors.up.x;
 	rotation.m[1][1] = mBasisVectors.up.y;
 	rotation.m[1][2] = mBasisVectors.up.z;
+	rotation.m[1][3] = 0.f;
 
 	// Row 2: Forward
 	rotation.m[2][0] = mBasisVectors.forward.x;
 	rotation.m[2][1] = mBasisVectors.forward.y;
 	rotation.m[2][2] = mBasisVectors.forward.z;
+	rotation.m[2][3] = 0.f;
 
 	// Set Translation
 	translation.m[3][0] = mCenter.x;

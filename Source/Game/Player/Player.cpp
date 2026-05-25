@@ -13,7 +13,7 @@ void Player::SetEntity(Entity* entity) {
 
 	mEntity = entity;
 
-	UpdateEntityCenterAndRotationAndSetItToDirty();
+	UpdateEntityCenterAndBasisVectorsAndSetItToDirty();
 }
 
 void Player::Update(float deltaTime, const IInputSystem* const inputSystem, const Engine::BasisVectors* cameraBasisVectors) {
@@ -61,7 +61,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, cons
 			&mCurrentRotation
 		);
 
-		UpdateForwardAndRightVectorsFromCurrentRotation();
+		UpdateBasisVectorsFromCurrentRotation();
 
 		if (mPlayerAnimator.GetIsRotationComplete()) {
 			mPlayerLogic.SetPlayerState(PlayerState::EndRotating);
@@ -93,7 +93,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, cons
 			mPlayerLogic.mRotationSpeed
 		);
 
-		UpdateForwardAndRightVectorsFromCurrentRotation();
+		UpdateBasisVectorsFromCurrentRotation();
 
 		break;
 	}
@@ -114,7 +114,7 @@ void Player::Update(float deltaTime, const IInputSystem* const inputSystem, cons
 	}
 
 	if (shouldUpdateEntity) {
-		UpdateEntityCenterAndRotationAndSetItToDirty();
+		UpdateEntityCenterAndBasisVectorsAndSetItToDirty();
 	}
 }
 
@@ -122,7 +122,7 @@ const Engine::Vector3* Player::GetCenter() const {
 	return &mCenter;
 }
 
-void Player::UpdateForwardAndRightVectorsFromCurrentRotation() {
+void Player::UpdateBasisVectorsFromCurrentRotation() {
 	mBasisVectors.forward.x = std::sin(mCurrentRotation);
 	mBasisVectors.forward.y = 0.0f;
 	mBasisVectors.forward.z = std::cos(mCurrentRotation);
@@ -174,7 +174,7 @@ void Player::CalculateMovementVector(
 	}
 }
 
-void Player::UpdateEntityCenterAndRotationAndSetItToDirty() {
+void Player::UpdateEntityCenterAndBasisVectorsAndSetItToDirty() {
 	// update the center in entity
 	mEntity->SetCenter(mCenter);
 

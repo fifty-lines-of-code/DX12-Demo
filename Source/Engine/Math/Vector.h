@@ -8,10 +8,10 @@ namespace Engine {
     // Pretty much copying the definition of XMFLOAT3
     // this will be useful when reinterpreting Vector3 as an XMFLOAT3
     // when sending data to the renderer
-    // (assuming DX12, but a quick search shows 
+    // (assuming DX12 for now)
     // Yes, this is brittle in the sense that if Microsoft changes the underlying 
     // structure of XMFLOAT3, 4, 4x4, then we have to update ours
-    // to use methods like XMMAtrixMultiply, which will internally use XMLoadFloat4x4
+    // to use methods like XMMAtrixMultiply, which will use XMLoadFloat4x4
     // the only way around it is to write the SIMD operations that happen in
     // XMMatrixMultiply, etc, ourselves
 

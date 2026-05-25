@@ -2,22 +2,22 @@
 
 #include "../Renderer.h"
 
-#include <dxgi1_4.h>
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include "d3dx12.h"
 #include <d3d12.h>
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
-#include <algorithm>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <cstdint>
+#include <dxgi1_4.h>
 #include <fstream>
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 #include <wrl.h>
-#include "../../d3dx12.h"
 
 // Link necessary d3d12 libraries.
 #pragma comment(lib,"d3dcompiler.lib")
@@ -27,7 +27,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-class Mesh;
 struct DX12MeshResource;
 struct DX12FrameResource;
 

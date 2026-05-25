@@ -1,6 +1,6 @@
 #include "DX12FrameResource.h"
 
-#include "../../Helper/Helper.h"
+#include "../../../Helper/Helper.h"
 
 DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT objectCount) :
     mPerPassCB(device, passCount, true),

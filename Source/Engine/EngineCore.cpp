@@ -114,7 +114,7 @@ namespace Engine {
 
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
 				Engine::Matrix4x4 transposedData;
-				entity->CopyConstantBufferDataTransposed(&transposedData);
+				entity->CopyToDestinationConstantBufferDataTransposed(&transposedData);
 
 				mRenderer.UpdatePerRenderItemCb(
 					id,

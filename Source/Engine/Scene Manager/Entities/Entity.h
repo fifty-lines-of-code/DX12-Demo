@@ -8,8 +8,8 @@ class Mesh;
 // width because our aabb will always be a cube
 // maybe we can optimize in the future
 struct EntityAABBMinMax {
-	Engine::Vector3 Min = Engine::Vector3::Zero();
-	Engine::Vector3 Max = Engine::Vector3::Zero();
+	Engine::Vector3 Min;
+	Engine::Vector3 Max;
 	float halfWidth;
 };
 
@@ -30,7 +30,7 @@ public:
 
 	void Update(float stickX, float stickY, float deltaTime, float speed);
 
-	void CopyConstantBufferDataTransposed(Engine::Matrix4x4* destination);
+	void CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* destination);
 	const EntityAABBMinMax GetAABBMinMax() const;
 
 	bool GetIsDirty() const;

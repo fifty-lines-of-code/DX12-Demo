@@ -13,7 +13,7 @@ namespace Engine {
             v{1.0f, 0.0f, 0.0f, 0.0f,
              0.0f, 1.0f, 0.0f, 0.0f,
              0.0f, 0.0f, 1.0f, 0.0f,
-             0.0f, 0.0f, 0.0f, 1.0} 
+             0.0f, 0.0f, 0.0f, 1.0f} 
         {}
         Matrix4x4(const Matrix4x4& other) noexcept = default;
         Matrix4x4& operator=(const Matrix4x4& other) noexcept = default;

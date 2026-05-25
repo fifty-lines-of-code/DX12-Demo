@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Camera/Camera.h"
-#include "../Renderer/DX12Renderer/DX12Renderer.h"
+#include "Renderer/DX12Renderer/DX12Renderer.h"
 #include "Math/EngineMath.h"
 #include "../Helper/Helper.h"
 #include "Scene Manager/SceneManager.h"
