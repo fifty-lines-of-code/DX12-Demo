@@ -19,23 +19,11 @@
     <Filter Include="Source Files\Engine">
       <UniqueIdentifier>{4bd52247-4534-48b8-9892-cf1be24ac49a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Renderer">
-      <UniqueIdentifier>{56bbb743-0e87-4960-b852-4fa4a5280d5f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Renderer">
-      <UniqueIdentifier>{4036d22d-2ca0-40ba-95a4-40c7d484ee3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Renderer\DX12Renderer">
-      <UniqueIdentifier>{45816bc1-7796-4e9f-b30e-8f909b5c78e5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Helper">
       <UniqueIdentifier>{95b9e197-0e7e-4af3-b041-4918c4c0e8a1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Helper">
       <UniqueIdentifier>{9b9acf19-7790-4518-997e-7aa29ca11007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Renderer\DX2Renderer">
-      <UniqueIdentifier>{048976fb-5860-42e1-8630-83a17bd17d1a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Engine\Scene Manager">
       <UniqueIdentifier>{cc89332c-14ef-4cad-a731-fadf23906ccf}</UniqueIdentifier>
@@ -94,23 +82,29 @@
     <Filter Include="Header Files\Engine\Input System">
       <UniqueIdentifier>{b5578723-5de1-47f3-96cd-3d8c76f7629c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer">
+      <UniqueIdentifier>{f0c1b6cf-a9b5-47e0-a321-03fb33591ad6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer">
+      <UniqueIdentifier>{e56b8b6c-72ef-4bf6-891d-e102398100a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Math">
+      <UniqueIdentifier>{d37dd9c7-e994-4e9a-b5c2-8d382d307322}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer">
+      <UniqueIdentifier>{56bbb743-0e87-4960-b852-4fa4a5280d5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer">
+      <UniqueIdentifier>{048976fb-5860-42e1-8630-83a17bd17d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game Timer">
+      <UniqueIdentifier>{93dbeb26-58da-40ee-9506-2c0dc75d429c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game Timer">
+      <UniqueIdentifier>{a87c741c-6bfc-4311-aeb6-03c3b68185e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\DX12Demo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer\Renderer.h">
-      <Filter>Header Files\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Engine.h">
-      <Filter>Header Files\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer\DX12Renderer\DX12Renderer.h">
-      <Filter>Header Files\Renderer\DX12Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game Timer\GameTimer.h">
-      <Filter>Header Files\Helper</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Helper\Helper.h">
       <Filter>Header Files\Helper</Filter>
     </ClInclude>
@@ -129,14 +123,8 @@
     <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h">
       <Filter>Header Files\Engine\Scene Manager\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h">
-      <Filter>Header Files\Renderer\DX12Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h">
       <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RendererHelper.h">
-      <Filter>Header Files\Renderer\DX12Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h">
       <Filter>Header Files\Engine\Scene Manager\World Manager</Filter>
@@ -146,15 +134,6 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Camera\Camera.h">
       <Filter>Header Files\Engine\Scene Manager\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer\DX12Renderer\DX12FrameResource.h">
-      <Filter>Header Files\Renderer\DX12Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer\DX12Renderer\DX12RenderItem.h">
-      <Filter>Header Files\Renderer\DX12Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Helper\MathHelper.h">
-      <Filter>Header Files\Helper</Filter>
     </ClInclude>
     <ClInclude Include="Source\Helper\Logger.h">
       <Filter>Header Files\Helper</Filter>
@@ -183,8 +162,50 @@
     <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h">
       <Filter>Header Files\Engine\Input System</Filter>
     </ClInclude>
-    <ClInclude Include="Source\d3dx12.h">
-      <Filter>Header Files\Helper</Filter>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DX12Demo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\Renderer.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\EngineCore.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\EngineMath.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\MathHelper.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\Matrix.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\Vector.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\BasisVectors.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game Timer\GameTimer.h">
+      <Filter>Header Files\Game Timer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -192,15 +213,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Helper\Helper.cpp">
-      <Filter>Source Files\Helper</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Renderer\DX12Renderer\DX12Renderer.cpp">
-      <Filter>Source Files\Renderer\DX2Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Engine.cpp">
-      <Filter>Source Files\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Game Timer\GameTimer.cpp">
       <Filter>Source Files\Helper</Filter>
     </ClCompile>
     <ClCompile Include="Source\main.cpp">
@@ -227,9 +239,6 @@
     <ClCompile Include="Source\Engine\Camera\Camera.cpp">
       <Filter>Source Files\Engine\Scene Manager\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Renderer\DX12Renderer\DX12FrameResource.cpp">
-      <Filter>Source Files\Renderer\DX2Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Game\Game.cpp">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
@@ -247,6 +256,18 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp">
       <Filter>Source Files\Engine\Input System</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\EngineCore.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game Timer\GameTimer.cpp">
+      <Filter>Source Files\Game Timer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
