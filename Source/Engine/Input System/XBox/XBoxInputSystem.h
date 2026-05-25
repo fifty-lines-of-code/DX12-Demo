@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../IInputSystem.h"
+#include <atomic>
+#include <thread>
 
 #define NOMINMAX
 #include <windows.h>
@@ -9,12 +11,23 @@
 // Automatically link Microsoft's XInput library
 #pragma comment(lib, "XInput.lib")
 
+struct XboxInputState {
+    XINPUT_STATE CurrentState;
+    XINPUT_STATE PreviousState;
+    bool mIsConnected = false;
+    // Processed, deadzone-filtered axis coordinates
+    float mLeftStickX = 0.f;
+    float mLeftStickY = 0.f;
+    float mRightStickX = 0.f;
+    float mRightStickY = 0.f;
+};
+
 class XboxInputSystem : public IInputSystem {
 public:
     // 'explicit' prevents the compiler from using this constructor to silently 
     // convert a raw DWORD (like 0) into an XboxInputSystem object behind our backs.
     explicit XboxInputSystem(DWORD userIndex = 0);
-    virtual ~XboxInputSystem() override = default;
+    virtual ~XboxInputSystem() override;
 
     // Core Frame Update
     virtual void Update() override;
@@ -34,20 +47,21 @@ public:
     virtual float GetRightTrigger() const override;
 
 private:
+    static const uint16_t Number_Of_Buffers = 3;
+    XboxInputState mInputStatePool[XboxInputSystem::Number_Of_Buffers];
+    std::atomic<uint16_t> mStagingIndex;
+    uint16_t mBackgroundIndex;
+    uint16_t mRenderIndex;
+
     DWORD mUserIndex;
-    bool mIsConnected;
-    XINPUT_STATE mCurrentState;
-    XINPUT_STATE mPreviousState;
     float mSquareOfLeftJoystickDeadzone;
     float mSquareOfRightJoystickDeadzone;
 
-    // Processed, deadzone-filtered axis coordinates
-    float mLeftStickX;
-    float mLeftStickY;
-    float mRightStickX;
-    float mRightStickY;
+    std::thread mBackgroundUpdateThread;
+    std::atomic<bool> mIsRunning;
 
 private:
+    void BackgroundUpdateThreadTick();
     void UpdateStateAndIsConnected();
     void ProcessLeftJoystick();
     void ProcessRightJoystick();
