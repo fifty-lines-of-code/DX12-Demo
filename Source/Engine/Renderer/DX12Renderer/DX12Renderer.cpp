@@ -1034,6 +1034,9 @@ void DX12Renderer::SetFullscreen() {
 		height,
 		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
 	);
+
+	// we don't call OnResize here as the Window's messaging system will 
+	// call it for us: See Game::MsgProc()
 }
 
 void DX12Renderer::SetWindowed(UINT clientWidth, UINT clientHeight) {
@@ -1067,6 +1070,9 @@ void DX12Renderer::SetWindowed(UINT clientWidth, UINT clientHeight) {
 		physicalHeight,
 		SWP_FRAMECHANGED | SWP_SHOWWINDOW
 	);
+
+	// we don't call OnResize here as the Window's messaging system will 
+	// call it for us: See Game::MsgProc()
 }
 
 int DX12Renderer::GetClientWidth() const { return mClientWidth; }
