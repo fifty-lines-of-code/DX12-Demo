@@ -9,13 +9,13 @@ public:
 	bool GetIsMinimized() const;
 	bool GetIsMaximized() const;
 	bool GetIsResizing() const;
-	bool GetIsFullscreenEnabled() const;
+	bool GetIsFullscreen() const;
 
 	void SetIsPaused(bool paused);
 	void SetIsMinimized(bool minimized);
 	void SetIsMaximized(bool maximized);
 	void SetIsResizing(bool resizing);
-	void SetIsFullscreenEnabled(bool fullscreenEnabled);
+	void SetIsFullscreen(bool fullscreenEnabled);
 
 private:
 
@@ -23,5 +23,5 @@ private:
 	bool mMinimized = false;  // is the application minimized?
 	bool mMaximized = false;  // is the application maximized?
 	bool mResizing = false;   // are the resize bars being dragged?
-	bool mFullscreenState = false; // fullscreen enabled
+	bool mIsFullscreen = false; // fullscreen enabled
 };

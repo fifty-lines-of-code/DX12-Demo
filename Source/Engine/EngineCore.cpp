@@ -157,6 +157,21 @@ namespace Engine {
 		mCamera.OnResize(newClientWidth, newClientHeight);
 	}
 
+	void EngineCore::SetFullscreen() {
+		mRenderer.SetFullscreen();
+		mClientWidth = mRenderer.GetClientWidth();
+		mClientHeight = mRenderer.GetClientHeight();
+		mCamera.OnResize(mClientWidth, mClientHeight);
+	}
+
+	void EngineCore::SetWindowed(UINT clientWidth, UINT clientHeight) {
+		mClientWidth = clientWidth;
+		mClientHeight = clientHeight;
+		mRenderer.SetWindowed();
+		mCamera.OnResize(clientWidth, clientHeight);
+
+	}
+
 	bool EngineCore::InitializeCamera(const Engine::Vector3* playerPosition) {
 		mCamera.Initialize(playerPosition);
 		return true;

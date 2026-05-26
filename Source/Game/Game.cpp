@@ -4,7 +4,7 @@
 #include "../Engine/Scene Manager/Entities/Entity.h"
 
 Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) :
-	mMainHwnd(nullptr),
+	mhMainHwnd(nullptr),
 	mMainWndCaption(caption),
 	mClientWidth(clientWidth),
 	mClientHeight(clientHeight),
@@ -16,7 +16,7 @@ Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::ws
 Game::~Game() {}
 
 bool Game::Initialize(HWND hwnd) {
-	mMainHwnd = hwnd;
+	mhMainHwnd = hwnd;
 
 	if (!mEngineCore.Initialize(hwnd, mPlayer.GetCenter())) { return false; }
 
@@ -83,7 +83,7 @@ void Game::CalculateFrameStats() {
 			L"  fps: " + fpsStr +
 			L"  mspf: " + mspfStr;
 
-		SetWindowText(mMainHwnd, windowText.c_str());
+		SetWindowText(mhMainHwnd, windowText.c_str());
 
 		// Reset for next average.
 		frameCnt = 0;
@@ -214,6 +214,18 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		if (wParam == VK_ESCAPE)
 		{
 			PostQuitMessage(0);
+		}
+		else if (wParam == 'F') {
+			// if we're windowed, go fullscreen
+			bool isFullscreen = mGameState.GetIsFullscreen();
+			if (!isFullscreen) {
+				mEngineCore.SetFullscreen();
+			}
+			else {
+				mEngineCore.SetWindowed(mClientWidth, mClientHeight);
+			}
+
+			mGameState.SetIsFullscreen(!isFullscreen);
 		}
 
 		return 0;

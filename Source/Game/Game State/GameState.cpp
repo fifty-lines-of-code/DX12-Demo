@@ -12,7 +12,7 @@ bool GameState::GetIsMaximized() const { return mMaximized; }
 
 bool GameState::GetIsResizing() const { return mResizing; }
 
-bool GameState::GetIsFullscreenEnabled() const { return mFullscreenState; }
+bool GameState::GetIsFullscreen() const { return mIsFullscreen; }
 
 void GameState::SetIsPaused(bool paused) { mPaused = paused; }
 
@@ -22,4 +22,4 @@ void GameState::SetIsMaximized(bool maximized) { mMaximized = maximized; }
 
 void GameState::SetIsResizing(bool resizing) { mResizing = resizing; }
 
-void GameState::SetIsFullscreenEnabled(bool fullscreenEnabled) { mFullscreenState = fullscreenEnabled; }
+void GameState::SetIsFullscreen(bool fullscreenEnabled) { mIsFullscreen = fullscreenEnabled; }

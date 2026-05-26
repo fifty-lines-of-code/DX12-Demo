@@ -34,6 +34,8 @@ namespace Engine {
 		Entity* GetPlayerEntity() const;
 
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
+		void SetWindowed(UINT clientWidth, UINT clientHeight);
+		void SetFullscreen();
 
 	private:
 		static const int NumberOfFrameResources = 3;

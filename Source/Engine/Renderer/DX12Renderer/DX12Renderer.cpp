@@ -36,7 +36,7 @@ DX12Renderer::~DX12Renderer() {
 }
 
 bool DX12Renderer::Initialize(HWND mainHWND, int numberOfFrameResources) {
-	mMainHwnd = mainHWND;
+	mhMainHwnd = mainHWND;
 	mNumberOfFrameResources = numberOfFrameResources;
 
 	InitializeDevice();
@@ -149,6 +149,7 @@ void DX12Renderer::Shutdown() {
 	for (auto& resource : mFrameResources) {
 		resource.reset();
 	}
+	mCurrentFrameResource = nullptr;
 	for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
 		uint32_t id = it->first;
 		auto& meshResource = it->second;
@@ -331,7 +332,7 @@ void DX12Renderer::EndFrame() {
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// swap the back and front buffers
-	ThrowIfFailed(mSwapChain->Present(0, 0));
+	ThrowIfFailed(mSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
 	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
 
 	// Advance the fence value to mark commands up to this fence point.
@@ -374,7 +375,7 @@ void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
 			mClientWidth,
 			mClientHeight,
 			mBackBufferFormat,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
 		)
 	);
 
@@ -633,10 +634,10 @@ void DX12Renderer::CreateSwapChain() {
 	sd.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = SwapChainBufferCount;
-	sd.OutputWindow = mMainHwnd;
+	sd.OutputWindow = mhMainHwnd;
 	sd.Windowed = true;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 	// Note: Swap chain uses queue to perform flush.
 	ThrowIfFailed(
@@ -645,6 +646,12 @@ void DX12Renderer::CreateSwapChain() {
 			&sd,
 			mSwapChain.GetAddressOf()
 		)
+	);
+
+	// Prevent DXGI from monitoring the message queue and hijacking Alt+Enter 
+	// This ensures our custom F and ESC windowing states function correctly.
+	ThrowIfFailed(
+		mdxgiFactory->MakeWindowAssociation(mhMainHwnd, DXGI_MWA_NO_ALT_ENTER)
 	);
 }
 
@@ -997,3 +1004,67 @@ void DX12Renderer::FinishInitialize() {
 		meshResource->DisposeUploaders();
 	}
 }
+
+void DX12Renderer::SetFullscreen() {
+	// make sure we have a main handle
+	assert(mhMainHwnd != nullptr);
+
+	// capture the window placement so we can restore it later
+	GetWindowPlacement(mhMainHwnd, &mWindowPlacement);
+
+	// identify the monitor of the window
+	HMONITOR hMonitor = MonitorFromWindow(mhMainHwnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(hMonitor, &mInfo);
+
+	// strip all borders, captions, resize styles
+	SetWindowLongPtr(mhMainHwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+
+	// get width, height
+	int width = mInfo.rcMonitor.right - mInfo.rcMonitor.left;
+	int height = mInfo.rcMonitor.bottom - mInfo.rcMonitor.top;
+
+	// position and scale the window
+	SetWindowPos(
+		mhMainHwnd,
+		HWND_TOP,
+		mInfo.rcMonitor.left,
+		mInfo.rcMonitor.top,
+		width,
+		height,
+		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
+	);
+
+	// OnrResize to recreate backbuffers amongst other things
+	OnResize(width, height);
+}
+
+void DX12Renderer::SetWindowed() {
+	// restore regular window decorations
+	SetWindowLongPtr(
+		mhMainHwnd, 
+		GWL_STYLE, 
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE
+	);
+
+	// re-apply the stored pre-fullscreen bounds and positions
+	SetWindowPlacement(mhMainHwnd, &mWindowPlacement);
+	SetWindowPos(
+		mhMainHwnd, 
+		nullptr, 
+		0, 
+		0, 
+		0, 
+		0,
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
+	);
+
+	// query the actual restored client size to ensure the DX12 buffers match
+	RECT rect;
+	GetClientRect(mhMainHwnd, &rect);
+	OnResize(rect.right - rect.left, rect.bottom - rect.top);
+}
+
+int DX12Renderer::GetClientWidth() const { return mClientWidth; }
+
+int DX12Renderer::GetClientHeight() const { return mClientHeight; }
