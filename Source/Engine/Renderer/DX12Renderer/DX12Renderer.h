@@ -77,7 +77,6 @@ private:
 	int mClientWidth = 0;
 	int mClientHeight = 0;
 	HWND mhMainHwnd = nullptr;
-	WINDOWPLACEMENT mWindowPlacement = { sizeof(WINDOWPLACEMENT) };
 	int mNumberOfFrameResources = 0;
 
 	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.

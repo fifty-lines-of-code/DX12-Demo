@@ -1009,9 +1009,6 @@ void DX12Renderer::SetFullscreen() {
 	// make sure we have a main handle
 	assert(mhMainHwnd != nullptr);
 
-	// capture the window placement so we can restore it later
-	GetWindowPlacement(mhMainHwnd, &mWindowPlacement);
-
 	// identify the monitor of the window
 	HMONITOR hMonitor = MonitorFromWindow(mhMainHwnd, MONITOR_DEFAULTTONEAREST);
 	MONITORINFO mInfo = { sizeof(MONITORINFO) };
