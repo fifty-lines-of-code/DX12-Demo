@@ -42,8 +42,9 @@ namespace Engine {
 		HINSTANCE mhAppInst = nullptr; // application instance handle
 		HWND mhMainWnd = nullptr;
 		std::wstring mMainWndCaption;
-		int mClientWidth;
-		int mClientHeight;
+		int mWindowedClientWidth;
+		int mWindowedClientHeight;
+		bool mIsInitialized;
 		const float mAnimationSpeed;
 
 		DX12Renderer mRenderer;

@@ -26,8 +26,6 @@ public:
 private:
 	HWND mhMainHwnd;
 	const std::wstring mMainWndCaption;
-	UINT mClientWidth;
-	UINT mClientHeight;
 
 	Engine::EngineCore mEngineCore;
 	GameTimer mTimer;

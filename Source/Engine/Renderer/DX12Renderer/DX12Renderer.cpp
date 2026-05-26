@@ -1034,35 +1034,39 @@ void DX12Renderer::SetFullscreen() {
 		height,
 		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
 	);
-
-	// OnrResize to recreate backbuffers amongst other things
-	OnResize(width, height);
 }
 
-void DX12Renderer::SetWindowed() {
-	// restore regular window decorations
+void DX12Renderer::SetWindowed(UINT clientWidth, UINT clientHeight) {
+	// restore standard window decorations (borders, title bar, close buttons)
 	SetWindowLongPtr(
-		mhMainHwnd, 
-		GWL_STYLE, 
+		mhMainHwnd,
+		GWL_STYLE,
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE
 	);
 
-	// re-apply the stored pre-fullscreen bounds and positions
-	SetWindowPlacement(mhMainHwnd, &mWindowPlacement);
-	SetWindowPos(
-		mhMainHwnd, 
-		nullptr, 
-		0, 
-		0, 
-		0, 
-		0,
-		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED
-	);
+	// calculate the Window Rect based on your desired client size
+	RECT windowRect = { 0, 0, clientWidth, clientHeight };
+	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
-	// query the actual restored client size to ensure the DX12 buffers match
-	RECT rect;
-	GetClientRect(mhMainHwnd, &rect);
-	OnResize(rect.right - rect.left, rect.bottom - rect.top);
+	int physicalWidth = windowRect.right - windowRect.left;
+	int physicalHeight = windowRect.bottom - windowRect.top;
+
+	// center the window on the user's primary screen using the new dimensions
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	int posX = (screenWidth - physicalWidth) / 2;
+	int posY = (screenHeight - physicalHeight) / 2;
+
+	// position the window and force a frame style update
+	SetWindowPos(
+		mhMainHwnd,
+		HWND_NOTOPMOST,
+		posX,
+		posY,
+		physicalWidth,
+		physicalHeight,
+		SWP_FRAMECHANGED | SWP_SHOWWINDOW
+	);
 }
 
 int DX12Renderer::GetClientWidth() const { return mClientWidth; }

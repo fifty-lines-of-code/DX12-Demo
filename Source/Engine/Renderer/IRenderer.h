@@ -19,5 +19,5 @@ public:
 	virtual void EndFrame() = 0;
 	virtual void OnResize(UINT newClientWidth, UINT newClientHeight) = 0;
 	virtual void SetFullscreen() = 0;
-	virtual void SetWindowed() = 0;
+	virtual void SetWindowed(UINT clientWidth, UINT clientHeight) = 0;
 };

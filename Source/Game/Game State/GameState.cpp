@@ -1,6 +1,11 @@
 #include "GameState.h"
 
-GameState::GameState() {}
+GameState::GameState(UINT windowedClientWidth, UINT windowedClientHeight) :
+	mWindowedClientWidth(windowedClientWidth),
+	mWindowedClientHeight(windowedClientHeight),
+	mFullscreenClientWidth(0),
+	mFullscreenClientHeight(0)
+{}
 
 GameState::~GameState() {}
 
@@ -14,6 +19,10 @@ bool GameState::GetIsResizing() const { return mResizing; }
 
 bool GameState::GetIsFullscreen() const { return mIsFullscreen; }
 
+UINT GameState::GetWindowedClientWidth() const { return mWindowedClientWidth; } 
+
+UINT GameState::GetWindowedClientHeight() const { return mWindowedClientHeight; }
+
 void GameState::SetIsPaused(bool paused) { mPaused = paused; }
 
 void GameState::SetIsMinimized(bool minimized) { mMinimized = minimized; }
@@ -23,3 +32,20 @@ void GameState::SetIsMaximized(bool maximized) { mMaximized = maximized; }
 void GameState::SetIsResizing(bool resizing) { mResizing = resizing; }
 
 void GameState::SetIsFullscreen(bool fullscreenEnabled) { mIsFullscreen = fullscreenEnabled; }
+
+void GameState::SetWindowedClientWidth(UINT windowedClientWidth) {
+	mWindowedClientWidth = windowedClientWidth;
+}
+
+void GameState::SetWindowedClientHeight(UINT windowedlClientHeight) {
+	mWindowedClientHeight = windowedlClientHeight;
+}
+
+void GameState::SetFullscreenClientWidth(UINT fullscreenClientHeight) {
+	mFullscreenClientWidth = fullscreenClientHeight; 
+}
+
+void GameState::SetFullscreenClientHeight(UINT fullscreenClienHeight) {
+	mFullscreenClientHeight = fullscreenClienHeight;
+}
+

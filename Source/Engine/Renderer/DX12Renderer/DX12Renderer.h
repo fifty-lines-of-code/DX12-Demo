@@ -50,7 +50,7 @@ public:
 	void Shutdown() override;
 	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
 	void SetFullscreen() override;
-	void SetWindowed() override;
+	void SetWindowed(UINT clientWidh, UINT clientHeight) override;
 	int GetClientWidth() const;
 	int GetClientHeight() const;
 

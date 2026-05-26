@@ -1,5 +1,5 @@
 // DX12Demo.cpp : Defines the entry point for the application.
-//
+
 #include "DX12Demo.h"
 
 #include <cassert>

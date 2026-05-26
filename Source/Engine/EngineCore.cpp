@@ -13,8 +13,9 @@ namespace Engine {
 	EngineCore::EngineCore(HINSTANCE hInstance, std::wstring caption, int clientWidth, int clientHeight) :
 		mhAppInst(hInstance),
 		mMainWndCaption(caption),
-		mClientWidth(clientWidth),
-		mClientHeight(clientHeight),
+		mWindowedClientWidth(clientWidth),
+		mWindowedClientHeight(clientHeight),
+		mIsInitialized(false),
 		mAnimationSpeed(.375f), // todo: move this out to somewhere else
 		mRenderer(DX12Renderer(clientWidth, clientHeight)),
 		mSceneManager(SceneManager()),
@@ -47,6 +48,8 @@ namespace Engine {
 		LoadGeometry();
 
 		mRenderer.FinishInitialize();
+
+		mIsInitialized = true;
 
 		return true;
 	}
@@ -153,23 +156,24 @@ namespace Engine {
 	}
 
 	void EngineCore::OnResize(UINT newClientWidth, UINT newClientHeight) {
+		if (!mIsInitialized) { return; }
+
 		mRenderer.OnResize(newClientWidth, newClientHeight);
 		mCamera.OnResize(newClientWidth, newClientHeight);
 	}
 
 	void EngineCore::SetFullscreen() {
 		mRenderer.SetFullscreen();
-		mClientWidth = mRenderer.GetClientWidth();
-		mClientHeight = mRenderer.GetClientHeight();
-		mCamera.OnResize(mClientWidth, mClientHeight);
+		int fsClientWidth = mRenderer.GetClientWidth();
+		int fsClientHeight = mRenderer.GetClientHeight();
+		mCamera.OnResize(fsClientWidth, fsClientHeight);
 	}
 
 	void EngineCore::SetWindowed(UINT clientWidth, UINT clientHeight) {
-		mClientWidth = clientWidth;
-		mClientHeight = clientHeight;
-		mRenderer.SetWindowed();
+		mWindowedClientWidth = clientWidth;
+		mWindowedClientHeight = clientHeight;
+		mRenderer.SetWindowed(clientWidth, clientHeight);
 		mCamera.OnResize(clientWidth, clientHeight);
-
 	}
 
 	bool EngineCore::InitializeCamera(const Engine::Vector3* playerPosition) {
