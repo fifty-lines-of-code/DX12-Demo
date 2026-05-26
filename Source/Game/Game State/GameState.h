@@ -19,10 +19,10 @@ public:
 	void SetIsMaximized(bool maximized);
 	void SetIsResizing(bool resizing);
 	void SetIsFullscreen(bool fullscreenEnabled);
-	void SetWindowedClientWidth(UINT fullscreenCLientWidth);
-	void SetWindowedClientHeight(UINT fullscreenCLientHeight);
-	void SetFullscreenClientWidth(UINT fullscreenCLientWidth);
-	void SetFullscreenClientHeight(UINT fullscreenCLientHeight);
+	void SetWindowedClientWidth(UINT windowedClientWidth);
+	void SetWindowedClientHeight(UINT windowedClientHeight);
+	void SetFullscreenClientWidth(UINT fullscreenClientWidth);
+	void SetFullscreenClientHeight(UINT fullscreenClientHeight);
 
 private:
 	bool mPaused = false;  // is the application paused?

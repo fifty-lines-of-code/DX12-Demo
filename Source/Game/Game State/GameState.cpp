@@ -41,7 +41,7 @@ void GameState::SetWindowedClientHeight(UINT windowedlClientHeight) {
 	mWindowedClientHeight = windowedlClientHeight;
 }
 
-void GameState::SetFullscreenClientWidth(UINT fullscreenClientHeight) {
+void GameState::SetFullscreenClientWidth(UINT fullscreenClientWidth) {
 	mFullscreenClientWidth = fullscreenClientHeight; 
 }
 
