@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Renderer.h"
+#include "../IRenderer.h"
 
 #include <algorithm>
 #include <array>
@@ -37,7 +37,6 @@ public:
 	~DX12Renderer();
 
 	bool Initialize(HWND mainHwnd, int numberOfFrameResources) override;
-	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
 	void FinishInitialize() override;
 	bool SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV);
 	void CreateFrameResources(uint32_t numberOfEntities);
@@ -49,6 +48,11 @@ public:
 	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
 	void EndFrame() override;
 	void Shutdown() override;
+	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
+	void SetFullscreen() override;
+	void SetWindowed(UINT clientWidh, UINT clientHeight) override;
+	int GetClientWidth() const;
+	int GetClientHeight() const;
 
 private:
 	bool InitializeDevice();
@@ -72,7 +76,7 @@ private:
 
 	int mClientWidth = 0;
 	int mClientHeight = 0;
-	HWND mMainHwnd = nullptr;
+	HWND mhMainHwnd = nullptr;
 	int mNumberOfFrameResources = 0;
 
 	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.

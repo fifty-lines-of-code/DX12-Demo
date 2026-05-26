@@ -144,7 +144,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
-    <ClInclude Include="Source\Engine\Renderer\Renderer.h" />
+    <ClInclude Include="Source\Engine\Renderer\IRenderer.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h" />

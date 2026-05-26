@@ -24,10 +24,8 @@ public:
 	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
-	HWND mMainHwnd;
+	HWND mhMainHwnd;
 	const std::wstring mMainWndCaption;
-	UINT mClientWidth;
-	UINT mClientHeight;
 
 	Engine::EngineCore mEngineCore;
 	GameTimer mTimer;

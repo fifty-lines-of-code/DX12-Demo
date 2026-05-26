@@ -8,6 +8,7 @@ public:
 	virtual ~IRenderer() {}
 
 	virtual bool Initialize(HWND mainHwnd, int numberOfFrameResources) = 0;
+	virtual void FinishInitialize() = 0;
 	virtual void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) = 0;
 	virtual void Shutdown() = 0;
 	virtual void PrepareForUpdate() = 0;
@@ -17,5 +18,6 @@ public:
 	virtual bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) = 0;
 	virtual void EndFrame() = 0;
 	virtual void OnResize(UINT newClientWidth, UINT newClientHeight) = 0;
-	virtual void FinishInitialize() = 0;
+	virtual void SetFullscreen() = 0;
+	virtual void SetWindowed(UINT clientWidth, UINT clientHeight) = 0;
 };

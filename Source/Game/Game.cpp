@@ -4,19 +4,17 @@
 #include "../Engine/Scene Manager/Entities/Entity.h"
 
 Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) :
-	mMainHwnd(nullptr),
+	mhMainHwnd(nullptr),
 	mMainWndCaption(caption),
-	mClientWidth(clientWidth),
-	mClientHeight(clientHeight),
 	mEngineCore(hInstance, mMainWndCaption, clientWidth, clientHeight),
-	mGameState(GameState()),
+	mGameState(GameState(clientWidth, clientHeight)),
 	mPlayer(Player())
 {}
 
 Game::~Game() {}
 
 bool Game::Initialize(HWND hwnd) {
-	mMainHwnd = hwnd;
+	mhMainHwnd = hwnd;
 
 	if (!mEngineCore.Initialize(hwnd, mPlayer.GetCenter())) { return false; }
 
@@ -83,7 +81,7 @@ void Game::CalculateFrameStats() {
 			L"  fps: " + fpsStr +
 			L"  mspf: " + mspfStr;
 
-		SetWindowText(mMainHwnd, windowText.c_str());
+		SetWindowText(mhMainHwnd, windowText.c_str());
 
 		// Reset for next average.
 		frameCnt = 0;
@@ -92,6 +90,9 @@ void Game::CalculateFrameStats() {
 }
 
 LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	UINT clientWidth;
+	UINT clientHeight;
+
 	switch (msg)
 	{
 		// WM_ACTIVATE is sent when the window is activated or deactivated.  
@@ -113,8 +114,19 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		// WM_SIZE is sent when the user resizes the window.  
 	case WM_SIZE:
 		// Save the new client area dimensions.
-		mClientWidth = LOWORD(lParam);
-		mClientHeight = HIWORD(lParam);
+		clientWidth = LOWORD(lParam);
+		clientHeight = HIWORD(lParam);
+
+		if (wParam != SIZE_MINIMIZED && clientWidth > 0 && clientHeight > 0) {
+			if (mGameState.GetIsFullscreen()) {
+				mGameState.SetFullscreenClientWidth(clientWidth);
+				mGameState.SetFullscreenClientHeight(clientHeight);
+			}
+			else {
+				mGameState.SetWindowedClientWidth(clientWidth);
+				mGameState.SetWindowedClientHeight(clientHeight);
+			}
+		}
 
 		if (wParam == SIZE_MINIMIZED)
 		{
@@ -128,7 +140,7 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			mGameState.SetIsMinimized(false);
 			mGameState.SetIsMaximized(true);
 			
-			mEngineCore.OnResize(mClientWidth, mClientHeight);
+			mEngineCore.OnResize(clientWidth, clientHeight);
 		}
 		else if (wParam == SIZE_RESTORED)
 		{
@@ -137,14 +149,14 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			{
 				mGameState.SetIsPaused(false);
 				mGameState.SetIsMinimized(false);
-				mEngineCore.OnResize(mClientWidth, mClientHeight);
+				mEngineCore.OnResize(clientWidth, clientHeight);
 			}
 			// Restoring from maximized state?
 			else if (mGameState.GetIsMaximized())
 			{
 				mGameState.SetIsPaused(false);
 				mGameState.SetIsMaximized(false);
-				mEngineCore.OnResize(mClientWidth, mClientHeight);
+				mEngineCore.OnResize(clientWidth, clientHeight);
 			}
 			else if (mGameState.GetIsResizing())
 			{
@@ -159,7 +171,7 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			}
 			else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
 			{
-				mEngineCore.OnResize(mClientWidth, mClientHeight);
+				mEngineCore.OnResize(clientWidth, clientHeight);
 			}
 		}
 		return 0;
@@ -177,7 +189,11 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		mGameState.SetIsPaused(false);
 		mGameState.SetIsResizing(false);
 		mTimer.Start();
-		mEngineCore.OnResize(mClientWidth, mClientHeight);
+		// here we assume were windowed
+		mEngineCore.OnResize(
+			mGameState.GetWindowedClientWidth(),
+			mGameState.GetWindowedClientHeight()
+		);
 		return 0;
 
 		// WM_DESTROY is sent when the window is being destroyed.
@@ -214,6 +230,23 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		if (wParam == VK_ESCAPE)
 		{
 			PostQuitMessage(0);
+		}
+		else if (wParam == 'F') {
+			bool isFullscreen = mGameState.GetIsFullscreen();
+			mGameState.SetIsFullscreen(!isFullscreen);
+
+			// if we're windowed, go fullscreen
+			if (!isFullscreen) {
+				mEngineCore.SetFullscreen();
+			}
+			else {
+				// else go windowed
+				mEngineCore.SetWindowed(
+					mGameState.GetWindowedClientWidth(),
+					mGameState.GetWindowedClientHeight()
+				);
+			}
+
 		}
 
 		return 0;

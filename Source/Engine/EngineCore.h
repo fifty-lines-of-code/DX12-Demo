@@ -34,14 +34,17 @@ namespace Engine {
 		Entity* GetPlayerEntity() const;
 
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
+		void SetWindowed(UINT clientWidth, UINT clientHeight);
+		void SetFullscreen();
 
 	private:
 		static const int NumberOfFrameResources = 3;
 		HINSTANCE mhAppInst = nullptr; // application instance handle
 		HWND mhMainWnd = nullptr;
 		std::wstring mMainWndCaption;
-		int mClientWidth;
-		int mClientHeight;
+		int mWindowedClientWidth;
+		int mWindowedClientHeight;
+		bool mIsInitialized;
 		const float mAnimationSpeed;
 
 		DX12Renderer mRenderer;

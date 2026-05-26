@@ -183,7 +183,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\Renderer.h">
+    <ClInclude Include="Source\Engine\Renderer\IRenderer.h">
       <Filter>Header Files\Engine\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\EngineCore.h">
