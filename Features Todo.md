@@ -16,14 +16,14 @@ Features to implement:
 12. ~~Refactor so that we use Vec3, Vec4, Matrix4x4. Also move Renderer inside Engine.~~
 13. ~~Move polling of Xbox input to background thread~~
 14. ~~Full screen support~~
-15. Start in fullscreen
-16. Switch between fullscreen and windowed  - esc to go window, F for fullscreen
+15. ~~Switch between fullscreen and windowed  - esc to go window, F for fullscreen~~
+16. Start in fullscreen
 17. Player "breathing" animation when idle
 18. Walking animation
 19. Running animation
 20. Smoothly interpolate from breathing into movement
 21. Rolling animation in the direction of controls - infinite direction dictated by controls
-22. Collision of player with the above wall
+22. Simple Collision of player with the above wall
 23. PS controller support
 24. FromSoft style lockon
 25. Main menu
