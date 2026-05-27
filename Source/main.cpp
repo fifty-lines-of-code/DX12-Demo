@@ -12,11 +12,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
-        DX12Demo theDemo(hInstance);
-        if (!theDemo.Initialize())
+        auto theDemo = std::make_unique<DX12Demo>(hInstance);
+        if (!theDemo->Initialize())
             return 0;
 
-        return theDemo.Run();
+        return theDemo->Run();
     }
     catch (DxException& e)
     {

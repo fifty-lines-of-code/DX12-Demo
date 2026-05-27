@@ -10,7 +10,8 @@ Entity::Entity(uint32_t Id, Engine::Vector3 center, float scaleX, float scaleY, 
 	mScaleX(scaleX),
 	mScaleY(scaleY),
 	mScaleZ(scaleZ),
-	mMesh(nullptr)
+	mMesh(nullptr),
+	mIsDirty(true)
 {
 	CalculateWorldMatrix();
 }
@@ -22,7 +23,9 @@ uint32_t Entity::GetID() const {
 }
 
 void Entity::SetMesh(const Mesh* mesh) {
-	this->mMesh = mesh;
+	mMesh = mesh;
+	mLocalAABB.Min = mesh->GetLocalMin();
+	mLocalAABB.Max = mesh->GetLocalMax();
 }
 
 const Mesh* Entity::GetMesh() const {
@@ -33,6 +36,9 @@ void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 	if (mIsDirty) {
 		// update the World matrix
 		CalculateWorldMatrix();
+
+		// update world aabb
+		CalculateWorldAABB();
 	}
 }
 
@@ -46,13 +52,8 @@ void Entity::CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* de
 	);
 }
 
-const EntityAABBMinMax Entity::GetAABBMinMax() const {
-	float halfSize = mScaleX *.5f;
-
-	Engine::Vector3 min = Engine::Vector3(mCenter.x - halfSize, mCenter.y - halfSize, mCenter.z - halfSize);
-	Engine::Vector3 max = Engine::Vector3(mCenter.x + halfSize, mCenter.y + halfSize, mCenter.z + halfSize);
-
-	return EntityAABBMinMax{min, max , halfSize};
+const AABB& Entity::GetAABB() const {
+	return mWorldAABB;
 }
 
 bool Entity::GetIsDirty() const { return mIsDirty; }
@@ -118,10 +119,68 @@ void Entity::CalculateWorldMatrix() {
 	);
 
 	DirectX::XMMATRIX world = DirectX::XMMatrixMultiply(
-		scaleRotation, DirectX::XMLoadFloat4x4(&translation.AsXMFLOAT4X4()));
+		scaleRotation, 
+		DirectX::XMLoadFloat4x4(&translation.AsXMFLOAT4X4())
+	);
 
 	DirectX::XMStoreFloat4x4(
 		&mConstantBufferData.World.AsXMFLOAT4X4(),
 		world
+	);
+}
+
+void Entity::CalculateWorldAABB() {
+	DirectX::XMMATRIX worldMatrix = DirectX::XMLoadFloat4x4(
+		&mConstantBufferData.World.AsXMFLOAT4X4()
+	);
+	Engine::Vector3& min = mLocalAABB.Min;
+	Engine::Vector3& max = mWorldAABB.Max;
+
+	const int numberOfVerticesInACube = 8;
+
+	// generate all 8 vertices
+	DirectX::XMVECTOR aabbVertices[numberOfVerticesInACube] = {
+		// Bottom Ring
+		DirectX::XMVectorSet(min.x, min.y, max.z, 1.0f), // 0: Bottom-Left-Back
+		DirectX::XMVectorSet(max.x, min.y, max.z, 1.0f), // 1: Bottom-Right-Back
+		DirectX::XMVectorSet(max.x, min.y, min.z, 1.0f), // 2: Bottom-Right-Front
+		DirectX::XMVectorSet(min.x, min.y, min.z, 1.0f), // 3: Bottom-Left-Front
+
+		// Top Ring
+		DirectX::XMVectorSet(min.x, max.y, max.z, 1.0f), // 4: Top-Left-Back
+		DirectX::XMVectorSet(max.x, max.y, max.z, 1.0f), // 5: Top-Right-Back
+		DirectX::XMVectorSet(max.x, max.y, min.z, 1.0f), // 6: Top-Right-Front
+		DirectX::XMVectorSet(min.x, max.y, min.z, 1.0f)  // 7: Top-Left-Front
+	};
+
+	DirectX::XMVECTOR vTransformed = DirectX::XMVector3TransformCoord(
+		aabbVertices[0], 
+		worldMatrix
+	);
+	DirectX::XMVECTOR vWorldMin = vTransformed;
+	DirectX::XMVECTOR vWorldMax = vTransformed;
+
+	// transform them using world matrix
+	for (int i = 1; i < numberOfVerticesInACube; ++i) {
+		// transform using the World matrix
+		vTransformed = DirectX::XMVector3TransformCoord(
+			aabbVertices[i], 
+			worldMatrix
+		);
+
+		// update min and max
+		vWorldMin = DirectX::XMVectorMin(vWorldMin, vTransformed);
+		vWorldMax = DirectX::XMVectorMax(vWorldMax, vTransformed);
+	}
+
+	// save World Min Max
+	DirectX::XMStoreFloat3(
+		&mWorldAABB.Min.AsXMFLOAT3(),
+		vWorldMin
+	);
+
+	DirectX::XMStoreFloat3(
+		&mWorldAABB.Max.AsXMFLOAT3(),
+		vWorldMax
 	);
 }

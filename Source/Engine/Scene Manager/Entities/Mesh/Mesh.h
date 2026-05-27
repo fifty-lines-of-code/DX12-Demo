@@ -21,6 +21,8 @@ public:
 	MeshID GetMeshID() const;
 	UINT GetVbByteSize() const;
 	UINT GetIbByteSize() const;
+	const Engine::Vector3& GetLocalMin() const;
+	const Engine::Vector3& GetLocalMax() const;
 
 private:
 	std::vector<Engine::Vertex> mVertices;
@@ -29,4 +31,9 @@ private:
 	MeshID mMeshID;
 	UINT mVbByteSize;
 	UINT mIbByteSize;
+	Engine::Vector3 mLocalMin;
+	Engine::Vector3 mLocalMax;
+
+private:
+	void CalculateLocalMinAndMax();
 };

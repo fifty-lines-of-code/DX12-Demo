@@ -26,15 +26,23 @@ namespace Engine {
         Vector3(const Vector3&) noexcept = default;
         Vector3& operator=(const Vector3&) noexcept = default;
 
+        inline Vector3 operator-(float scalar) const noexcept {
+            return Vector3(x - scalar, y - scalar, z - scalar);
+        }
+
+        inline Vector3 operator+(float scalar) const noexcept {
+            return Vector3(x + scalar, y + scalar, z + scalar);
+        }
+
         inline static Vector3 Zero() noexcept {
             return Vector3(0.f, 0.f, 0.f);
         }
 
-        const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {
+        inline const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {
             return *reinterpret_cast<const DirectX::XMFLOAT3*>(this);
         }
 
-        DirectX::XMFLOAT3& AsXMFLOAT3() noexcept {
+        inline DirectX::XMFLOAT3& AsXMFLOAT3() noexcept {
             return *reinterpret_cast<DirectX::XMFLOAT3*>(this);
         }
     };

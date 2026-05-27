@@ -7,10 +7,9 @@ class Mesh;
 
 // width because our aabb will always be a cube
 // maybe we can optimize in the future
-struct EntityAABBMinMax {
+struct AABB {
 	Engine::Vector3 Min;
 	Engine::Vector3 Max;
-	float halfWidth;
 };
 
 class Entity {
@@ -31,7 +30,7 @@ public:
 	void Update(float stickX, float stickY, float deltaTime, float speed);
 
 	void CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* destination);
-	const EntityAABBMinMax GetAABBMinMax() const;
+	const AABB& GetAABB() const;
 
 	bool GetIsDirty() const;
 	void SetIsDirty(bool dirty);
@@ -50,8 +49,11 @@ private:
 	Engine::BasisVectors mBasisVectors;
 	const Mesh* mMesh;
 	EntityConstantBufferData mConstantBufferData;
-	bool mIsDirty = true;
+	bool mIsDirty;
+	AABB mLocalAABB;
+	AABB mWorldAABB;
 
 private:
-	void CalculateWorldMatrix();	
+	void CalculateWorldMatrix();
+	void CalculateWorldAABB();
 };

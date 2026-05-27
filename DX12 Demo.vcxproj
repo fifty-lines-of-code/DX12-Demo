@@ -151,7 +151,8 @@
     <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h" />
     <ClInclude Include="Source\Engine\Scene Manager\SceneManager.h" />
-    <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree.h" />
+    <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree\OctTree.h" />
+    <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree\OctTreeNode.h" />
     <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h" />
     <ClInclude Include="Source\Game Timer\GameTimer.h" />
     <ClInclude Include="Source\Game\Game State\GameState.h" />
@@ -173,7 +174,8 @@
     <ClCompile Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\SceneManager.cpp" />
-    <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree.cpp" />
+    <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree\OctTree.cpp" />
+    <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree\OctTreeNode.cpp" />
     <ClCompile Include="Source\Engine\Scene Manager\World Manager\World Manager.cpp" />
     <ClCompile Include="Source\Game Timer\GameTimer.cpp" />
     <ClCompile Include="Source\Game\Game State\GameState.cpp" />
