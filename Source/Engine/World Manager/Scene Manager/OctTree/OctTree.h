@@ -11,9 +11,13 @@ namespace Engine {
 	
 	class OctTree {
 	public:
-		OctTree(const Vector3 center, float halfWidth);
+		OctTree();
 		~OctTree();
+
+		bool Initialize(const Vector3& center, float halfWidth);
 		bool Insert(const Entity* entity);
+		void ClearDynamicEntities();
+		void GetCollisionsWithPlayer(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<const Entity*>& candidates);
 
 	private:
 		// why depth of 3? Because our scene is small and we don't have many entities, so we don't need a very deep tree, but helps to learn the idea
@@ -29,20 +33,23 @@ namespace Engine {
 		// credit: Google Gemini
 
 		// the formula comes from Geometric Series Sum Formula
-		// create: Google Gemini
+		// credit: Google Gemini
 		static constexpr uint32_t TOTAL_NUMBER_OF_NODES =
 			((1 << (3 * (MAX_DEPTH + 1))) - 1) / 7;
 
 		OctTreeNode* mRoot;
 		OctTreeNode allNodes[OctTree::TOTAL_NUMBER_OF_NODES];
-		uint32_t mNextAvailableStartIndex;
+		uint32_t mNextAvailableStartIndex = 1; // index 0 will store root
 
 	private:
-		void SetupRoot(float halfWidth);
+		void SetupRoot(const Vector3& center, float halfWidth);
 		void IncrementNextAvailableStartIndex();
 		bool Insert_Internal(const Entity* entity, OctTreeNode* const node, uint32_t depth);
 		void Subdivide(OctTreeNode* const node, float childrenHalfWidth);
 		void CalculateAndUpdateBoundsOfNode(OctTreeNode* node);
-		bool DoesEntityFitInNode(const AABB& entityAABB, const Vector3& nodeMin, const Vector3& nodeMax) const;
+		bool DoesEntityFitInNode(const AABB& entityAABB, const AABB& nodeAABB) const;
+
+		void GetPotentalCollisionsWithPlayer(uint32_t startIndex, const AABB& playerPotentialAABB, std::vector<const Entity*>& potentialCandidates);
+		bool AABBIntersect(const AABB& first, const AABB& second);
 	};
 }

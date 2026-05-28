@@ -1,6 +1,6 @@
 #include "ResourceManager.h"
 
-#include "../../Scene Manager/Entities/Mesh/Mesh.h"
+#include "../../Scene Manager/Entity/Mesh/Mesh.h"
 #include <DirectXColors.h>
 
 using namespace DirectX;

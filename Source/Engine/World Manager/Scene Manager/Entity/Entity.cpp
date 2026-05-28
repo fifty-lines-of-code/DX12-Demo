@@ -4,28 +4,43 @@
 #include <DirectXMath.h>
 #include "Mesh/Mesh.h"
 
-Entity::Entity(uint32_t Id, Engine::Vector3 center, float scaleX, float scaleY, float scaleZ) :
+Entity::Entity() : Entity(-1, Engine::Vector3(), Engine::Vector3(), true) 
+{}
+
+Entity::Entity(uint32_t Id, Engine::Vector3 center, Engine::Vector3 scale, bool isStatic) :
 	mID(Id),
 	mCenter(center),
-	mScaleX(scaleX),
-	mScaleY(scaleY),
-	mScaleZ(scaleZ),
+	mPotentialCenter(center),
+	mScale(scale),
+	mIsStatic(isStatic),
 	mMesh(nullptr),
 	mIsDirty(true)
 {
-	CalculateWorldMatrix();
+	CalculateWorldMatrix(mConstantBufferData.World, mCenter);
 }
 
 Entity::~Entity() {}
+
+void Entity::SetID(uint32_t id) { mID = id; }
 
 uint32_t Entity::GetID() const {
 	return mID;
 }
 
+void Entity::SetIsStatic(bool isStatic) { mIsStatic = isStatic; }
+
+bool Entity::GetIsStatic() const { return mIsStatic; }
+
 void Entity::SetMesh(const Mesh* mesh) {
 	mMesh = mesh;
 	mLocalAABB.Min = mesh->GetLocalMin();
 	mLocalAABB.Max = mesh->GetLocalMax();
+
+	CalculateWorldMatrix(mConstantBufferData.World, mCenter);
+	CalculateAABB(mConstantBufferData.World, mWorldAABB);
+
+	CalculateWorldMatrix(mPotentialWorldMatrix, mPotentialCenter);
+	CalculateAABB(mPotentialWorldMatrix, mPotentialWorldAABB);
 }
 
 const Mesh* Entity::GetMesh() const {
@@ -35,10 +50,10 @@ const Mesh* Entity::GetMesh() const {
 void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 	if (mIsDirty) {
 		// update the World matrix
-		CalculateWorldMatrix();
+		CalculateWorldMatrix(mConstantBufferData.World, mCenter);
 
 		// update world aabb
-		CalculateWorldAABB();
+		CalculateAABB(mConstantBufferData.World, mWorldAABB);
 	}
 }
 
@@ -52,17 +67,28 @@ void Entity::CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* de
 	);
 }
 
-const AABB& Entity::GetAABB() const {
-	return mWorldAABB;
-}
+const AABB& Entity::GetAABB() const { return mWorldAABB; }
+
+const AABB& Entity::GetPotentialAABB() const { return mPotentialWorldAABB; }
 
 bool Entity::GetIsDirty() const { return mIsDirty; }
 
 void Entity::SetIsDirty(bool dirty) { mIsDirty = dirty; }
 
-Engine::Vector3 Entity::GetCenter() const { return mCenter; }
+const Engine::Vector3& Entity::GetCenter() const { return mCenter; }
 
 void Entity::SetCenter(Engine::Vector3 center) { mCenter = center; }
+
+void Entity::SetPotentialCenter(Engine::Vector3 potentialCenter) {
+	mPotentialCenter = potentialCenter;
+
+	CalculateWorldMatrix(mPotentialWorldMatrix, mPotentialCenter);
+	CalculateAABB(mPotentialWorldMatrix, mPotentialWorldAABB);
+}
+
+const Engine::Vector3& Entity::GetPotentialCenter() { return mPotentialCenter; }
+
+void Entity::SetScale(Engine::Vector3 scale) { mScale = scale; }
 
 void Entity::SetBasisVectors(const Engine::BasisVectors* const basisVectors) { 
 	mBasisVectors.forward = basisVectors->forward;
@@ -70,7 +96,7 @@ void Entity::SetBasisVectors(const Engine::BasisVectors* const basisVectors) {
 	mBasisVectors.right = basisVectors->right;
 }
 
-void Entity::CalculateWorldMatrix() {
+void Entity::CalculateWorldMatrix(Engine::Matrix4x4& world, Engine::Vector3& center) {
 	// todo: Use DX methods to build SRT and then W
 	// DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(mScaleX, mScaleY, mScaleZ);
 	Engine::Matrix4x4 scale;
@@ -78,9 +104,9 @@ void Entity::CalculateWorldMatrix() {
 	Engine::Matrix4x4 translation;
 
 	// Set Scale
-	scale.m[0][0] = mScaleX;
-	scale.m[1][1] = mScaleY;
-	scale.m[2][2] = mScaleZ;
+	scale.m[0][0] = mScale.x;
+	scale.m[1][1] = mScale.y;
+	scale.m[2][2] = mScale.z;
 
 	// Set Rotation
 	// Row 0: Right
@@ -102,9 +128,9 @@ void Entity::CalculateWorldMatrix() {
 	rotation.m[2][3] = 0.f;
 
 	// Set Translation
-	translation.m[3][0] = mCenter.x;
-	translation.m[3][1] = mCenter.y;
-	translation.m[3][2] = mCenter.z;
+	translation.m[3][0] = center.x;
+	translation.m[3][1] = center.y;
+	translation.m[3][2] = center.z;
 	translation.m[3][3] = 1.0f;
 
 	// lets read and write to our Matrix4x4 as an XMFLOAT4x4 so that
@@ -118,23 +144,23 @@ void Entity::CalculateWorldMatrix() {
 		DirectX::XMLoadFloat4x4(&rotation.AsXMFLOAT4X4())
 	);
 
-	DirectX::XMMATRIX world = DirectX::XMMatrixMultiply(
+	DirectX::XMMATRIX worldXM = DirectX::XMMatrixMultiply(
 		scaleRotation, 
 		DirectX::XMLoadFloat4x4(&translation.AsXMFLOAT4X4())
 	);
 
 	DirectX::XMStoreFloat4x4(
-		&mConstantBufferData.World.AsXMFLOAT4X4(),
-		world
+		&world.AsXMFLOAT4X4(),
+		worldXM
 	);
 }
 
-void Entity::CalculateWorldAABB() {
+void Entity::CalculateAABB(Engine::Matrix4x4& world, AABB& aabb) {
 	DirectX::XMMATRIX worldMatrix = DirectX::XMLoadFloat4x4(
-		&mConstantBufferData.World.AsXMFLOAT4X4()
+		&world.AsXMFLOAT4X4()
 	);
 	Engine::Vector3& min = mLocalAABB.Min;
-	Engine::Vector3& max = mWorldAABB.Max;
+	Engine::Vector3& max = mLocalAABB.Max;
 
 	const int numberOfVerticesInACube = 8;
 
@@ -175,12 +201,12 @@ void Entity::CalculateWorldAABB() {
 
 	// save World Min Max
 	DirectX::XMStoreFloat3(
-		&mWorldAABB.Min.AsXMFLOAT3(),
+		&aabb.Min.AsXMFLOAT3(),
 		vWorldMin
 	);
 
 	DirectX::XMStoreFloat3(
-		&mWorldAABB.Max.AsXMFLOAT3(),
+		&aabb.Max.AsXMFLOAT3(),
 		vWorldMax
 	);
 }

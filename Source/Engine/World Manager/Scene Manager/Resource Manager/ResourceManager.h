@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <memory>
-#include "../Entities/Mesh/Mesh.h"
+#include "../Entity/Mesh/Mesh.h"
 
 class ResourceManager {
 public:

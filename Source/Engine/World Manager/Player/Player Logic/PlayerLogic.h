@@ -1,7 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
-#include "../../../Engine/Input System/IInputSystem.h"
+#include "../../../../Engine/Input System/IInputSystem.h"
 
 enum class PlayerState {
 	Idle,

@@ -1,8 +1,7 @@
 #include "PlayerAnimator.h"
 
-#include "../../../Engine/Camera/Camera.h"
 #include <cmath>
-#include "../../../Helper/Logger.h"
+#include "../../../Math/MathHelper.h"
 
 PlayerAnimator::PlayerAnimator() {}
 
@@ -10,17 +9,17 @@ PlayerAnimator::~PlayerAnimator() {}
 
 bool PlayerAnimator::MoveAndRotatePlayer(
 	float deltaTime,
-	const Engine::Vector3* const movement,
-	Engine::Vector3* const center,
+	const Engine::Vector3& movement,
+	Engine::Vector3& center,
 	float* currentRotation,
 	float walkingRunningSpeed,
 	float rotationSpeed
 ) {
 	// update center
-	center->x += movement->x * walkingRunningSpeed * deltaTime;
+	center.x += movement.x * walkingRunningSpeed * deltaTime;
 	// todo: hardcoded for now. will take y into consideration when ready
-	center->y = 0.6f;
-	center->z += movement->z * walkingRunningSpeed * deltaTime;
+	center.y = 0.6f;
+	center.z += movement.z * walkingRunningSpeed * deltaTime;
 
 	// update rotation
 	RotatePlayer(deltaTime, movement, rotationSpeed, currentRotation);
@@ -30,14 +29,14 @@ bool PlayerAnimator::MoveAndRotatePlayer(
 
 void PlayerAnimator::RotatePlayer(
 	float deltaTime,
-	const Engine::Vector3* const movement,
+	const Engine::Vector3& movement,
 	float rotationSpeed,
 	float* currentRotation
 ) {
 	// We have to send in x first and then z to convert from 
 	// Math's RH rule to DX12's LH coordinate rule
 	// Rotation in Math is CCW and DX12 is CW
-	float targetRotation = std::atan2(movement->x, movement->z);
+	float targetRotation = std::atan2(movement.x, movement.z);
 	float deltaRotation = targetRotation - *currentRotation;
 
 	// we have to make sure we take the shortest rotation 
@@ -54,12 +53,6 @@ void PlayerAnimator::RotatePlayer(
 		deltaRotation += Engine::MathHelper::Two_Pi; 
 	}
 
-	Logger::PRINT(
-		L"Delta Rotation is: " +
-		std::to_wstring(deltaRotation) +
-		L"\n"
-	);
-
 	if (std::abs(deltaRotation) < 0.01f) {
 		*currentRotation = targetRotation;
 		mIsRotationComplete = true;
@@ -72,8 +65,8 @@ void PlayerAnimator::RotatePlayer(
 
 bool PlayerAnimator::PerformBackwardsDash(
 	float deltaTime, 
-	Engine::Vector3* const center,
-	const Engine::Vector3* const forward,
+	Engine::Vector3& center,
+	const Engine::Vector3& forward,
 	float backwardsDashVelocity,
 	float animationDuration
 ) {
@@ -85,9 +78,9 @@ bool PlayerAnimator::PerformBackwardsDash(
 
 		// Calculate and store the direction (flipped forward vector)
 		// We flatten the Y axis to keep the dash strictly in the xz plane for now
-		mDashDirection.x = -forward->x;
+		mDashDirection.x = -forward.x;
 		mDashDirection.y = 0.0f;
-		mDashDirection.z = -forward->z;
+		mDashDirection.z = -forward.z;
 
 		float square = (mDashDirection.x * mDashDirection.x) + (mDashDirection.z * mDashDirection.z);
 
@@ -111,8 +104,8 @@ bool PlayerAnimator::PerformBackwardsDash(
 		mDashAnimationTimer += deltaTime;
 
 		// position = position + (direction * speed * time)
-		center->x += mDashDirection.x * backwardsDashVelocity * deltaTime;
-		center->z += mDashDirection.z * backwardsDashVelocity * deltaTime;
+		center.x += mDashDirection.x * backwardsDashVelocity * deltaTime;
+		center.z += mDashDirection.z * backwardsDashVelocity * deltaTime;
 
 		if (mDashAnimationTimer >= animationDuration) {
 			mIsPerformingBackwardsDash = false;

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../../../Engine/Math/EngineMath.h"
-
-struct BasisVectors;
+#include "../../../../Engine/Math/EngineMath.h"
 
 class PlayerAnimator {
 public:
@@ -11,22 +9,22 @@ public:
 
 	bool MoveAndRotatePlayer(
 		float deltaTime,
-		const Engine::Vector3* const movement,
-		Engine::Vector3* const center, 
+		const Engine::Vector3& movement,
+		Engine::Vector3& center, 
 		float* currentRotation,
 		float walkingRunningSpeed,
 		float rotationSpeed
 	);
 	void RotatePlayer(
 		float deltaTime,
-		const Engine::Vector3* const movement,
+		const Engine::Vector3& movement,
 		float rotationSpeed,
 		float* currentRotation
 	);
 	bool PerformBackwardsDash(
 		float deltaTime, 
-		Engine::Vector3* const center, 
-		const Engine::Vector3* const forward,
+		Engine::Vector3& center, 
+		const Engine::Vector3& forward,
 		float backwardsDashDistance,
 		float animationDuration
 	);

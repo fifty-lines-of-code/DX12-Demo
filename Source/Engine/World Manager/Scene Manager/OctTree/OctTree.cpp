@@ -1,29 +1,62 @@
 #include "OctTree.h"
 
-#include "../../Entities/Entity.h"
+#include "../Entity/Entity.h"
 
 namespace Engine {
 
-	OctTree::OctTree(Vector3 center, float halfWidth) :
-		mRoot(nullptr),
-		mNextAvailableStartIndex(1)
-	{
-		SetupRoot(halfWidth);
-		IncrementNextAvailableStartIndex();
-	}
+	OctTree::OctTree() : 
+		mRoot(nullptr)
+	{}
 
 	OctTree::~OctTree() {}
+
+	bool OctTree::Initialize(const Vector3& center, float halfWidth) {
+		SetupRoot(center, halfWidth);
+		IncrementNextAvailableStartIndex();
+
+		return mRoot != nullptr;
+	}
 
 	bool OctTree::Insert(const Entity* entity) {
 		return Insert_Internal(entity, mRoot, 0);
 	}
 
+	void OctTree::ClearDynamicEntities() {
+		for (uint32_t i = 0; i < mNextAvailableStartIndex; ++i) {
+			allNodes[i].ClearDynamicEntities();
+		}
+	}
+
+	void OctTree::GetCollisionsWithPlayer(
+		uint32_t playerID,
+		const AABB& playerPotentialAABB,
+		std::vector<const Entity*>& candidates
+	) {
+		std::vector<const Entity*> potentialCollisions;
+		GetPotentalCollisionsWithPlayer(
+			0,
+			playerPotentialAABB,
+			potentialCollisions
+		);
+
+		for (int i = 0; i < potentialCollisions.size(); ++i) {
+			const Entity* entity = potentialCollisions[i];
+			
+			// don't count player "colliding" with player
+			if (entity->GetID() == playerID) { continue; }
+
+			if (!AABBIntersect(playerPotentialAABB, entity->GetAABB())) { continue; }
+
+			candidates.push_back(entity);
+		}
+	}
+
 #pragma region Private
 
-	void OctTree::SetupRoot(float halfWidth) {
+	void OctTree::SetupRoot(const Vector3& center, float halfWidth) {
 		mRoot = &allNodes[0];
+		mRoot->SetCenter(center);
 		mRoot->SetHalfWidth(halfWidth);
-		mRoot->SetStartIndexOfChildNodes(mNextAvailableStartIndex);
 		CalculateAndUpdateBoundsOfNode(mRoot);
 	}
 
@@ -36,13 +69,16 @@ namespace Engine {
 
 		// if this isn't the deepest level (leaf nodes)
 		if (depth < OctTree::MAX_DEPTH) {
-			AABB entityAABB = entity->GetAABB();
+			AABB entityAABB = entity->GetIsStatic() ?
+				entity->GetAABB() :
+				entity->GetPotentialAABB();
+
 			double childrenHalfWidth = node->GetHalfWidth() * 0.5;
 
 			// 1. Subdivide the node if it doesn't have children already
 			// known by if start index == uint32_t::max
 			// maybe we can find a better way to know if a node has been subdivided
-			if (node->GetStartIndexOfChildNodes() == UINT32_MAX) {
+			if (node->GetStartIndexOfChildNodes() == OctTreeNode::INVALID_START_INDEX) {
 				Subdivide(node, (float)childrenHalfWidth);
 			}
 
@@ -60,8 +96,7 @@ namespace Engine {
 				// now check if the entity can be inserted into any of the child nodes
 				bool entityFitsInsideNode = DoesEntityFitInNode(
 					entityAABB,
-					child->GetMin(),
-					child->GetMax()
+					child->GetAABB()
 				);
 
 				if (entityFitsInsideNode) {
@@ -71,9 +106,15 @@ namespace Engine {
 			}
 		}
 
-		// 3. if none of the children could completely insert it even though 
-		// it's small enough add it to (parent) node's entity list
-		node->UpdateEntities(entity);
+		// 3. if we're at a leaf node OR
+		// none of the children could completely insert it even though 
+		// it's small enough, add it to (parent) node's entity list
+		if (entity->GetIsStatic()) {
+			node->UpdateStaticEntities(entity);
+		}
+		else {
+			node->UpdateDynamicEntities(entity);
+		}
 
 		return true;
 	}
@@ -126,18 +167,71 @@ namespace Engine {
 
 	bool OctTree::DoesEntityFitInNode(
 		const AABB& entityAABB, 
-		const Vector3& nodeMin, 
-		const Vector3& nodeMax
+		const AABB& nodeAABB
 	) const {
 		return
 			// nodeMin has to be less than or equal to entity min
-			(nodeMin.x <= entityAABB.Min.x) &&
-			(nodeMin.y <= entityAABB.Min.y) &&
-			(nodeMin.z <= entityAABB.Min.z) &&
+			(nodeAABB.Min.x <= entityAABB.Min.x) &&
+			(nodeAABB.Min.y <= entityAABB.Min.y) &&
+			(nodeAABB.Min.z <= entityAABB.Min.z) &&
 			// nodeMax has to be greater than or equal to entity max
-			(nodeMax.x >= entityAABB.Max.x) &&
-			(nodeMax.y >= entityAABB.Max.y) &&
-			(nodeMax.z >= entityAABB.Max.z);
+			(nodeAABB.Max.x >= entityAABB.Max.x) &&
+			(nodeAABB.Max.y >= entityAABB.Max.y) &&
+			(nodeAABB.Max.z >= entityAABB.Max.z);
+	}
+
+	void OctTree::GetPotentalCollisionsWithPlayer(
+		uint32_t startIndex,
+		const AABB& playerPotentialAABB,
+		std::vector<const Entity*>& potentialCandidates
+	) {
+		if (startIndex >= mNextAvailableStartIndex) { return; }
+
+		OctTreeNode& node = allNodes[startIndex];
+
+		// if player doesn't intersect with this node, return
+		if (!AABBIntersect(playerPotentialAABB, node.GetAABB())) { return; }
+
+		// add all entities inside this node to candidates
+		for (const Entity* entity : node.GetStaticEntities()) {
+			potentialCandidates.push_back(entity);
+		}
+
+		// recurse through it's children, if it has any
+		if (node.GetStartIndexOfChildNodes() == OctTreeNode::INVALID_START_INDEX) {
+			return;
+		}
+
+		for (int i = 0; i < OctTreeNode::NUMBER_OF_CHILDREN; ++i) {
+			GetPotentalCollisionsWithPlayer(
+				node.GetStartIndexOfChildNodes() + i,
+				playerPotentialAABB,
+				potentialCandidates
+			);
+		}
+	}
+
+	bool OctTree::AABBIntersect(const AABB& first, const AABB& second) {
+		// check x
+		if (first.Max.x < second.Min.x ||
+			first.Min.x > second.Max.x) { 
+			return false;
+		}
+
+		// check y
+		if (first.Max.y < second.Min.y ||
+			first.Min.y > second.Max.y) {
+			return false;
+		}
+
+		// check z
+		if (first.Max.z < second.Min.z ||
+			first.Min.z > second.Max.z) {
+			return false;
+		}
+
+		// collision
+		return true;
 	}
 }
 

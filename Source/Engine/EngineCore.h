@@ -4,10 +4,10 @@
 #include "Renderer/DX12Renderer/DX12Renderer.h"
 #include "Math/EngineMath.h"
 #include "../Helper/Helper.h"
-#include "Scene Manager/SceneManager.h"
-#include "Input System/Xbox/XboxInputSystem.h"
 #include <memory>
 #include <vector>
+#include "World Manager/WorldManager.h"
+#include "Input System/Xbox/XboxInputSystem.h"
 
 struct BasisVectors;
 class Entity;
@@ -21,17 +21,13 @@ namespace Engine {
 		EngineCore& operator=(const EngineCore& rhs) = delete;
 		~EngineCore();
 
-		bool Initialize(HWND mainWnd, const Engine::Vector3* playerPosition);
+		bool Initialize(HWND mainWnd);
 		bool SetupPipeline();
 
 		void UpdateInputSystemAndCamera(float deltaTime);
-		void Update(float deltaTime, const Engine::Vector3* playerPosition);
-		const BasisVectors* GetCameraBasisVectors() const;
+		void Update(float deltaTime);
 
 		void Draw();
-
-		const IInputSystem* const GetInputSystem() const;
-		Entity* GetPlayerEntity() const;
 
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
 		void SetWindowed(UINT clientWidth, UINT clientHeight);
@@ -48,7 +44,7 @@ namespace Engine {
 		const float mAnimationSpeed;
 
 		DX12Renderer mRenderer;
-		SceneManager mSceneManager;
+		WorldManager mWorldManager;
 		Camera mCamera;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
 		XboxInputSystem mInputSystem;
@@ -56,7 +52,8 @@ namespace Engine {
 		Engine::Matrix4x4 mViewProjectionTranspose;
 
 	private:
-		bool InitializeCamera(const Engine::Vector3* playerPosition);
+		bool InitializeCamera(const Engine::Vector3& playerPosition);
 		void LoadGeometry();
+		void UpdateConstantBuffers();
 	};
 }

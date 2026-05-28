@@ -2,13 +2,11 @@
 
 #include "../Engine/EngineCore.h"
 #include "Game State/GameState.h"
-#include "../Game Timer/GameTimer.h"
-#include "Player/Player.h"
+#include "Game Timer/GameTimer.h"
 #include <memory>
-#include <wtypes.h>
 #include <string>
+#include <wtypes.h>
 
-class EngineCore;
 class Entity;
 
 class Game {
@@ -30,7 +28,6 @@ private:
 	Engine::EngineCore mEngineCore;
 	GameTimer mTimer;
 	GameState mGameState;
-	Player mPlayer;
 
 private:
 	void CalculateFrameStats();
