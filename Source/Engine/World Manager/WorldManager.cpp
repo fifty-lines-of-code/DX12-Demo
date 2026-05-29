@@ -30,45 +30,27 @@ namespace Engine {
 
 	void WorldManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed, const BasisVectors& cameraBasisVectors) {
 		// first prepare for new frame
-		PrepareForNewFrame();
+		PrepareForUpdate();
 
-		// tell player to calculate it's new potential center
-		mPlayer.CalculateNewPotentialCenter(
+		// then update player
+		mPlayer.Update(
 			deltaTime,
 			inputSystem,
 			cameraBasisVectors
 		);
 
-		// get all entities player is colliding with
-		std::vector<const Entity*> collisions;
-		collisions.reserve(8);
-
-		mSceneManager.GetCollisionsWithPlayer(
-			mSceneManager.GetPlayerEntity().GetPotentialAABB(),
-			collisions
+		std::vector<const Entity*> collisionCandidates;
+		const AABB potentialFootprint = mPlayer.CalculatePotentialFootprintAABB();
+		mSceneManager.GetPotentialCollisionsWithAABB(
+			potentialFootprint,
+			collisionCandidates
 		);
 
-		// todo:
-		// crude right now, will build later
-		// if collision, don't do anything
-		// otherwise update player
-		bool foundCollision = false;
-		for (const Entity* entity: collisions) {
-			// don't check with ourselves
-			if (entity->GetID() == mSceneManager.GetPlayerEntity().GetID()) { continue; }
-
-			foundCollision = true;
-			break;
-		}
-
-		if (!foundCollision) {
-			// then update player
-			mPlayer.Update(
-				deltaTime,
-				inputSystem,
-				cameraBasisVectors
-			);
-		}
+		// resolve collisions
+		mPhysicsSystem.ResolveEntityMovement(
+			mSceneManager.GetPlayerEntity(),
+			collisionCandidates
+		);
 
 		// finally update scene manager
 		mSceneManager.Update(inputSystem, deltaTime, animationSpeed);
@@ -102,8 +84,8 @@ namespace Engine {
 		return mSceneManager.GetMeshesToLoad();
 	}
 
-	void WorldManager::PrepareForNewFrame() {
-		mSceneManager.PrepareForNewFrame();
+	void WorldManager::PrepareForUpdate() {
+		mSceneManager.PrepareForUpdate();
 	}
 
 #pragma endregion

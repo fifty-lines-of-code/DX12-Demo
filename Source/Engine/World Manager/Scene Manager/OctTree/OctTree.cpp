@@ -1,6 +1,7 @@
 #include "OctTree.h"
 
 #include "../Entity/Entity.h"
+#include "../../../Math/GeometryHelper.h"
 
 namespace Engine {
 
@@ -27,28 +28,16 @@ namespace Engine {
 		}
 	}
 
-	void OctTree::GetCollisionsWithPlayer(
+	void OctTree::GetPotentialCollisionsWithAABB(
 		uint32_t playerID,
 		const AABB& playerPotentialAABB,
 		std::vector<const Entity*>& candidates
 	) {
-		std::vector<const Entity*> potentialCollisions;
-		GetPotentalCollisionsWithPlayer(
+		GetPotentalCollisionsWithPlayer_Internal(
 			0,
 			playerPotentialAABB,
-			potentialCollisions
+			candidates
 		);
-
-		for (int i = 0; i < potentialCollisions.size(); ++i) {
-			const Entity* entity = potentialCollisions[i];
-			
-			// don't count player "colliding" with player
-			if (entity->GetID() == playerID) { continue; }
-
-			if (!AABBIntersect(playerPotentialAABB, entity->GetAABB())) { continue; }
-
-			candidates.push_back(entity);
-		}
 	}
 
 #pragma region Private
@@ -69,20 +58,18 @@ namespace Engine {
 
 		// if this isn't the deepest level (leaf nodes)
 		if (depth < OctTree::MAX_DEPTH) {
-			AABB entityAABB = entity->GetIsStatic() ?
-				entity->GetAABB() :
-				entity->GetPotentialAABB();
+			AABB entityAABB = entity->GetAABB();
 
 			double childrenHalfWidth = node->GetHalfWidth() * 0.5;
 
 			// 1. Subdivide the node if it doesn't have children already
 			// known by if start index == uint32_t::max
 			// maybe we can find a better way to know if a node has been subdivided
-			if (node->GetStartIndexOfChildNodes() == OctTreeNode::INVALID_START_INDEX) {
+			if (node->GetStartIndexOfChildren() == OctTreeNode::INVALID_START_INDEX) {
 				Subdivide(node, (float)childrenHalfWidth);
 			}
 
-			uint32_t startIndex = node->GetStartIndexOfChildNodes();
+			uint32_t startIndex = node->GetStartIndexOfChildren();
 			// 2. Find the child node to insert into
 			for (int i = 0; i < OctTreeNode::NUMBER_OF_CHILDREN; ++i) {
 				uint32_t childIndex = startIndex + i;
@@ -180,7 +167,7 @@ namespace Engine {
 			(nodeAABB.Max.z >= entityAABB.Max.z);
 	}
 
-	void OctTree::GetPotentalCollisionsWithPlayer(
+	void OctTree::GetPotentalCollisionsWithPlayer_Internal(
 		uint32_t startIndex,
 		const AABB& playerPotentialAABB,
 		std::vector<const Entity*>& potentialCandidates
@@ -190,48 +177,28 @@ namespace Engine {
 		OctTreeNode& node = allNodes[startIndex];
 
 		// if player doesn't intersect with this node, return
-		if (!AABBIntersect(playerPotentialAABB, node.GetAABB())) { return; }
+		if (!GeometryHelper::AABBIntersect(playerPotentialAABB, node.GetAABB())) { return; }
 
 		// add all entities inside this node to candidates
 		for (const Entity* entity : node.GetStaticEntities()) {
 			potentialCandidates.push_back(entity);
 		}
+		for (const Entity* entity : node.GetDynamicEntities()) {
+			potentialCandidates.push_back(entity);
+		}
 
 		// recurse through it's children, if it has any
-		if (node.GetStartIndexOfChildNodes() == OctTreeNode::INVALID_START_INDEX) {
+		if (node.GetStartIndexOfChildren() == OctTreeNode::INVALID_START_INDEX) {
 			return;
 		}
 
 		for (int i = 0; i < OctTreeNode::NUMBER_OF_CHILDREN; ++i) {
-			GetPotentalCollisionsWithPlayer(
-				node.GetStartIndexOfChildNodes() + i,
+			GetPotentalCollisionsWithPlayer_Internal(
+				node.GetStartIndexOfChildren() + i,
 				playerPotentialAABB,
 				potentialCandidates
 			);
 		}
-	}
-
-	bool OctTree::AABBIntersect(const AABB& first, const AABB& second) {
-		// check x
-		if (first.Max.x < second.Min.x ||
-			first.Min.x > second.Max.x) { 
-			return false;
-		}
-
-		// check y
-		if (first.Max.y < second.Min.y ||
-			first.Min.y > second.Max.y) {
-			return false;
-		}
-
-		// check z
-		if (first.Max.z < second.Min.z ||
-			first.Min.z > second.Max.z) {
-			return false;
-		}
-
-		// collision
-		return true;
 	}
 }
 

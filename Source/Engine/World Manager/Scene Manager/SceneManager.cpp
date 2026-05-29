@@ -32,14 +32,15 @@ namespace Engine {
 		return true;
 	}
 
-	void SceneManager::GetCollisionsWithPlayer(
+	void SceneManager::GetPotentialCollisionsWithAABB(
 		const AABB& playerPotentialAABB,
 		std::vector<const Entity*>& candidates
 	) {
 		// prepare for collision checks
 		PrepareForCollisionPass();
 
-		mOctTree.GetCollisionsWithPlayer(
+		// find all entities player may be colliding with
+		mOctTree.GetPotentialCollisionsWithAABB(
 			PLAYER_INDEX,
 			playerPotentialAABB,
 			candidates
@@ -75,7 +76,7 @@ namespace Engine {
 		return mEntities;
 	}
 
-	void SceneManager::PrepareForNewFrame() {
+	void SceneManager::PrepareForUpdate() {
 		mOctTree.ClearDynamicEntities();
 	}
 
@@ -99,8 +100,7 @@ namespace Engine {
 	bool SceneManager::GeneratePlayerEntity() {
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
 		playerEntity.SetID(PLAYER_INDEX);
-		playerEntity.SetCenter(Vector3(0.f, 0.65f, 0.5f));
-		playerEntity.SetPotentialCenter(Vector3(0.f, 0.6f, 0.5f));
+		playerEntity.GetPhysicsBody().Center = Vector3(0.f, 0.65f, 0.5f);
 		playerEntity.SetScale(Vector3(1.f, 1.f, 1.f));
 		playerEntity.SetIsStatic(false);
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
@@ -119,7 +119,7 @@ namespace Engine {
 		// generate the floor
 		Entity& floor = mEntities[mIDOfNextEntityThatWillBeCreated];
 		floor.SetID(mIDOfNextEntityThatWillBeCreated);
-		floor.SetCenter(Vector3(0.f, 0.f, 0.f));
+		floor.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
 		floor.SetScale(Vector3(10.f, .2f, 10.f));
 
 		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
@@ -130,7 +130,7 @@ namespace Engine {
 		// generate the wall
 		Entity& wall = mEntities[mIDOfNextEntityThatWillBeCreated];
 		wall.SetID(mIDOfNextEntityThatWillBeCreated);
-		wall.SetCenter(Vector3(0.f, 1.1f, 3.f));
+		wall.GetPhysicsBody().Center = Vector3(0.f, 1.1f, 3.f);
 		wall.SetScale(Vector3(1.5f, 2.f, .2f));
 
 		wall.SetMesh(cubeMesh);

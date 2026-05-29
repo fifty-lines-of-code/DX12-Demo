@@ -2,24 +2,24 @@
 
 #include "../../../../Engine/Math/EngineMath.h"
 
+struct DashAnimationData {
+	Engine::Vector3 DashStartPosition = Engine::Vector3(0, 0, 0);
+	Engine::Vector3 DashTargetPosition = Engine::Vector3(0, 0, 0);
+	Engine::Vector3 DashDirection = Engine::Vector3(0, 0, 0);
+	float DashAnimationTimer = 0.5f;
+	float IsPerformingBackwardsDash = false;
+	float IsBackwardsDashAnimationComplete = true;
+};
+
 class PlayerAnimator {
 public:
 	PlayerAnimator();
 	~PlayerAnimator();
 
-	bool MoveAndRotatePlayer(
+	void UpdateVisualRotation(
 		float deltaTime,
 		const Engine::Vector3& movement,
-		Engine::Vector3& center, 
-		float* currentRotation,
-		float walkingRunningSpeed,
 		float rotationSpeed
-	);
-	void RotatePlayer(
-		float deltaTime,
-		const Engine::Vector3& movement,
-		float rotationSpeed,
-		float* currentRotation
 	);
 	bool PerformBackwardsDash(
 		float deltaTime, 
@@ -29,17 +29,15 @@ public:
 		float animationDuration
 	);
 	bool GetIsBackwardsDashAnimationComplete() const;
+	float GetRotation() const;
 	bool GetIsRotationComplete() const;
 	void SetIsRotationComplete(bool value);
 
 private:
 	// dash animation data
-	Engine::Vector3 mDashStartPosition = Engine::Vector3(0, 0, 0);
-	Engine::Vector3 mDashTargetPosition = Engine::Vector3(0, 0, 0);
-	float mDashAnimationTimer = 0.5f;
-	float mIsPerformingBackwardsDash = false;
-	float mIsBackwardsDashAnimationComplete = true;
-	Engine::Vector3 mDashDirection = Engine::Vector3(0, 0, 0);
+	DashAnimationData mDashAnimationData;
+	// Rotation Data
+	float mCurrentRotation;
 	bool mIsRotationComplete = false;
 
 private:

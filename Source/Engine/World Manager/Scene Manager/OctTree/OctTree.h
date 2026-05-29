@@ -17,7 +17,7 @@ namespace Engine {
 		bool Initialize(const Vector3& center, float halfWidth);
 		bool Insert(const Entity* entity);
 		void ClearDynamicEntities();
-		void GetCollisionsWithPlayer(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<const Entity*>& candidates);
+		void GetPotentialCollisionsWithAABB(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<const Entity*>& candidates);
 
 	private:
 		// why depth of 3? Because our scene is small and we don't have many entities, so we don't need a very deep tree, but helps to learn the idea
@@ -49,7 +49,6 @@ namespace Engine {
 		void CalculateAndUpdateBoundsOfNode(OctTreeNode* node);
 		bool DoesEntityFitInNode(const AABB& entityAABB, const AABB& nodeAABB) const;
 
-		void GetPotentalCollisionsWithPlayer(uint32_t startIndex, const AABB& playerPotentialAABB, std::vector<const Entity*>& potentialCandidates);
-		bool AABBIntersect(const AABB& first, const AABB& second);
+		void GetPotentalCollisionsWithPlayer_Internal(uint32_t startIndex, const AABB& playerPotentialAABB, std::vector<const Entity*>& potentialCandidates);
 	};
 }

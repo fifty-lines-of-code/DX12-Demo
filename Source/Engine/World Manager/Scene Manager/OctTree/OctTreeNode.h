@@ -16,8 +16,9 @@ namespace Engine {
 		const Vector3& GetCenter() const;
 		float GetHalfWidth() const;
 		const AABB& GetAABB() const;
-		uint32_t GetStartIndexOfChildNodes() const;
+		uint32_t GetStartIndexOfChildren() const;
 		const std::vector<const Entity*>& GetStaticEntities() const;
+		const std::vector<const Entity*>& GetDynamicEntities() const;
 
 		void SetCenter(const Vector3& center);
 		void SetHalfWidth(float halfWidth);

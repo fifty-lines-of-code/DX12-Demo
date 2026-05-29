@@ -1,0 +1,97 @@
+#pragma once
+
+#include "../Math/EngineMath.h"
+#include "../Math/GeometryHelper.h"
+
+namespace Engine::EnginePhysics {
+
+	struct PhysicsBody {
+		// current validated spatial state
+		Vector3 Center;
+		Vector3 Scale;
+		BasisVectors BasisVectors;
+		Matrix4x4 WorldMatrix;
+
+		// bounds
+		AABB LocalAABB;
+		AABB WorldAABB;
+
+		// transient simulation state
+		Vector3 VelocityIntent;
+
+		PhysicsBody(const Engine::Vector3& initCenter, const Engine::Vector3& initScale)
+			: Center(initCenter)
+			, Scale(initScale)
+			, BasisVectors()
+		{}
+
+		// Public update endpoints called by processing subsystems
+		void UpdateProductionTransforms() {
+			RebuildWorldMatrix(WorldMatrix, Center);
+			GeometryHelper::CalculateAABB(LocalAABB, WorldMatrix, WorldAABB);
+		}
+
+	private:
+		void RebuildWorldMatrix(
+			Matrix4x4& world,
+			Vector3& center
+		) {
+			// todo: Use DX methods to build SRT and then W
+			// DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(mScaleX, mScaleY, mScaleZ);
+			Engine::Matrix4x4 scale;
+			Engine::Matrix4x4 rotation;
+			Engine::Matrix4x4 translation;
+
+			// Set Scale
+			scale.m[0][0] = Scale.x;
+			scale.m[1][1] = Scale.y;
+			scale.m[2][2] = Scale.z;
+
+			// Set Rotation
+			// Row 0: Right
+			rotation.m[0][0] = BasisVectors.right.x;
+			rotation.m[0][1] = BasisVectors.right.y;
+			rotation.m[0][2] = BasisVectors.right.z;
+			rotation.m[0][3] = 0.f;
+
+			// Row 1: Up
+			rotation.m[1][0] = BasisVectors.up.x;
+			rotation.m[1][1] = BasisVectors.up.y;
+			rotation.m[1][2] = BasisVectors.up.z;
+			rotation.m[1][3] = 0.f;
+
+			// Row 2: Forward
+			rotation.m[2][0] = BasisVectors.forward.x;
+			rotation.m[2][1] = BasisVectors.forward.y;
+			rotation.m[2][2] = BasisVectors.forward.z;
+			rotation.m[2][3] = 0.f;
+
+			// Set Translation
+			translation.m[3][0] = center.x;
+			translation.m[3][1] = center.y;
+			translation.m[3][2] = center.z;
+			translation.m[3][3] = 1.0f;
+
+			// lets read and write to our Matrix4x4 as an XMFLOAT4x4 so that
+			// we get access to fast SIMD math operations
+			// from my understand there should be 0 performance penalty for this cast
+			// and it allows us to keep our code clean, without having to use too many 
+			// XMMatrix* methods
+
+			DirectX::XMMATRIX scaleRotation = DirectX::XMMatrixMultiply(
+				DirectX::XMLoadFloat4x4(&scale.AsXMFLOAT4X4()),
+				DirectX::XMLoadFloat4x4(&rotation.AsXMFLOAT4X4())
+			);
+
+			DirectX::XMMATRIX worldXM = DirectX::XMMatrixMultiply(
+				scaleRotation,
+				DirectX::XMLoadFloat4x4(&translation.AsXMFLOAT4X4())
+			);
+
+			DirectX::XMStoreFloat4x4(
+				&world.AsXMFLOAT4X4(),
+				worldXM
+			);
+		}
+	};
+}

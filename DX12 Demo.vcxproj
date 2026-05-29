@@ -135,9 +135,14 @@
     <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h" />
     <ClInclude Include="Source\Engine\Math\BasisVectors.h" />
     <ClInclude Include="Source\Engine\Math\EngineMath.h" />
+    <ClInclude Include="Source\Engine\Math\Geometry.h" />
+    <ClInclude Include="Source\Engine\Math\GeometryHelper.h" />
     <ClInclude Include="Source\Engine\Math\MathHelper.h" />
     <ClInclude Include="Source\Engine\Math\Matrix.h" />
     <ClInclude Include="Source\Engine\Math\Vector.h" />
+    <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h" />
+    <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h" />
+    <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h" />
@@ -149,7 +154,6 @@
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
-    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Geometry.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h" />
@@ -169,6 +173,7 @@
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
+    <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />

@@ -3,6 +3,7 @@
 #include <array>
 #include <memory>
 #include "Player/Player.h"
+#include "../Physics System/PhysicsSystem.h"
 #include "Scene Manager/SceneManager.h"
 #include <vector>
 
@@ -31,9 +32,10 @@ namespace Engine {
 	private:
 		SceneManager mSceneManager;
 		Player mPlayer;
+		EnginePhysics::PhysicsSystem mPhysicsSystem;
 
 	private:
 		bool LoadScene();
-		void PrepareForNewFrame();
+		void PrepareForUpdate();
 	};
 }

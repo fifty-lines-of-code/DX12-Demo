@@ -133,6 +133,12 @@
     <Filter Include="Header Files\Game\Game State">
       <UniqueIdentifier>{4059241d-9d4c-424c-a84a-cf836277a80c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Physics System">
+      <UniqueIdentifier>{1466d8c3-4adc-4131-94ab-f67361d4e2a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Physics System">
+      <UniqueIdentifier>{ab08eb71-e007-4c55-b5ad-c183255befb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -219,9 +225,6 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Geometry.h">
-      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h">
       <Filter>Header Files\Engine\World Manager</Filter>
     </ClInclude>
@@ -242,6 +245,21 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Input System\GameButton.h">
       <Filter>Header Files\Engine\Input System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\Geometry.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\GeometryHelper.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -307,6 +325,9 @@
     </ClCompile>
     <ClCompile Include="Source\Game\Game State\GameState.cpp">
       <Filter>Source Files\Game\Game State</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp">
+      <Filter>Source Files\Engine\Physics System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -33,7 +33,8 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 	float leftStickX = inputSystem->GetLeftStickX();
 	float leftStickY = inputSystem->GetLeftStickY();
 	PlayerState targetState = mState;
-	bool isMoving = leftStickX != 0 || leftStickY != 0;
+	float movementSqLength = (leftStickX * leftStickX) + (leftStickY * leftStickY);
+	bool isMoving = movementSqLength >= 0.01f;
 
 	switch (mState) {
 	case PlayerState::Idle:
@@ -42,6 +43,7 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 			targetState = PlayerState::BeginRotating;
 			break;
 		}
+		// fallthrough on purpose
 	case PlayerState::BeginRotating:
 	case PlayerState::Rotating:
 	case PlayerState::EndRotating:

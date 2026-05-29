@@ -22,12 +22,16 @@ namespace Engine {
 
 	const AABB& OctTreeNode::GetAABB() const { return mAABB; }
 
-	uint32_t OctTreeNode::GetStartIndexOfChildNodes() const { 
+	uint32_t OctTreeNode::GetStartIndexOfChildren() const { 
 		return mStartIndexOfChildNodes;
 	}
 
 	const std::vector<const Entity*>& OctTreeNode::GetStaticEntities() const {
 		return mStaticEntities;
+	}
+
+	const std::vector<const Entity*>& OctTreeNode::GetDynamicEntities() const {
+		return mDynamicEntities;
 	}
 
 	void OctTreeNode::SetCenter(const Vector3& center) { mCenter = center; }

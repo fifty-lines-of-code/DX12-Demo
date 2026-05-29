@@ -21,7 +21,7 @@ namespace Engine {
 
 		bool Initialize(const Vector3& center, float halfWidth);
 		bool LoadScene();
-		void GetCollisionsWithPlayer(
+		void GetPotentialCollisionsWithAABB(
 			const AABB& playerPotentialAABB,
 			std::vector<const Entity*>& candidates
 		);
@@ -38,7 +38,7 @@ namespace Engine {
 		static constexpr uint32_t MAX_ENTITIES = 3;
 		std::array<Entity, MAX_ENTITIES>& GetEntities();
 
-		void PrepareForNewFrame();
+		void PrepareForUpdate();
 
 	private:
 		static constexpr uint8_t PLAYER_INDEX = 0;
