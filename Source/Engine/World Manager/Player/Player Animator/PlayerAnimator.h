@@ -2,10 +2,7 @@
 
 #include "../../../../Engine/Math/EngineMath.h"
 
-struct DashAnimationData {
-	Engine::Vector3 DashStartPosition = Engine::Vector3(0, 0, 0);
-	Engine::Vector3 DashTargetPosition = Engine::Vector3(0, 0, 0);
-	Engine::Vector3 DashDirection = Engine::Vector3(0, 0, 0);
+struct BackwardsDashAnimationData {
 	float DashAnimationTimer = 0.5f;
 	float IsPerformingBackwardsDash = false;
 	float IsBackwardsDashAnimationComplete = true;
@@ -33,7 +30,7 @@ public:
 
 private:
 	// dash animation data
-	DashAnimationData mDashAnimationData;
+	BackwardsDashAnimationData mDashAnimationData;
 	// Rotation Data
 	float mCurrentRotation;
 	bool mIsRotationComplete = false;

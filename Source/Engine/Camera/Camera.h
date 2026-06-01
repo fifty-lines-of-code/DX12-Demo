@@ -42,7 +42,7 @@ private:
 	Engine::Matrix4x4 mProjection;
 	Engine::Matrix4x4 mViewProjection;
 	const float mTrackingSpeed = 4.f;
-	Engine::BasisVectors basisVectors;
+	Engine::BasisVectors mBasisVectors;
 
 private:
 	void UpdateTarget(const Engine::Vector3& target);

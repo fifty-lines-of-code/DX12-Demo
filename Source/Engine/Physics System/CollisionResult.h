@@ -5,9 +5,7 @@
 namespace Engine::EnginePhysics {
 
 	struct CollisionResult {
-		float ProposedCenterX;
-		float ProposedCenterY;
-		float ProposedCenterZ;
+		Vector3 ProposedCenter;
 		bool CollidedX = false;
 		bool CollidedY = false;
 		bool CollidedZ = false;

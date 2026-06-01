@@ -111,8 +111,7 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisionResult) {
 	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
 
-	physicsBody.Center.x = collisionResult.ProposedCenterX;
-	physicsBody.Center.z = collisionResult.ProposedCenterZ;
+	physicsBody.Center = collisionResult.ProposedCenter;
 
 	if (collisionResult.HasCollided() && 
 		mPlayerLogic.GetPlayerState() == PlayerState::BackwardsDashing) {

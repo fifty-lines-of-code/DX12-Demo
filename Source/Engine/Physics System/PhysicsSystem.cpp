@@ -11,9 +11,7 @@ namespace Engine::EnginePhysics {
 		PhysicsBody& physicsBody = entity.GetPhysicsBody();
 
 		// Set the proposed center to current center
-		collisionResult.ProposedCenterX = physicsBody.Center.x;
-		collisionResult.ProposedCenterY = physicsBody.Center.y;
-		collisionResult.ProposedCenterZ = physicsBody.Center.z;
+		collisionResult.ProposedCenter = physicsBody.Center;
 
 		if (physicsBody.VelocityIntent.x == 0.f &&
 			physicsBody.VelocityIntent.z == 0.f) {
@@ -22,13 +20,13 @@ namespace Engine::EnginePhysics {
 
 		uint32_t entityID = entity.GetID();
 		// store the safe Center
-		float safeCenterX = physicsBody.Center.x;
-		float safeCenterZ = physicsBody.Center.z;
+		Vector3 safeCenter = physicsBody.Center;
 
 		// resolve movement in the x direction
 		if (physicsBody.VelocityIntent.x != 0.f) {
 			AABB potentialAABB;
-			Vector3 testCenter = Vector3(safeCenterX, physicsBody.Center.y, safeCenterZ);
+			Vector3 testCenter = safeCenter;
+
 			testCenter.x += physicsBody.VelocityIntent.x;
 
 			potentialAABB.Min = {
@@ -53,14 +51,15 @@ namespace Engine::EnginePhysics {
 				collisionResult.CollidedX = true;
 			}
 			else {
-				safeCenterX = testCenter.x;
+				safeCenter.x = testCenter.x;
 			}
 		}
 
 		// resolve movement in the z direction
 		if (physicsBody.VelocityIntent.z != 0.f) {
 			AABB potentialAABB;
-			Vector3 testCenter = Vector3(safeCenterX, physicsBody.Center.y, safeCenterZ);
+			Vector3 testCenter = safeCenter;
+
 			testCenter.z += physicsBody.VelocityIntent.z;
 
 			potentialAABB.Min = {
@@ -85,13 +84,12 @@ namespace Engine::EnginePhysics {
 				collisionResult.CollidedZ = true;
 			}
 			else {
-				safeCenterZ = testCenter.z;
+				safeCenter.z = testCenter.z;
 			}
 		}
 
 		// commit the movement
-		collisionResult.ProposedCenterX = safeCenterX;
-		collisionResult.ProposedCenterZ = safeCenterZ;
+		collisionResult.ProposedCenter = safeCenter;
 	}
 
 	bool PhysicsSystem::ResolveCollision(

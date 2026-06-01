@@ -46,7 +46,7 @@ const Engine::Matrix4x4* Camera::GetViewProjection() const {
 }
 
 const Engine::BasisVectors& Camera::GetBasisVectors() const {
-	return basisVectors;
+	return mBasisVectors;
 }
 
 void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
@@ -88,8 +88,8 @@ void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, floa
 	// and forward x and z come from simple trignometry
 	// if we draw x, z, and the pitch out on paper
 
-	basisVectors.forward = Engine::Vector3(-std::sin(mYaw), 0.f, std::cos(mYaw));
-	basisVectors.right = Engine::Vector3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
+	mBasisVectors.forward = Engine::Vector3(-std::sin(mYaw), 0.f, std::cos(mYaw));
+	mBasisVectors.right = Engine::Vector3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
 }
 
 void Camera::BuildViewMatrix() {
