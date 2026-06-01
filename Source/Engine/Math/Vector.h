@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include "MathHelper.h"
 
 namespace Engine {
     // Copyright below: Microsoft DirectX::XMFLOAT3
@@ -26,16 +27,54 @@ namespace Engine {
         Vector3(const Vector3&) noexcept = default;
         Vector3& operator=(const Vector3&) noexcept = default;
 
+        inline Vector3 operator-(float scalar) const noexcept {
+            return Vector3(x - scalar, y - scalar, z - scalar);
+        }
+
+        inline Vector3 operator+(float scalar) const noexcept {
+            return Vector3(x + scalar, y + scalar, z + scalar);
+        }
+
         inline static Vector3 Zero() noexcept {
             return Vector3(0.f, 0.f, 0.f);
         }
 
-        const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {
+        inline const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {
             return *reinterpret_cast<const DirectX::XMFLOAT3*>(this);
         }
 
-        DirectX::XMFLOAT3& AsXMFLOAT3() noexcept {
+        inline DirectX::XMFLOAT3& AsXMFLOAT3() noexcept {
             return *reinterpret_cast<DirectX::XMFLOAT3*>(this);
+        }
+
+        inline void Normalize() noexcept {
+            float sqLen = (x * x) + (y * y) + (z * z);
+
+            if (sqLen > 0.0001f) {
+                float invLen = MathHelper::FastInverseSqrt(sqLen);
+                x *= invLen;
+                y *= invLen;
+                z *= invLen;
+            }
+        }
+
+        inline void ClampMagnitude(float maxLength) {
+            float sqLen = (x * x) + (y * y) + (z * z);
+
+            if (sqLen > (maxLength * maxLength)) {
+                float invLen = MathHelper::FastInverseSqrt(sqLen);
+                float scale = maxLength * invLen;
+
+                x *= scale;
+                y *= scale;
+                z *= scale;
+            }
+        }
+
+        inline void Reset() noexcept {
+            x = 0.f;
+            y = 0.f;
+            z = 0.f;
         }
     };
 

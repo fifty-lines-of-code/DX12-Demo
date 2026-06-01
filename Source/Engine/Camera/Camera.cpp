@@ -10,7 +10,7 @@ Camera::Camera(float aspectRatio) :
 
 Camera::~Camera() {}
 
-void Camera::Initialize(const Engine::Vector3* target) {
+void Camera::Initialize(const Engine::Vector3& target) {
 	UpdateTarget(target);
 
 	UpdateYawPitchAndOffset(0, 0, 0);
@@ -26,7 +26,7 @@ void Camera::UpdateWithInputSystem(float deltaTime, float rightJoystickX, float 
 	BuildViewProjectionMatrix();
 }
 
-void Camera::UpdateWithTarget(const Engine::Vector3* target) {
+void Camera::UpdateWithTarget(const Engine::Vector3& target) {
 	UpdateTarget(target);
 
 	DirectX::XMVECTOR targetVector = DirectX::XMLoadFloat3(&mTarget.AsXMFLOAT3());
@@ -45,8 +45,8 @@ const Engine::Matrix4x4* Camera::GetViewProjection() const {
 	return &mViewProjection;
 }
 
-const Engine::BasisVectors* Camera::GetBasisVectors() const {
-	return &basisVectors;
+const Engine::BasisVectors& Camera::GetBasisVectors() const {
+	return mBasisVectors;
 }
 
 void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
@@ -57,10 +57,8 @@ void Camera::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	BuildViewProjectionMatrix();
 }
 
-void Camera::UpdateTarget(const Engine::Vector3* target) {
-	mTarget.x = target->x;
-	mTarget.y = target->y;
-	mTarget.z = target->z;
+void Camera::UpdateTarget(const Engine::Vector3& target) {
+	mTarget = target;
 }
 
 void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, float rightJoystickY) {
@@ -90,8 +88,8 @@ void Camera::UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, floa
 	// and forward x and z come from simple trignometry
 	// if we draw x, z, and the pitch out on paper
 
-	basisVectors.forward = Engine::Vector3(-std::sin(mYaw), 0.f, std::cos(mYaw));
-	basisVectors.right = Engine::Vector3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
+	mBasisVectors.forward = Engine::Vector3(-std::sin(mYaw), 0.f, std::cos(mYaw));
+	mBasisVectors.right = Engine::Vector3(std::cos(mYaw), 0.f, -(-std::sin(mYaw)));
 }
 
 void Camera::BuildViewMatrix() {

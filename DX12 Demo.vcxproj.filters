@@ -25,59 +25,17 @@
     <Filter Include="Source Files\Helper">
       <UniqueIdentifier>{9b9acf19-7790-4518-997e-7aa29ca11007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager">
-      <UniqueIdentifier>{cc89332c-14ef-4cad-a731-fadf23906ccf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager">
-      <UniqueIdentifier>{1834a152-6a64-4816-ac7a-f84c88cd0e3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager\Camera">
-      <UniqueIdentifier>{46975459-7bdd-4461-98d5-c4ac289fc850}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager\Camera">
-      <UniqueIdentifier>{660204ff-0d65-4db5-8aa9-e6ee8eaf3865}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager\Entity">
-      <UniqueIdentifier>{ee2a8c6e-63ab-4efe-989c-483c64ac999e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager\Entity">
-      <UniqueIdentifier>{048c1f24-862a-4330-ac79-5cebe39d6a65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager\Entity\Mesh">
-      <UniqueIdentifier>{916755c0-a897-4799-a6fc-7727c3e648a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager\Entity\Mesh">
-      <UniqueIdentifier>{0de30c2d-e99b-457f-ab11-6cf1ac097a9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager\ResourceManager">
-      <UniqueIdentifier>{7821fa3b-eb40-48f5-9acd-d034136a8267}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager\ResourceManager">
-      <UniqueIdentifier>{aabd4978-14ad-4d63-81fb-899e5a312956}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\Shaders">
       <UniqueIdentifier>{df2aeb42-ffb3-4418-a288-271c3926c669}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Engine\Scene Manager\World Manager">
-      <UniqueIdentifier>{91702e22-de5a-4d9e-8fb7-fe0ab04eaded}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\Scene Manager\World Manager">
-      <UniqueIdentifier>{9ae901d9-5468-4a34-9feb-d4dc1780e556}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{27b8a46b-b870-41c2-9a77-1130931e073b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Game\Player">
-      <UniqueIdentifier>{2053f30a-5b5a-4fa4-9be0-75be74a571e8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Engine\Input System">
       <UniqueIdentifier>{275c9819-8038-40d4-b701-d0513a6a1a29}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Game">
       <UniqueIdentifier>{3a0234da-34b5-4e23-a5b1-7be4e1c682ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Game\Player">
-      <UniqueIdentifier>{47407db7-5c21-4431-b332-b4d50f908647}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Engine\Input System">
       <UniqueIdentifier>{b5578723-5de1-47f3-96cd-3d8c76f7629c}</UniqueIdentifier>
@@ -97,70 +55,100 @@
     <Filter Include="Source Files\Engine\Renderer\DX2Renderer">
       <UniqueIdentifier>{048976fb-5860-42e1-8630-83a17bd17d1a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Game Timer">
-      <UniqueIdentifier>{93dbeb26-58da-40ee-9506-2c0dc75d429c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Game Timer">
-      <UniqueIdentifier>{a87c741c-6bfc-4311-aeb6-03c3b68185e7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Engine\Input System\Xbox">
       <UniqueIdentifier>{7a96add6-8ca4-4cd9-8912-849d01cb8a26}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Engine\Input System\Xbox">
       <UniqueIdentifier>{dcffb177-00d3-4de0-b606-6f55adf64d9c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\World Manager">
+      <UniqueIdentifier>{91702e22-de5a-4d9e-8fb7-fe0ab04eaded}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager">
+      <UniqueIdentifier>{cc89332c-14ef-4cad-a731-fadf23906ccf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Entity">
+      <UniqueIdentifier>{ee2a8c6e-63ab-4efe-989c-483c64ac999e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Entity\Mesh">
+      <UniqueIdentifier>{916755c0-a897-4799-a6fc-7727c3e648a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager">
+      <UniqueIdentifier>{7821fa3b-eb40-48f5-9acd-d034136a8267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\OctTree">
+      <UniqueIdentifier>{a02bf695-f9e6-43b3-86a8-e57d25ff2856}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager">
+      <UniqueIdentifier>{9ae901d9-5468-4a34-9feb-d4dc1780e556}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager">
+      <UniqueIdentifier>{1834a152-6a64-4816-ac7a-f84c88cd0e3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Entity">
+      <UniqueIdentifier>{048c1f24-862a-4330-ac79-5cebe39d6a65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Entity\Mesh">
+      <UniqueIdentifier>{0de30c2d-e99b-457f-ab11-6cf1ac097a9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager">
+      <UniqueIdentifier>{aabd4978-14ad-4d63-81fb-899e5a312956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\OctTree">
+      <UniqueIdentifier>{ef3867d0-47be-40ab-8f90-dd188479f8b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Camera">
+      <UniqueIdentifier>{660204ff-0d65-4db5-8aa9-e6ee8eaf3865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Camera">
+      <UniqueIdentifier>{46975459-7bdd-4461-98d5-c4ac289fc850}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Player">
+      <UniqueIdentifier>{47407db7-5c21-4431-b332-b4d50f908647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Player\Player Animator">
+      <UniqueIdentifier>{1a00e7bd-137d-4e5e-839f-d8fc6273664a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Player\Player Logic">
+      <UniqueIdentifier>{15fa30da-709a-47d7-adb2-67dd11795d4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Player">
+      <UniqueIdentifier>{2053f30a-5b5a-4fa4-9be0-75be74a571e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Game Timer">
+      <UniqueIdentifier>{a87c741c-6bfc-4311-aeb6-03c3b68185e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Player\Player Animator">
+      <UniqueIdentifier>{ccc6836d-acd0-4244-b814-7151192d43be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Player\Player Logic">
+      <UniqueIdentifier>{9a8a6cf5-7429-4aff-a352-c5aae925efbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game\Game Timer">
+      <UniqueIdentifier>{93dbeb26-58da-40ee-9506-2c0dc75d429c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Game State">
+      <UniqueIdentifier>{7783b8a4-58aa-432c-a700-5c5d5a908453}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game\Game State">
+      <UniqueIdentifier>{4059241d-9d4c-424c-a84a-cf836277a80c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Physics System">
+      <UniqueIdentifier>{1466d8c3-4adc-4131-94ab-f67361d4e2a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Physics System">
+      <UniqueIdentifier>{ab08eb71-e007-4c55-b5ad-c183255befb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
       <Filter>Header Files\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\SceneManager.h">
-      <Filter>Header Files\Engine\Scene Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\Entity.h">
-      <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.h">
-      <Filter>Header Files\Engine\Scene Manager\Entity\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\Mesh\Geometry.h">
-      <Filter>Header Files\Engine\Scene Manager\Entity\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.h">
-      <Filter>Header Files\Engine\Scene Manager\ResourceManager</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\Entities\PerPassAndPerEntityConstantBufferData.h">
-      <Filter>Header Files\Engine\Scene Manager\Entity</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\World Manager\World Manager.h">
-      <Filter>Header Files\Engine\Scene Manager\World Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Scene Manager\World Manager\OctTree.h">
-      <Filter>Header Files\Engine\Scene Manager\World Manager</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Camera\Camera.h">
-      <Filter>Header Files\Engine\Scene Manager\Camera</Filter>
+      <Filter>Header Files\Engine\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Source\Helper\Logger.h">
       <Filter>Header Files\Helper</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game\Game.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Input System\GameButton.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game\Game State\GameState.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game\Player\Player.h">
-      <Filter>Header Files\Game\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game\Player\Player Animator\PlayerAnimator.h">
-      <Filter>Header Files\Game\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Game\Player\Player Logic\PlayerLogic.h">
-      <Filter>Header Files\Game\Player</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h">
       <Filter>Header Files\Engine\Input System</Filter>
@@ -201,17 +189,80 @@
     <ClInclude Include="Source\Engine\Math\Matrix.h">
       <Filter>Header Files\Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Math\Vector.h">
-      <Filter>Header Files\Engine\Math</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Math\BasisVectors.h">
       <Filter>Header Files\Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Game Timer\GameTimer.h">
-      <Filter>Header Files\Game Timer</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h">
       <Filter>Header Files\Engine\Input System\Xbox</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\Vector.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\WorldManager.h">
+      <Filter>Header Files\Engine\World Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\OctTree</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\OctTree</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h">
+      <Filter>Header Files\Engine\World Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Player\Player.h">
+      <Filter>Header Files\Engine\World Manager\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h">
+      <Filter>Header Files\Engine\World Manager\Player\Player Animator</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h">
+      <Filter>Header Files\Engine\World Manager\Player\Player Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game Timer\GameTimer.h">
+      <Filter>Header Files\Game\Game Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game State\GameState.h">
+      <Filter>Header Files\Game\Game State</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Input System\GameButton.h">
+      <Filter>Header Files\Engine\Input System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\Geometry.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\GeometryHelper.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\CollisionResult.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -224,41 +275,11 @@
     <ClCompile Include="Source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\SceneManager.cpp">
-      <Filter>Source Files\Engine\Scene Manager</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\Entities\Entity.cpp">
-      <Filter>Source Files\Engine\Scene Manager\Entity</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\Entities\Mesh\Mesh.cpp">
-      <Filter>Source Files\Engine\Scene Manager\Entity\Mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\Resource Manager\ResourceManager.cpp">
-      <Filter>Source Files\Engine\Scene Manager\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\World Manager\World Manager.cpp">
-      <Filter>Source Files\Engine\Scene Manager\World Manager</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Scene Manager\World Manager\OctTree.cpp">
-      <Filter>Source Files\Engine\Scene Manager\World Manager</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Camera\Camera.cpp">
-      <Filter>Source Files\Engine\Scene Manager\Camera</Filter>
+      <Filter>Source Files\Engine\Camera</Filter>
     </ClCompile>
     <ClCompile Include="Source\Game\Game.cpp">
       <Filter>Source Files\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Game\Game State\GameState.cpp">
-      <Filter>Source Files\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Game\Player\Player.cpp">
-      <Filter>Source Files\Game\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Game\Player\Player Animator\PlayerAnimator.cpp">
-      <Filter>Source Files\Game\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Game\Player\Player Logic\PlayerLogic.cpp">
-      <Filter>Source Files\Game\Player</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
@@ -269,11 +290,47 @@
     <ClCompile Include="Source\Engine\EngineCore.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Game Timer\GameTimer.cpp">
-      <Filter>Source Files\Game Timer</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp">
       <Filter>Source Files\Engine\Input System\Xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\WorldManager.cpp">
+      <Filter>Source Files\Engine\World Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\SceneManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\OctTree</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\OctTree</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.cpp">
+      <Filter>Source Files\Engine\World Manager\Player\Player Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp">
+      <Filter>Source Files\Engine\World Manager\Player\Player Animator</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Player\Player.cpp">
+      <Filter>Source Files\Engine\World Manager\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Game Timer\GameTimer.cpp">
+      <Filter>Source Files\Game\Game Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Game State\GameState.cpp">
+      <Filter>Source Files\Game\Game State</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp">
+      <Filter>Source Files\Engine\Physics System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

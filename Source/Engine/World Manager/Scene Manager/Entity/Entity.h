@@ -1,0 +1,47 @@
+#pragma once
+
+#include "../../../Math/Geometry.h"
+#include "../../../Math/BasisVectors.h"
+#include "PerPassAndPerEntityConstantBufferData.h"
+#include "../../../Physics System/PhysicsBody.h"
+
+class Mesh;
+
+class Entity {
+public:
+	Entity();
+	Entity(
+		uint32_t Id, 
+		Engine::Vector3 center,
+		Engine::Vector3 scale,
+		bool isStatic
+	);
+	~Entity();
+
+	void SetID(uint32_t id);
+	uint32_t GetID() const;
+
+	void SetIsStatic(bool isStatic);
+	bool GetIsStatic() const;
+
+	void SetMesh(const Mesh* mesh);
+	const Mesh* GetMesh() const;
+
+	void Update(float stickX, float stickY, float deltaTime, float speed);
+
+	void CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* destination);
+	Engine::EnginePhysics::PhysicsBody& GetPhysicsBody();
+	const Engine::AABB& GetAABB() const;
+
+	bool GetIsDirty() const;
+	void SetIsDirty(bool dirty);
+
+	void SetScale(Engine::Vector3 scale);
+
+private:
+	uint32_t mID;
+	Engine::EnginePhysics::PhysicsBody mPhysicsBody;
+	bool mIsStatic;
+	const Mesh* mMesh;
+	bool mIsDirty;
+};

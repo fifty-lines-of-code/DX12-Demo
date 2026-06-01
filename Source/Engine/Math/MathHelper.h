@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "EngineMath.h"
 
 namespace Engine {
     class MathHelper {

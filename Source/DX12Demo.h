@@ -2,7 +2,6 @@
 
 #include <memory>
 #include "Game/Game.h"
-#include "Game Timer/GameTimer.h"
 
 // in debug mode let's us know about any memory we are leaking
 #if defined(DEBUG) || defined(_DEBUG)

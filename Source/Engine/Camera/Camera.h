@@ -9,13 +9,13 @@ public:
 	Camera(float aspectRatio);
 	~Camera();
 
-	void Initialize(const Engine::Vector3* target);
+	void Initialize(const Engine::Vector3& target);
 	
 	void UpdateWithInputSystem(float deltaTime, float rightJoystickX, float rightJoystickY);
-	void UpdateWithTarget(const Engine::Vector3* target);
+	void UpdateWithTarget(const Engine::Vector3& target);
 
 	const Engine::Matrix4x4* GetViewProjection() const;
-	const Engine::BasisVectors* GetBasisVectors() const;
+	const Engine::BasisVectors& GetBasisVectors() const;
 
 	void OnResize(UINT newClientWidth, UINT newClientHeight);
 
@@ -42,10 +42,10 @@ private:
 	Engine::Matrix4x4 mProjection;
 	Engine::Matrix4x4 mViewProjection;
 	const float mTrackingSpeed = 4.f;
-	Engine::BasisVectors basisVectors;
+	Engine::BasisVectors mBasisVectors;
 
 private:
-	void UpdateTarget(const Engine::Vector3* target);
+	void UpdateTarget(const Engine::Vector3& target);
 	void UpdateYawPitchAndOffset(float deltaTime, float rightJoystickX, float rightJoystickY);
 	void BuildViewMatrix();
 	void BuildProjectionMatrix();

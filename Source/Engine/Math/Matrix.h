@@ -1,5 +1,7 @@
 #pragma once
 
+#include <DirectXMath.h>
+
 namespace Engine {
     struct Matrix4x4 {
         union {

@@ -1,14 +1,13 @@
 #include "Game.h"
 
 #include "../Engine/Camera/Camera.h"
-#include "../Engine/Scene Manager/Entities/Entity.h"
+#include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 
 Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) :
 	mhMainHwnd(nullptr),
 	mMainWndCaption(caption),
 	mEngineCore(hInstance, mMainWndCaption, clientWidth, clientHeight),
-	mGameState(GameState(clientWidth, clientHeight)),
-	mPlayer(Player())
+	mGameState(GameState(clientWidth, clientHeight))
 {}
 
 Game::~Game() {}
@@ -16,9 +15,7 @@ Game::~Game() {}
 bool Game::Initialize(HWND hwnd) {
 	mhMainHwnd = hwnd;
 
-	if (!mEngineCore.Initialize(hwnd, mPlayer.GetCenter())) { return false; }
-
-	mPlayer.SetEntity(mEngineCore.GetPlayerEntity());
+	if (!mEngineCore.Initialize(hwnd)) { return false; }
 
 	return true;
  }
@@ -259,20 +256,11 @@ void Game::Update() {
 	// update stats
 	CalculateFrameStats();
 
+	// get delta time
 	float deltaTime = mTimer.GetDeltaTime();
 
-	// ask engine to update the input system
-	mEngineCore.UpdateInputSystemAndCamera(deltaTime);
-
-	// update the player
-	mPlayer.Update(
-		deltaTime,
-		mEngineCore.GetInputSystem(),
-		mEngineCore.GetCameraBasisVectors()
-	);
-
 	// update the engine
-	mEngineCore.Update(deltaTime, mPlayer.GetCenter());
+	mEngineCore.Update(deltaTime);
 }
 
 void Game::Draw() {
