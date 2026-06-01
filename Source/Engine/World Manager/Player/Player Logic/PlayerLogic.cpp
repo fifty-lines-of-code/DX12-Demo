@@ -36,18 +36,7 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 
 	switch (mState) {
 	case PlayerState::Idle:
-		if (isMoving) {
-			// rotate to camera's movement vector
-			targetState = PlayerState::BeginRotating;
-			break;
-		}
-		// fallthrough on purpose
-	case PlayerState::BeginRotating:
-	case PlayerState::Rotating:
-		if (!isMoving) {
-			targetState = PlayerState::Idle;
-		}
-	case PlayerState::EndRotating:
+		// fallthrough is intentional to catch the actionEastButtonState logic
 	case PlayerState::Walking:
 	case PlayerState::Running:
 		if (actionEastButtonState == GameButtonState::Just_Pressed) {

@@ -39,26 +39,6 @@ void Player::Update(
 	switch (mPlayerLogic.GetPlayerState()) {
 	case PlayerState::Idle:
 	case PlayerState::PendingActionEast: break;
-	case PlayerState::BeginRotating:
-	{
-		mPlayerAnimator.SetIsRotationComplete(false);
-		mPlayerLogic.SetPlayerState(PlayerState::Rotating);
-		// intentional fallthrough to start rotating this frame
-	}
-	case PlayerState::Rotating:
-	{
-		mPlayerAnimator.UpdateVisualRotation(
-			deltaTime,
-			movement,
-			mPlayerLogic.mRotationSpeed
-		);
-		UpdateBasisVectorsFromVisualRotation();
-
-		if (mPlayerAnimator.GetIsRotationComplete()) {
-			mPlayerLogic.SetPlayerState(PlayerState::EndRotating);
-		}
-		break;
-	}
 	case PlayerState::Walking:
 	case PlayerState::Running:
 	{
@@ -131,14 +111,13 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisionResult) {
 	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
 
+	physicsBody.Center.x = collisionResult.ProposedCenterX;
+	physicsBody.Center.z = collisionResult.ProposedCenterZ;
+
 	if (collisionResult.HasCollided() && 
 		mPlayerLogic.GetPlayerState() == PlayerState::BackwardsDashing) {
 		mPlayerLogic.SetPlayerState(PlayerState::Idle);
 		mPlayerAnimator.ResetBackwardsDashAnimation();
-	}
-	else {
-		physicsBody.Center.x = collisionResult.ProposedCenterX;
-		physicsBody.Center.z = collisionResult.ProposedCenterZ;
 	}
 
 	mEntity->SetIsDirty(true);

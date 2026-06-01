@@ -5,9 +5,6 @@
 
 enum class PlayerState {
 	Idle,
-	BeginRotating,
-	Rotating,
-	EndRotating,
 	Walking,
 	Running,
 	PendingActionEast,
