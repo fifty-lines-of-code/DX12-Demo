@@ -21,14 +21,12 @@ public:
 		const Engine::Vector3& movement,
 		float rotationSpeed
 	);
-	bool PerformBackwardsDash(
-		float deltaTime, 
-		Engine::Vector3& center, 
-		const Engine::Vector3& forward,
-		float backwardsDashDistance,
+	void AnimateBackwardsDash(
+		float deltaTime,
 		float animationDuration
 	);
 	bool GetIsBackwardsDashAnimationComplete() const;
+	void ResetBackwardsDashAnimation();
 	float GetRotation() const;
 	bool GetIsRotationComplete() const;
 	void SetIsRotationComplete(bool value);

@@ -5,9 +5,15 @@
 namespace Engine::EnginePhysics {
 	void PhysicsSystem::ResolveEntityMovement(
 		Entity& entity, 
-		const std::vector<const Entity*>& candidates
+		const std::vector<const Entity*>& candidates,
+		CollisionResult& collisionResult
 	) {
 		PhysicsBody& physicsBody = entity.GetPhysicsBody();
+
+		// Set the proposed center to current center
+		collisionResult.ProposedCenterX = physicsBody.Center.x;
+		collisionResult.ProposedCenterY = physicsBody.Center.y;
+		collisionResult.ProposedCenterZ = physicsBody.Center.z;
 
 		if (physicsBody.VelocityIntent.x == 0.f &&
 			physicsBody.VelocityIntent.z == 0.f) {
@@ -16,12 +22,13 @@ namespace Engine::EnginePhysics {
 
 		uint32_t entityID = entity.GetID();
 		// store the safe Center
-		Vector3 safeCenter = physicsBody.Center;
+		float safeCenterX = physicsBody.Center.x;
+		float safeCenterZ = physicsBody.Center.z;
 
 		// resolve movement in the x direction
 		if (physicsBody.VelocityIntent.x != 0.f) {
 			AABB potentialAABB;
-			Vector3 testCenter = safeCenter;
+			Vector3 testCenter = Vector3(safeCenterX, physicsBody.Center.y, safeCenterZ);
 			testCenter.x += physicsBody.VelocityIntent.x;
 
 			potentialAABB.Min = {
@@ -37,20 +44,23 @@ namespace Engine::EnginePhysics {
 
 			bool collidedX = ResolveCollision(
 				entityID, 
-				potentialAABB, candidates
+				potentialAABB, 
+				candidates
 			);
+
 			if (collidedX) {
 				physicsBody.VelocityIntent.x = 0.f;
+				collisionResult.CollidedX = true;
 			}
 			else {
-				safeCenter.x = testCenter.x;
+				safeCenterX = testCenter.x;
 			}
 		}
 
 		// resolve movement in the z direction
 		if (physicsBody.VelocityIntent.z != 0.f) {
 			AABB potentialAABB;
-			Vector3 testCenter = safeCenter;
+			Vector3 testCenter = Vector3(safeCenterX, physicsBody.Center.y, safeCenterZ);
 			testCenter.z += physicsBody.VelocityIntent.z;
 
 			potentialAABB.Min = {
@@ -72,18 +82,17 @@ namespace Engine::EnginePhysics {
 
 			if (collidedZ) {
 				physicsBody.VelocityIntent.z = 0;
+				collisionResult.CollidedZ = true;
 			}
 			else {
-				safeCenter.z = testCenter.z;
+				safeCenterZ = testCenter.z;
 			}
 		}
 
 		// commit the movement
-		physicsBody.Center = safeCenter;
-		physicsBody.UpdateProductionTransforms();
-		entity.SetIsDirty(true);
+		collisionResult.ProposedCenterX = safeCenterX;
+		collisionResult.ProposedCenterZ = safeCenterZ;
 	}
-
 
 	bool PhysicsSystem::ResolveCollision(
 		uint32_t entityID,

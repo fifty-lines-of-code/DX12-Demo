@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../Physics System/CollisionResult.h"
 #include "../../Math/Geometry.h"
 #include "../.././../Engine/Input System/IInputSystem.h"
 #include "../../../Engine/Math/MathHelper.h"
@@ -23,6 +24,7 @@ public:
 
 	const Engine::Vector3& GetCenter() const;
 	Engine::AABB CalculatePotentialFootprintAABB() const;
+	void PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisioNResult);
 
 private:
 	Entity* mEntity = nullptr;

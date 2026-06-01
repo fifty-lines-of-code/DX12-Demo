@@ -48,11 +48,16 @@ namespace Engine {
 			collisionCandidates
 		);
 
-		// resolve collisions
+		Engine::EnginePhysics::CollisionResult collisionResult;
 		mPhysicsSystem.ResolveEntityMovement(
 			mSceneManager.GetPlayerEntity(),
-			collisionCandidates
+			collisionCandidates,
+			collisionResult
 		);
+
+		// todo: tell all entities to handle collision result
+		// for now it's just the player
+		mPlayer.PostPhysicsUpdate(collisionResult);
 
 		// finally update scene manager
 		mSceneManager.Update(inputSystem, deltaTime, animationSpeed);

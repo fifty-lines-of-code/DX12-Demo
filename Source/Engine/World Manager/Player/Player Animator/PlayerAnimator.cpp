@@ -44,11 +44,8 @@ void PlayerAnimator::UpdateVisualRotation(
 	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime;
 }
 
-bool PlayerAnimator::PerformBackwardsDash(
-	float deltaTime, 
-	Engine::Vector3& center,
-	const Engine::Vector3& forward,
-	float backwardsDashVelocity,
+void PlayerAnimator::AnimateBackwardsDash(
+	float deltaTime,
 	float animationDuration
 ) {
 	if (!mDashAnimationData.IsPerformingBackwardsDash) {
@@ -56,38 +53,25 @@ bool PlayerAnimator::PerformBackwardsDash(
 		mDashAnimationData.IsPerformingBackwardsDash = true;
 		mDashAnimationData.IsBackwardsDashAnimationComplete = false;
 		mDashAnimationData.DashAnimationTimer = 0.f;
-
-		// Calculate and store the direction (flipped forward vector)
-		// We flatten the Y axis to keep the dash strictly in the xz plane for now
-		mDashAnimationData.DashDirection.x = -forward.x;
-		mDashAnimationData.DashDirection.y = 0.0f;
-		mDashAnimationData.DashDirection.z = -forward.z;
-
-		// keep it a pure direction
-		mDashAnimationData.DashDirection.Normalize();
-
-		return false;
 	}
 	else {
 		// update the timer
 		mDashAnimationData.DashAnimationTimer += deltaTime;
 
-		// position = position + (direction * speed * time)
-		center.x += mDashAnimationData.DashDirection.x * backwardsDashVelocity * deltaTime;
-		center.z += mDashAnimationData.DashDirection.z * backwardsDashVelocity * deltaTime;
-
 		if (mDashAnimationData.DashAnimationTimer >= animationDuration) {
-			mDashAnimationData.IsPerformingBackwardsDash = false;
-			mDashAnimationData.IsBackwardsDashAnimationComplete = true;
-			mDashAnimationData.DashAnimationTimer = 0.f;
+			ResetBackwardsDashAnimation();
 		}
-
-		return true;
 	}
 }
 
 bool PlayerAnimator::GetIsBackwardsDashAnimationComplete() const {
 	return mDashAnimationData.IsBackwardsDashAnimationComplete;
+}
+
+void PlayerAnimator::ResetBackwardsDashAnimation() {
+	mDashAnimationData.IsPerformingBackwardsDash = false;
+	mDashAnimationData.IsBackwardsDashAnimationComplete = true;
+	mDashAnimationData.DashAnimationTimer = 0.f;
 }
 
 float PlayerAnimator::GetRotation() const { return mCurrentRotation; }

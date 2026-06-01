@@ -140,6 +140,7 @@
     <ClInclude Include="Source\Engine\Math\MathHelper.h" />
     <ClInclude Include="Source\Engine\Math\Matrix.h" />
     <ClInclude Include="Source\Engine\Math\Vector.h" />
+    <ClInclude Include="Source\Engine\Physics System\CollisionResult.h" />
     <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h" />
     <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h" />
     <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h" />

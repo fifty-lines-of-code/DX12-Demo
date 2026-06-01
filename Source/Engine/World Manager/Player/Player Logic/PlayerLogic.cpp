@@ -47,7 +47,6 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 		if (!isMoving) {
 			targetState = PlayerState::Idle;
 		}
-		break;
 	case PlayerState::EndRotating:
 	case PlayerState::Walking:
 	case PlayerState::Running:

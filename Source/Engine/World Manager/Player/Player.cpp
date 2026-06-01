@@ -37,7 +37,7 @@ void Player::Update(
 	);
 
 	switch (mPlayerLogic.GetPlayerState()) {
-	case PlayerState::Idle: 
+	case PlayerState::Idle:
 	case PlayerState::PendingActionEast: break;
 	case PlayerState::BeginRotating:
 	{
@@ -47,7 +47,11 @@ void Player::Update(
 	}
 	case PlayerState::Rotating:
 	{
-		mPlayerAnimator.UpdateVisualRotation(deltaTime, movement, mPlayerLogic.mRotationSpeed);
+		mPlayerAnimator.UpdateVisualRotation(
+			deltaTime,
+			movement,
+			mPlayerLogic.mRotationSpeed
+		);
 		UpdateBasisVectorsFromVisualRotation();
 
 		if (mPlayerAnimator.GetIsRotationComplete()) {
@@ -58,7 +62,11 @@ void Player::Update(
 	case PlayerState::Walking:
 	case PlayerState::Running:
 	{
-		mPlayerAnimator.UpdateVisualRotation(deltaTime, movement, mPlayerLogic.mRotationSpeed);
+		mPlayerAnimator.UpdateVisualRotation(
+			deltaTime, 
+			movement, 
+			mPlayerLogic.mRotationSpeed
+		);
 		UpdateBasisVectorsFromVisualRotation();
 
 		float speed = mPlayerLogic.GetWalkingRunningSpeed();
@@ -68,9 +76,24 @@ void Player::Update(
 		break;
 	}
 	case PlayerState::BackwardsDashing:
-		// todo, remove below test code
-		mPlayerLogic.SetPlayerState(PlayerState::Idle);
+	{
+		Engine::Vector3 forward = physicsBody.BasisVectors.forward;
+		forward.Normalize();
+
+		physicsBody.VelocityIntent.x = -forward.x *  mPlayerLogic.mBackwardsDashVelocity * deltaTime;
+		physicsBody.VelocityIntent.z = -forward.z * mPlayerLogic.mBackwardsDashVelocity * deltaTime;
+
+		mPlayerAnimator.AnimateBackwardsDash(
+			deltaTime,
+			mPlayerLogic.mBackwardsDashAnimationDuration
+		);
+
+		if (mPlayerAnimator.GetIsBackwardsDashAnimationComplete()) {
+			mPlayerLogic.SetPlayerState(PlayerState::Idle);
+		}
+
 		break;
+	}
 
 	default: break;
 	}
@@ -105,6 +128,22 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 	return broadphase;
 }
 
+void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisionResult) {
+	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+
+	if (collisionResult.HasCollided() && 
+		mPlayerLogic.GetPlayerState() == PlayerState::BackwardsDashing) {
+		mPlayerLogic.SetPlayerState(PlayerState::Idle);
+		mPlayerAnimator.ResetBackwardsDashAnimation();
+	}
+	else {
+		physicsBody.Center.x = collisionResult.ProposedCenterX;
+		physicsBody.Center.z = collisionResult.ProposedCenterZ;
+	}
+
+	mEntity->SetIsDirty(true);
+}
+
 #pragma endregion
 
 #pragma region Private
@@ -112,15 +151,15 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 void Player::UpdateBasisVectorsFromVisualRotation() {
 	float currentRotation = mPlayerAnimator.GetRotation();
 
-	Engine::EnginePhysics::PhysicsBody& physicsBpdy = mEntity->GetPhysicsBody();
+	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
 
-	physicsBpdy.BasisVectors.forward.x = std::sin(currentRotation);
-	physicsBpdy.BasisVectors.forward.y = 0.0f;
-	physicsBpdy.BasisVectors.forward.z = std::cos(currentRotation);
+	physicsBody.BasisVectors.forward.x = std::sin(currentRotation);
+	physicsBody.BasisVectors.forward.y = 0.0f;
+	physicsBody.BasisVectors.forward.z = std::cos(currentRotation);
 
-	physicsBpdy.BasisVectors.right.x = std::cos(currentRotation);
-	physicsBpdy.BasisVectors.right.y = 0.0f;
-	physicsBpdy.BasisVectors.right.z = -std::sin(currentRotation);
+	physicsBody.BasisVectors.right.x = std::cos(currentRotation);
+	physicsBody.BasisVectors.right.y = 0.0f;
+	physicsBody.BasisVectors.right.z = -std::sin(currentRotation);
 }
 
 void Player::CalculateMovementVector(
@@ -137,7 +176,7 @@ void Player::CalculateMovementVector(
 	Engine::Vector3 flatCamRight = { cameraBasisVectors.right.x, 0.0f, cameraBasisVectors.right.z };
 	flatCamRight.Normalize();
 
-	// 3. Now safely blend your pristine, full-strength horizontal basis vectors by the stick inputs
+	// 3. Now safely blend horizontal basis vectors by the stick inputs
 	movement.x = (leftStickY * flatCamFwd.x) + (leftStickX * flatCamRight.x);
 	movement.y = 0.0f; // Stable flat ground line
 	movement.z = (leftStickY * flatCamFwd.z) + (leftStickX * flatCamRight.z);

@@ -261,6 +261,9 @@
     <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h">
       <Filter>Header Files\Engine\Physics System</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Physics System\CollisionResult.h">
+      <Filter>Header Files\Engine\Physics System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">

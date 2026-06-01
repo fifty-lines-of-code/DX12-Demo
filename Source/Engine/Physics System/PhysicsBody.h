@@ -25,7 +25,6 @@ namespace Engine::EnginePhysics {
 			, BasisVectors()
 		{}
 
-		// Public update endpoints called by processing subsystems
 		void UpdateProductionTransforms() {
 			RebuildWorldMatrix(WorldMatrix, Center);
 			GeometryHelper::CalculateAABB(LocalAABB, WorldMatrix, WorldAABB);
@@ -74,9 +73,9 @@ namespace Engine::EnginePhysics {
 
 			// lets read and write to our Matrix4x4 as an XMFLOAT4x4 so that
 			// we get access to fast SIMD math operations
-			// from my understand there should be 0 performance penalty for this cast
-			// and it allows us to keep our code clean, without having to use too many 
-			// XMMatrix* methods
+			// from my understanding there should be 0 performance penalty for this 
+			// cast and it allows us to keep our code clean,
+			// without having to use too many XMMatrix* methods
 
 			DirectX::XMMATRIX scaleRotation = DirectX::XMMatrixMultiply(
 				DirectX::XMLoadFloat4x4(&scale.AsXMFLOAT4X4()),
