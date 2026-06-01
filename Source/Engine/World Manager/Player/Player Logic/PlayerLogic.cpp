@@ -23,10 +23,8 @@ float PlayerLogic::GetWalkingRunningSpeed() {
 }
 
 void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* const inputSystem) {
-	// don't do anything if we're rotating or backwards dashing
-	if (mState == PlayerState::Rotating ||
-		mState == PlayerState::BackwardsDashing)
-	{ return; }
+	// don't do anything if we're backwards dashing
+	if (mState == PlayerState::BackwardsDashing) { return; }
 
 	// get data
 	GameButtonState actionEastButtonState = inputSystem->GetButtonState(GameButton::ActionEast);
@@ -34,7 +32,7 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 	float leftStickY = inputSystem->GetLeftStickY();
 	PlayerState targetState = mState;
 	float movementSqLength = (leftStickX * leftStickX) + (leftStickY * leftStickY);
-	bool isMoving = movementSqLength >= 0.01f;
+	bool isMoving = movementSqLength > 0.01f;
 
 	switch (mState) {
 	case PlayerState::Idle:
@@ -46,6 +44,10 @@ void PlayerLogic::CalculateCurrentState(float deltaTime, const IInputSystem* con
 		// fallthrough on purpose
 	case PlayerState::BeginRotating:
 	case PlayerState::Rotating:
+		if (!isMoving) {
+			targetState = PlayerState::Idle;
+		}
+		break;
 	case PlayerState::EndRotating:
 	case PlayerState::Walking:
 	case PlayerState::Running:

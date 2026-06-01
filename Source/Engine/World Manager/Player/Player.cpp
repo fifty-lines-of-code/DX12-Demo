@@ -47,12 +47,7 @@ void Player::Update(
 	}
 	case PlayerState::Rotating:
 	{
-		mPlayerAnimator.UpdateVisualRotation(
-			deltaTime,
-			movement,
-			mPlayerLogic.mRotationSpeed
-		);
-
+		mPlayerAnimator.UpdateVisualRotation(deltaTime, movement, mPlayerLogic.mRotationSpeed);
 		UpdateBasisVectorsFromVisualRotation();
 
 		if (mPlayerAnimator.GetIsRotationComplete()) {
@@ -63,12 +58,7 @@ void Player::Update(
 	case PlayerState::Walking:
 	case PlayerState::Running:
 	{
-		// update the visual rotation
-		mPlayerAnimator.UpdateVisualRotation(
-			deltaTime,
-			movement,
-			mPlayerLogic.mRotationSpeed
-		);
+		mPlayerAnimator.UpdateVisualRotation(deltaTime, movement, mPlayerLogic.mRotationSpeed);
 		UpdateBasisVectorsFromVisualRotation();
 
 		float speed = mPlayerLogic.GetWalkingRunningSpeed();
@@ -78,8 +68,11 @@ void Player::Update(
 		break;
 	}
 	case PlayerState::BackwardsDashing:
-		// todo
+		// todo, remove below test code
+		mPlayerLogic.SetPlayerState(PlayerState::Idle);
 		break;
+
+	default: break;
 	}
 
 	mEntity->SetIsDirty(true);

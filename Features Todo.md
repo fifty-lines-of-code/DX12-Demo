@@ -30,8 +30,11 @@ Features to implement:
 26. Frustum Culling
 27. Dynamic loading and unloading of data as player moves/crosses a boundary
 28. Chunk, ChunkData, ChunksManager
-29. Create and load height map
-30. textures
-31. lighting
-32. 
+29. Create and load static height map
+30. integrate dynamic height map into dynamic chunks loader
+31. implement waterfall in the heightmap
+32. render waterfall
+33. textures
+34. lighting
+35. 
 

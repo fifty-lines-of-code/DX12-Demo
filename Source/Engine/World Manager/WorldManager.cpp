@@ -39,6 +39,8 @@ namespace Engine {
 			cameraBasisVectors
 		);
 
+		// get collision candidates for player
+		// todo: generalize for all dynamic objects
 		std::vector<const Entity*> collisionCandidates;
 		const AABB potentialFootprint = mPlayer.CalculatePotentialFootprintAABB();
 		mSceneManager.GetPotentialCollisionsWithAABB(
