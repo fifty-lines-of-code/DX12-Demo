@@ -15,9 +15,9 @@ namespace Engine {
 		~OctTree();
 
 		bool Initialize(const Vector3& center, float halfWidth);
-		bool Insert(const Entity* entity);
+		bool Insert(uint32_t entityIndex, const AABB& entityAABB, bool isStatic);
 		void ClearDynamicEntities();
-		void GetPotentialCollisionsWithAABB(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<const Entity*>& candidates);
+		void GetPotentialCollisionsWithAABB(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<uint32_t>& candidates);
 
 	private:
 		// why depth of 3? Because our scene is small and we don't have many entities, so we don't need a very deep tree, but helps to learn the idea
@@ -37,18 +37,18 @@ namespace Engine {
 		static constexpr uint32_t TOTAL_NUMBER_OF_NODES =
 			((1 << (3 * (MAX_DEPTH + 1))) - 1) / 7;
 
-		OctTreeNode* mRoot;
+		OctTreeNode& mRoot;
 		OctTreeNode allNodes[OctTree::TOTAL_NUMBER_OF_NODES];
 		uint32_t mNextAvailableStartIndex = 1; // index 0 will store root
 
 	private:
 		void SetupRoot(const Vector3& center, float halfWidth);
 		void IncrementNextAvailableStartIndex();
-		bool Insert_Internal(const Entity* entity, OctTreeNode* const node, uint32_t depth);
-		void Subdivide(OctTreeNode* const node, float childrenHalfWidth);
-		void CalculateAndUpdateBoundsOfNode(OctTreeNode* node);
+		bool Insert_Internal(uint32_t entityIndex, const AABB& entityAABB, bool isStatic, OctTreeNode& node, uint32_t depth);
+		void Subdivide(OctTreeNode& node, float childrenHalfWidth);
+		void CalculateAndUpdateBoundsOfNode(OctTreeNode& node);
 		bool DoesEntityFitInNode(const AABB& entityAABB, const AABB& nodeAABB) const;
 
-		void GetPotentalCollisionsWithPlayer_Internal(uint32_t startIndex, const AABB& playerPotentialAABB, std::vector<const Entity*>& potentialCandidates);
+		void GetPotentalCollisionsWithPlayer_Internal(uint32_t startIndex, const AABB& playerPotentialAABB, std::vector<uint32_t>& potentialCandidates);
 	};
 }

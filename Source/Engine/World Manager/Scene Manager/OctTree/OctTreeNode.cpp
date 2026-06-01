@@ -26,11 +26,11 @@ namespace Engine {
 		return mStartIndexOfChildNodes;
 	}
 
-	const std::vector<const Entity*>& OctTreeNode::GetStaticEntities() const {
+	const std::vector<uint32_t>& OctTreeNode::GetStaticEntities() const {
 		return mStaticEntities;
 	}
 
-	const std::vector<const Entity*>& OctTreeNode::GetDynamicEntities() const {
+	const std::vector<uint32_t>& OctTreeNode::GetDynamicEntities() const {
 		return mDynamicEntities;
 	}
 
@@ -46,12 +46,12 @@ namespace Engine {
 		mStartIndexOfChildNodes = startingIndex;
 	}
 
-	void OctTreeNode::UpdateStaticEntities(const Entity* entity) {
-		mStaticEntities.push_back(entity);
+	void OctTreeNode::UpdateStaticEntities(uint32_t entityIndex) {
+		mStaticEntities.push_back(entityIndex);
 	}
 
-	void OctTreeNode::UpdateDynamicEntities(const Entity* entity) {
-		mDynamicEntities.push_back(entity);
+	void OctTreeNode::UpdateDynamicEntities(uint32_t entityIndex) {
+		mDynamicEntities.push_back(entityIndex);
 	}
 
 	void OctTreeNode::ClearDynamicEntities() {

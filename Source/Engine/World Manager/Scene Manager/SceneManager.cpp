@@ -24,9 +24,11 @@ namespace Engine {
 		if (!GeneratePlayerEntity()) { return false; }
 		if (!GenerateBasicScene()) { return false; }
 
-		// add only static entities to the OctTree during Load
+		// only add static entities to the OctTree during Load
 		for (const auto& entity : mEntities) {
-			if (entity.GetIsStatic()) { mOctTree.Insert(&entity); }
+			if (entity.GetIsStatic()) { 
+				mOctTree.Insert(entity.GetID(), entity.GetAABB(), true); 
+			}
 		}
 
 		return true;
@@ -39,12 +41,19 @@ namespace Engine {
 		// prepare for collision checks
 		PrepareForCollisionPass();
 
+		std::vector<uint32_t> candidateIndexes;
 		// find all entities player may be colliding with
 		mOctTree.GetPotentialCollisionsWithAABB(
 			PLAYER_INDEX,
 			playerPotentialAABB,
-			candidates
+			candidateIndexes
 		);
+
+		for (uint32_t index : candidateIndexes) {
+			if (index >= 0 && index < MAX_ENTITIES) {
+				candidates.push_back(&mEntities[index]);
+			}
+		}
 	}
 
 	void SceneManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed) {
@@ -142,9 +151,15 @@ namespace Engine {
 
 	void SceneManager::PrepareForCollisionPass() {
 		// add dynamic entities to the octtree
-		for (int i = 0; i < mIndexesOfDynamicEntities.size(); ++i) {
-			if (mIndexesOfDynamicEntities[i] < MAX_ENTITIES) {
-				mOctTree.Insert(&mEntities[mIndexesOfDynamicEntities[i]]);
+		for (uint32_t index : mIndexesOfDynamicEntities) {
+			if (index >= 0 && index < MAX_ENTITIES) {
+				Entity& entity = mEntities[index];
+
+				mOctTree.Insert(
+					entity.GetID(),
+					entity.GetAABB(),
+					false
+				);
 			}
 		}
 	}
