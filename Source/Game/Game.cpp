@@ -3,19 +3,36 @@
 #include "../Engine/Camera/Camera.h"
 #include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 
-Game::Game(HINSTANCE hInstance, int clientWidth, int clientHeight, const std::wstring caption) :
-	mhMainHwnd(nullptr),
+Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
+	mhMainWnd(nullptr),
 	mMainWndCaption(caption),
-	mEngineCore(hInstance, mMainWndCaption, clientWidth, clientHeight),
-	mGameState(GameState(clientWidth, clientHeight))
+	mEngineCore(hInstance, mMainWndCaption),
+	mGameState(GameState(windowedClientWidth, windowedClientHeight))
 {}
 
 Game::~Game() {}
 
 bool Game::Initialize(HWND hwnd) {
-	mhMainHwnd = hwnd;
+	mhMainWnd = hwnd;
 
-	if (!mEngineCore.Initialize(hwnd)) { return false; }
+	// get the fullscreen dimensions
+	CalculateFullscreenDimensions();
+
+	// get window width and height
+	bool isFullscreen = mGameState.GetIsFullscreen();
+	UINT width = isFullscreen ? mGameState.GetFullscreenClientWidth() : mGameState.GetWindowedClientWidth();
+	UINT height = isFullscreen ? mGameState.GetFullscreenClientHeight() : mGameState.GetWindowedClientHeight();
+
+	// init the engine core
+	if (!mEngineCore.Initialize(hwnd, width, height)) { return false; }
+
+	// set window to fullscreen if we need to
+	if (isFullscreen) {
+		SetFullscreen();
+	}
+
+	// call resize on the engine to finalize init
+	mEngineCore.OnResize(width, height);
 
 	return true;
  }
@@ -55,6 +72,73 @@ int Game::Run() {
 	return (int)msg.wParam;
 }
 
+void Game::CalculateFullscreenDimensions() {
+	// identify the monitor of the window
+	HMONITOR hMonitor = MonitorFromWindow(mhMainWnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(hMonitor, &mInfo);
+
+	// get width, height
+	int width = mInfo.rcMonitor.right - mInfo.rcMonitor.left;
+	int height = mInfo.rcMonitor.bottom - mInfo.rcMonitor.top;
+
+	mGameState.SetFullscreenClientWidth(width);
+	mGameState.SetFullscreenClientHeight(height);
+}
+
+void Game::SetFullscreen() {
+
+	// make sure we have a main handle
+	assert(mhMainWnd != nullptr);
+
+	// strip all borders, captions, resize styles
+	SetWindowLongPtr(mhMainWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+
+	// position and scale the window
+	SetWindowPos(
+		mhMainWnd,
+		HWND_TOP,
+		0,
+		0,
+		mGameState.GetFullscreenClientWidth(),
+		mGameState.GetFullscreenClientHeight(),
+		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
+	);
+}
+
+void Game::SetWindowed() {
+	// restore standard window decorations (borders, title bar, close buttons)
+	SetWindowLongPtr(
+		mhMainWnd,
+		GWL_STYLE,
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE
+	);
+
+	// calculate the Window Rect based on your desired client size
+	RECT windowRect = { 0, 0, mGameState.GetWindowedClientWidth(), mGameState.GetWindowedClientHeight()};
+	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+	int physicalWidth = windowRect.right - windowRect.left;
+	int physicalHeight = windowRect.bottom - windowRect.top;
+
+	// center the window on the user's primary screen using the new dimensions
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	int posX = (screenWidth - physicalWidth) / 2;
+	int posY = (screenHeight - physicalHeight) / 2;
+
+	// position the window and force a frame style update
+	SetWindowPos(
+		mhMainWnd,
+		HWND_NOTOPMOST,
+		posX,
+		posY,
+		physicalWidth,
+		physicalHeight,
+		SWP_FRAMECHANGED | SWP_SHOWWINDOW
+	);
+}
+
 void Game::CalculateFrameStats() {
 	// Code computes the average frames per second, and also the 
 	// average time it takes to render one frame.  These stats 
@@ -78,7 +162,7 @@ void Game::CalculateFrameStats() {
 			L"  fps: " + fpsStr +
 			L"  mspf: " + mspfStr;
 
-		SetWindowText(mhMainHwnd, windowText.c_str());
+		SetWindowText(mhMainWnd, windowText.c_str());
 
 		// Reset for next average.
 		frameCnt = 0;
@@ -89,6 +173,7 @@ void Game::CalculateFrameStats() {
 LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	UINT clientWidth;
 	UINT clientHeight;
+	bool isFullscreen = false;
 
 	switch (msg)
 	{
@@ -116,8 +201,7 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		if (wParam != SIZE_MINIMIZED && clientWidth > 0 && clientHeight > 0) {
 			if (mGameState.GetIsFullscreen()) {
-				mGameState.SetFullscreenClientWidth(clientWidth);
-				mGameState.SetFullscreenClientHeight(clientHeight);
+				isFullscreen = true;
 			}
 			else {
 				mGameState.SetWindowedClientWidth(clientWidth);
@@ -187,10 +271,7 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		mGameState.SetIsResizing(false);
 		mTimer.Start();
 		// here we assume were windowed
-		mEngineCore.OnResize(
-			mGameState.GetWindowedClientWidth(),
-			mGameState.GetWindowedClientHeight()
-		);
+		mEngineCore.OnResize(mGameState.GetWindowedClientWidth(), mGameState.GetWindowedClientHeight());
 		return 0;
 
 		// WM_DESTROY is sent when the window is being destroyed.
@@ -234,16 +315,11 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			// if we're windowed, go fullscreen
 			if (!isFullscreen) {
-				mEngineCore.SetFullscreen();
+				SetFullscreen();
 			}
 			else {
-				// else go windowed
-				mEngineCore.SetWindowed(
-					mGameState.GetWindowedClientWidth(),
-					mGameState.GetWindowedClientHeight()
-				);
+				SetWindowed();
 			}
-
 		}
 
 		return 0;

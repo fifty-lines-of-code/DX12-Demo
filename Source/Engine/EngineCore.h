@@ -16,12 +16,12 @@ class GameTimer;
 namespace Engine {
 	class EngineCore {
 	public:
-		EngineCore(HINSTANCE hInstance, std::wstring caption, int clientWidth, int clientHeight);
+		EngineCore(HINSTANCE hInstance, std::wstring caption);
 		EngineCore(const EngineCore& rhs) = delete;
 		EngineCore& operator=(const EngineCore& rhs) = delete;
 		~EngineCore();
 
-		bool Initialize(HWND mainWnd);
+		bool Initialize(HWND mainWnd, UINT fullscreenWidth, UINT fullscreenHeight);
 		bool SetupPipeline();
 
 		void UpdateInputSystemAndCamera(float deltaTime);
@@ -30,26 +30,21 @@ namespace Engine {
 		void Draw();
 
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
-		void SetWindowed(UINT clientWidth, UINT clientHeight);
-		void SetFullscreen();
 
 	private:
-		static const int NumberOfFrameResources = 3;
-		HINSTANCE mhAppInst = nullptr; // application instance handle
-		HWND mhMainWnd = nullptr;
-		std::wstring mMainWndCaption;
-		int mWindowedClientWidth;
-		int mWindowedClientHeight;
-		bool mIsInitialized;
-		const float mAnimationSpeed;
-
-		DX12Renderer mRenderer;
 		WorldManager mWorldManager;
+		DX12Renderer mRenderer;
 		Camera mCamera;
-		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
 		XboxInputSystem mInputSystem;
 		// per pass cb
 		Engine::Matrix4x4 mViewProjectionTranspose;
+		std::wstring mMainWndCaption;
+		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
+		HINSTANCE mhAppInst = nullptr; // application instance handle
+		HWND mhMainWnd = nullptr;
+		static const int NumberOfFrameResources = 3;
+		bool mIsInitialized;
+		const float mAnimationSpeed;
 
 	private:
 		bool InitializeCamera(const Engine::Vector3& playerPosition);

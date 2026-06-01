@@ -30,13 +30,22 @@ using Microsoft::WRL::ComPtr;
 struct DX12MeshResource;
 struct DX12FrameResource;
 
+struct WindowDimensions {
+	UINT Width;
+	UINT Height;
+
+	WindowDimensions() : WindowDimensions(0, 0) {}
+	WindowDimensions(UINT _width, UINT _height) : Width(_width), Height(_height) {}
+	~WindowDimensions() {}
+};
+
 class DX12Renderer : public IRenderer {
 
 public: 		
-	DX12Renderer(int clientWidth, int clientHeight);
+	DX12Renderer();
 	~DX12Renderer();
 
-	bool Initialize(HWND mainHwnd, int numberOfFrameResources) override;
+	bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT screenWidth, UINT screenHeight) override;
 	void FinishInitialize() override;
 	bool SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV);
 	void CreateFrameResources(uint32_t numberOfEntities);
@@ -48,11 +57,7 @@ public:
 	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
 	void EndFrame() override;
 	void Shutdown() override;
-	void OnResize(UINT newClientWidth, UINT newClientHeight) override;
-	void SetFullscreen() override;
-	void SetWindowed(UINT clientWidh, UINT clientHeight) override;
-	int GetClientWidth() const;
-	int GetClientHeight() const;
+	void OnResize(UINT width, UINT height) override;
 
 private:
 	bool InitializeDevice();
@@ -74,9 +79,8 @@ private:
 private:
 	static const int SwapChainBufferCount = 2;
 
-	int mClientWidth = 0;
-	int mClientHeight = 0;
-	HWND mhMainHwnd = nullptr;
+	WindowDimensions mWindowDimensions;
+	HWND mhMainWnd = nullptr;
 	int mNumberOfFrameResources = 0;
 
 	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.

@@ -72,6 +72,7 @@ bool DX12Demo::InitMainWindow()
 }
 
 bool DX12Demo::InitializeGame() {
+
     return mGame.Initialize(mhMainWnd);
 }
 

@@ -23,6 +23,10 @@ UINT GameState::GetWindowedClientWidth() const { return mWindowedClientWidth; }
 
 UINT GameState::GetWindowedClientHeight() const { return mWindowedClientHeight; }
 
+UINT GameState::GetFullscreenClientWidth() const { return mFullscreenClientWidth; }
+
+UINT GameState::GetFullscreenClientHeight() const { return mFullscreenClientHeight; }
+
 void GameState::SetIsPaused(bool paused) { mPaused = paused; }
 
 void GameState::SetIsMinimized(bool minimized) { mMinimized = minimized; }

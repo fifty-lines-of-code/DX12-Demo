@@ -6,7 +6,7 @@
 
 class Camera {
 public:
-	Camera(float aspectRatio);
+	Camera();
 	~Camera();
 
 	void Initialize(const Engine::Vector3& target);

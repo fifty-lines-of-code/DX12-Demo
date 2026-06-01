@@ -3,10 +3,7 @@
 #include <cmath>
 #include <DirectXMath.h>
 
-Camera::Camera(float aspectRatio) :
-	mAspectRatio(aspectRatio) {
-	BuildProjectionMatrix();
-}
+Camera::Camera() {}
 
 Camera::~Camera() {}
 
@@ -16,7 +13,6 @@ void Camera::Initialize(const Engine::Vector3& target) {
 	UpdateYawPitchAndOffset(0, 0, 0);
 
 	BuildViewMatrix();
-	BuildViewProjectionMatrix();
 }
 
 void Camera::UpdateWithInputSystem(float deltaTime, float rightJoystickX, float rightJoystickY) {

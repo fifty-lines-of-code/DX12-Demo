@@ -11,7 +11,7 @@ class Entity;
 
 class Game {
 public:
-	Game(HINSTANCE hInstance, int clientWidth, int clientHeight, std::wstring caption);
+	Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, std::wstring caption);
 	Game(const Game& rhs) = delete;
 	Game& operator=(const Game& rhs) = delete;
 	~Game();
@@ -22,14 +22,16 @@ public:
 	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
-	HWND mhMainHwnd;
-	const std::wstring mMainWndCaption;
-
 	Engine::EngineCore mEngineCore;
 	GameTimer mTimer;
+	const std::wstring mMainWndCaption;
 	GameState mGameState;
+	HWND mhMainWnd;
 
 private:
+	void CalculateFullscreenDimensions();
+	void SetFullscreen();
+	void SetWindowed();
 	void CalculateFrameStats();
 	void Update();
 	void Draw();

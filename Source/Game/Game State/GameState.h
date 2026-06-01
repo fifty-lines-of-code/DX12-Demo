@@ -13,6 +13,8 @@ public:
 	bool GetIsFullscreen() const;
 	UINT GetWindowedClientWidth() const;
 	UINT GetWindowedClientHeight() const;
+	UINT GetFullscreenClientWidth() const;
+	UINT GetFullscreenClientHeight() const;
 
 	void SetIsPaused(bool paused);
 	void SetIsMinimized(bool minimized);
@@ -25,14 +27,13 @@ public:
 	void SetFullscreenClientHeight(UINT fullscreenClientHeight);
 
 private:
-	bool mPaused = false;  // is the application paused?
-	bool mMinimized = false;  // is the application minimized?
-	bool mMaximized = false;  // is the application maximized?
-	bool mResizing = false;   // are the resize bars being dragged?
-	bool mIsFullscreen = false; // fullscreen enabled
-
 	UINT mWindowedClientWidth;
 	UINT mWindowedClientHeight;
 	UINT mFullscreenClientWidth;
 	UINT mFullscreenClientHeight;
+	bool mPaused = false;  // is the application paused?
+	bool mMinimized = false;  // is the application minimized?
+	bool mMaximized = false;  // is the application maximized?
+	bool mResizing = false;   // are the resize bars being dragged?
+	bool mIsFullscreen = true; // we start in fullscreen
 };

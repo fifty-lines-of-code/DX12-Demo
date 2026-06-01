@@ -11,9 +11,7 @@
 
 using namespace DirectX;
 
-DX12Renderer::DX12Renderer(int clientWidth, int clientHeight) :
-	mClientWidth(clientWidth), mClientHeight(clientHeight)
-{ }
+DX12Renderer::DX12Renderer() {}
 
 DX12Renderer::~DX12Renderer() {
 
@@ -35,17 +33,21 @@ DX12Renderer::~DX12Renderer() {
 	}
 }
 
-bool DX12Renderer::Initialize(HWND mainHWND, int numberOfFrameResources) {
-	mhMainHwnd = mainHWND;
+bool DX12Renderer::Initialize(
+	HWND mainHWND, 
+	int numberOfFrameResources,
+	UINT screenWidth, 
+	UINT screenHeight
+) {
+	mhMainWnd = mainHWND;
 	mNumberOfFrameResources = numberOfFrameResources;
+	mWindowDimensions.Width = screenWidth;
+	mWindowDimensions.Height = screenHeight;
 
 	InitializeDevice();
 	CreateCommandObjects();
 	CreateSwapChain();
 	CreateRtvDsvDescriptorHeaps();
-	
-	// do initial resize
-	OnResize(mClientWidth, mClientHeight);
 
 	return true;
 }
@@ -344,11 +346,11 @@ void DX12Renderer::EndFrame() {
 	mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
 
-void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
+void DX12Renderer::OnResize(UINT width, UINT height) {
 	if (mDX12Device == nullptr) { return; }
 
-	mClientWidth = newClientWidth;
-	mClientHeight = newClientHeight;
+	mWindowDimensions.Width = width;
+	mWindowDimensions.Height = height;
 
 	// ensure if we have devicewe also have swap chain, allocator
 	assert(mSwapChain);
@@ -372,8 +374,8 @@ void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	ThrowIfFailed(
 		mSwapChain->ResizeBuffers(
 			SwapChainBufferCount,
-			mClientWidth,
-			mClientHeight,
+			width,
+			height,
 			mBackBufferFormat,
 			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
 		)
@@ -403,8 +405,8 @@ void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;
-	depthStencilDesc.Width = mClientWidth;
-	depthStencilDesc.Height = mClientHeight;
+	depthStencilDesc.Width = width;
+	depthStencilDesc.Height = height;
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
 
@@ -471,12 +473,12 @@ void DX12Renderer::OnResize(UINT newClientWidth, UINT newClientHeight) {
 	// Update the viewport transform to cover the client area.
 	mScreenViewport.TopLeftX = 0;
 	mScreenViewport.TopLeftY = 0;
-	mScreenViewport.Width = static_cast<float>(mClientWidth);
-	mScreenViewport.Height = static_cast<float>(mClientHeight);
+	mScreenViewport.Width = static_cast<float>(width);
+	mScreenViewport.Height = static_cast<float>(height);
 	mScreenViewport.MinDepth = 0.0f;
 	mScreenViewport.MaxDepth = 1.0f;
 
-	mScissorRect = { 0, 0, mClientWidth, mClientHeight };
+	mScissorRect = { 0, 0, (long)width, (long)height };
 }
 
 void DX12Renderer::FlushCommandQueue() {
@@ -623,8 +625,8 @@ void DX12Renderer::CreateSwapChain() {
 	mSwapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC sd;
-	sd.BufferDesc.Width = mClientWidth;
-	sd.BufferDesc.Height = mClientHeight;
+	sd.BufferDesc.Width = mWindowDimensions.Width;
+	sd.BufferDesc.Height = mWindowDimensions.Height;
 	sd.BufferDesc.RefreshRate.Numerator = 60;
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferDesc.Format = mBackBufferFormat;
@@ -634,7 +636,7 @@ void DX12Renderer::CreateSwapChain() {
 	sd.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = SwapChainBufferCount;
-	sd.OutputWindow = mhMainHwnd;
+	sd.OutputWindow = mhMainWnd;
 	sd.Windowed = true;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
@@ -651,7 +653,7 @@ void DX12Renderer::CreateSwapChain() {
 	// Prevent DXGI from monitoring the message queue and hijacking Alt+Enter 
 	// This ensures our custom F and ESC windowing states function correctly.
 	ThrowIfFailed(
-		mdxgiFactory->MakeWindowAssociation(mhMainHwnd, DXGI_MWA_NO_ALT_ENTER)
+		mdxgiFactory->MakeWindowAssociation(mhMainWnd, DXGI_MWA_NO_ALT_ENTER)
 	);
 }
 
@@ -1004,74 +1006,3 @@ void DX12Renderer::FinishInitialize() {
 		meshResource->DisposeUploaders();
 	}
 }
-
-void DX12Renderer::SetFullscreen() {
-	// make sure we have a main handle
-	assert(mhMainHwnd != nullptr);
-
-	// identify the monitor of the window
-	HMONITOR hMonitor = MonitorFromWindow(mhMainHwnd, MONITOR_DEFAULTTONEAREST);
-	MONITORINFO mInfo = { sizeof(MONITORINFO) };
-	GetMonitorInfo(hMonitor, &mInfo);
-
-	// strip all borders, captions, resize styles
-	SetWindowLongPtr(mhMainHwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-
-	// get width, height
-	int width = mInfo.rcMonitor.right - mInfo.rcMonitor.left;
-	int height = mInfo.rcMonitor.bottom - mInfo.rcMonitor.top;
-
-	// position and scale the window
-	SetWindowPos(
-		mhMainHwnd,
-		HWND_TOP,
-		mInfo.rcMonitor.left,
-		mInfo.rcMonitor.top,
-		width,
-		height,
-		SWP_NOOWNERZORDER | SWP_FRAMECHANGED
-	);
-
-	// we don't call OnResize here as the Window's messaging system will 
-	// call it for us: See Game::MsgProc()
-}
-
-void DX12Renderer::SetWindowed(UINT clientWidth, UINT clientHeight) {
-	// restore standard window decorations (borders, title bar, close buttons)
-	SetWindowLongPtr(
-		mhMainHwnd,
-		GWL_STYLE,
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE
-	);
-
-	// calculate the Window Rect based on your desired client size
-	RECT windowRect = { 0, 0, clientWidth, clientHeight };
-	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-	int physicalWidth = windowRect.right - windowRect.left;
-	int physicalHeight = windowRect.bottom - windowRect.top;
-
-	// center the window on the user's primary screen using the new dimensions
-	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-	int posX = (screenWidth - physicalWidth) / 2;
-	int posY = (screenHeight - physicalHeight) / 2;
-
-	// position the window and force a frame style update
-	SetWindowPos(
-		mhMainHwnd,
-		HWND_NOTOPMOST,
-		posX,
-		posY,
-		physicalWidth,
-		physicalHeight,
-		SWP_FRAMECHANGED | SWP_SHOWWINDOW
-	);
-
-	// we don't call OnResize here as the Window's messaging system will 
-	// call it for us: See Game::MsgProc()
-}
-
-int DX12Renderer::GetClientWidth() const { return mClientWidth; }
-
-int DX12Renderer::GetClientHeight() const { return mClientHeight; }

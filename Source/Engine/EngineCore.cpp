@@ -9,25 +9,25 @@
 
 namespace Engine {
 
-	EngineCore::EngineCore(HINSTANCE hInstance, std::wstring caption, int clientWidth, int clientHeight) :
+	EngineCore::EngineCore(HINSTANCE hInstance, std::wstring caption) :
 		mhAppInst(hInstance),
 		mMainWndCaption(caption),
-		mWindowedClientWidth(clientWidth),
-		mWindowedClientHeight(clientHeight),
 		mIsInitialized(false),
 		mAnimationSpeed(.375f), // todo: move this out to somewhere else
-		mRenderer(DX12Renderer(clientWidth, clientHeight)),
+		mRenderer(DX12Renderer()),
 		mWorldManager(WorldManager()),
-		mCamera(Camera(clientWidth / (float)clientHeight)),
+		mCamera(Camera()),
 		mInputSystem(XboxInputSystem())
 	{}
 
 	EngineCore::~EngineCore() {}
 
-	bool EngineCore::Initialize(HWND mainHwnd) {
+	bool EngineCore::Initialize(HWND mainHwnd, UINT screenWidth, UINT screenHeight) {
+		if (screenHeight == 0) { return false; }
+
 		mhMainWnd = mainHwnd;
 
-		if (!mRenderer.Initialize(mhMainWnd, EngineCore::NumberOfFrameResources)) { return false; }
+		if (!mRenderer.Initialize(mhMainWnd, EngineCore::NumberOfFrameResources, screenWidth, screenHeight)) { return false; }
 
 		if (!mWorldManager.Initialize()) { return false; }
 
@@ -112,20 +112,6 @@ namespace Engine {
 
 		mRenderer.OnResize(newClientWidth, newClientHeight);
 		mCamera.OnResize(newClientWidth, newClientHeight);
-	}
-
-	void EngineCore::SetFullscreen() {
-		mRenderer.SetFullscreen();
-		int fsClientWidth = mRenderer.GetClientWidth();
-		int fsClientHeight = mRenderer.GetClientHeight();
-		mCamera.OnResize(fsClientWidth, fsClientHeight);
-	}
-
-	void EngineCore::SetWindowed(UINT clientWidth, UINT clientHeight) {
-		mWindowedClientWidth = clientWidth;
-		mWindowedClientHeight = clientHeight;
-		mRenderer.SetWindowed(clientWidth, clientHeight);
-		mCamera.OnResize(clientWidth, clientHeight);
 	}
 
 	bool EngineCore::InitializeCamera(const Engine::Vector3& playerPosition) {
