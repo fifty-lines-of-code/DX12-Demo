@@ -17,24 +17,26 @@ Features to implement:
 13. ~~Move polling of Xbox input to background thread~~
 14. ~~Full screen support~~
 15. ~~Switch between fullscreen and windowed  - esc to go window, F for fullscreen~~
-16. Start in fullscreen
-17. Player "breathing" animation when idle
-18. Walking animation
-19. Running animation
-20. Smoothly interpolate from breathing into movement
-21. Rolling animation in the direction of controls - infinite direction dictated by controls
-22. Simple Collision of player with the above wall
-23. PS controller support
-24. FromSoft style lockon
-25. Main menu
-26. Frustum Culling
-27. Dynamic loading and unloading of data as player moves/crosses a boundary
-28. Chunk, ChunkData, ChunksManager
-29. Create and load static height map
-30. integrate dynamic height map into dynamic chunks loader
-31. implement waterfall in the heightmap
-32. render waterfall
-33. textures
-34. lighting
-35. 
+16. ~~Collision detection of player with wall~~
+17. ~~Optimized Collision detection using OctTree~~
+18. Remove references to entities in OctTree and just store indexes as our entities are stored in a flat array
+19. Start in fullscreen
+20. Player "breathing" animation when idle
+21. Walking animation
+22. Running animation
+23. Smoothly interpolate from breathing into movement
+24. Rolling animation in the direction of controls - infinite direction dictated by controls
+25. PS controller support
+26. FromSoft style lockon
+27. Main menu
+28. Frustum Culling
+29. Dynamic loading and unloading of data as player moves/crosses a boundary
+30. Chunk, ChunkData, ChunksManager
+31. Create and load static height map
+32. integrate dynamic height map into dynamic chunks loader
+33. implement waterfall in the heightmap
+34. render waterfall
+35. textures
+36. lighting
+37. 
 
