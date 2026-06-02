@@ -1,26 +1,34 @@
 #pragma once
 
 #include <array>
-#include "Chunk/Chunk.h"
+#include "ChunkSlot.h"
+#include "../Resource Manager/ResourceManager.h"
+#include "../../WorldDimensions.h"
 
 namespace Engine {
 
 	class ChunksManager {
 	public:
-		ChunksManager();
+		ChunksManager(void* mEntitiesStartAddressInMemory);
 		~ChunksManager();
 
 		bool Initialize();
+		bool LoadChunks(ResourceManager& resourceManager);
 
 	private:
-		static constexpr float CHUNK_SIZE = 32.0f;
+		static constexpr uint16_t CHUNK_SIZE = 32;
+		static constexpr uint16_t MAX_CHUNKS_EACH_XZ_AXIS = WorldDimensions::World_Size / CHUNK_SIZE;
+		static constexpr uint16_t MAX_CHUNKS = MAX_CHUNKS_EACH_XZ_AXIS * MAX_CHUNKS_EACH_XZ_AXIS;
+
 		static constexpr size_t MAX_ACTIVE_CHUNKS = 1;
 
-		std::array<Chunk, MAX_ACTIVE_CHUNKS> mActiveChunks;
-		uint32_t mActiveChunkCount;
+		std::array<ChunkSlot, MAX_ACTIVE_CHUNKS> mActiveChunks;
+		const void* mEntitiesStartAddressInMemory;
+		uint16_t mNextChunkID;
+		uint8_t mActiveChunkCount;
 
 	private:
-		bool LoadInitialChunks();
-
+		bool InitializeInitialChunks();
+		bool LoadChunkAtSlot0(ResourceManager& resourceManager);
 	};
 }

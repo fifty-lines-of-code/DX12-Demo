@@ -154,6 +154,7 @@
     <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunkSlot.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />

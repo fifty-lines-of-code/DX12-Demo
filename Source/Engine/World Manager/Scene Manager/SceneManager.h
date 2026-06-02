@@ -36,7 +36,7 @@ namespace Engine {
 		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
 		Entity& GetPlayerEntity();
 
-		static constexpr uint32_t MAX_ENTITIES = 2;
+		static constexpr uint32_t MAX_ENTITIES = 3;
 		std::array<Entity, MAX_ENTITIES>& GetEntities();
 
 		void PrepareForUpdate();
@@ -45,17 +45,14 @@ namespace Engine {
 		static constexpr uint8_t PLAYER_INDEX = 0;
 
 		OctTree mOctTree;
-
 		std::array<Entity, MAX_ENTITIES> mEntities;
+		ChunksManager mChunksManager;
 		std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
 		ResourceManager mResourceManager;
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
-		ChunksManager mChunksManager;
-		uint32_t mIDOfNextEntityThatWillBeCreated = 0;
 
 	private:
 		bool GeneratePlayerEntity();
-		bool GenerateBasicScene();
 		void PrepareForCollisionPass();
 	};
 }

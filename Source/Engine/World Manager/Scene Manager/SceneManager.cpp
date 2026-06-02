@@ -6,8 +6,7 @@
 namespace Engine {
 
 	SceneManager::SceneManager() :
-		mResourceManager(ResourceManager()),
-		mOctTree(OctTree())
+		mChunksManager(&mEntities[1]) // 0th index is always Player stored in scene manager
 	{}
 
 	SceneManager::~SceneManager() {}
@@ -16,7 +15,9 @@ namespace Engine {
 		if (!mOctTree.Initialize(halfWidth)) { return false; }
 
 		// todo init chunk's manager from this center
-		// so it loads the 9 chunks at and around this center
+		// so it loads the (x) chunks at and around this center
+		// also gotta decide a good value for that (x)
+
 		if (!mChunksManager.Initialize()) { return false; }
 
 		return true;
@@ -26,7 +27,9 @@ namespace Engine {
 		// ALWAYS create Player Entity first so it has ID 0
 		// todo: find a better way to enforce this
 		if (!GeneratePlayerEntity()) { return false; }
-		if (!GenerateBasicScene()) { return false; }
+
+		// load the chunks
+		if (!mChunksManager.LoadChunks(mResourceManager)) { return false; }
 
 		// only add static entities to the OctTree during Load
 		for (const auto& entity : mEntities) {
@@ -109,6 +112,7 @@ namespace Engine {
 
 	bool SceneManager::GeneratePlayerEntity() {
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
+		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
 		playerEntity.GetPhysicsBody().Center = Vector3(0.f, 0.65f, 0.5f);
 		playerEntity.SetScale(Vector3(1.f, 1.f, 1.f));
@@ -119,33 +123,6 @@ namespace Engine {
 		playerEntity.SetMesh(cubeMesh);
 
 		mMeshesToLoad[cubeMesh->GetMeshID()] = cubeMesh;
-
-		++mIDOfNextEntityThatWillBeCreated;
-
-		return true;
-	}
-
-	bool SceneManager::GenerateBasicScene() {
-		// generate the floor
-		Entity& floor = mEntities[mIDOfNextEntityThatWillBeCreated];
-		floor.SetID(mIDOfNextEntityThatWillBeCreated);
-		floor.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		floor.SetScale(Vector3(10.f, .2f, 10.f));
-
-		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
-		floor.SetMesh(cubeMesh);
-
-		++mIDOfNextEntityThatWillBeCreated;
-
-		// generate the wall
-		Entity& wall = mEntities[mIDOfNextEntityThatWillBeCreated];
-		wall.SetID(mIDOfNextEntityThatWillBeCreated);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 1.1f, 3.f);
-		wall.SetScale(Vector3(1.5f, 2.f, .2f));
-
-		wall.SetMesh(cubeMesh);
-
-		++mIDOfNextEntityThatWillBeCreated;
 
 		return true;
 	}

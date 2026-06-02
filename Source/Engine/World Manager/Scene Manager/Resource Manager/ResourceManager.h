@@ -5,23 +5,26 @@
 #include <memory>
 #include "../Entity/Mesh/Mesh.h"
 
-class ResourceManager {
-public:
-	ResourceManager();
-	~ResourceManager();
+namespace Engine {
 
-	const Mesh* GetMesh(MeshID id);
+	class ResourceManager {
+	public:
+		ResourceManager();
+		~ResourceManager();
 
-private:
-	std::vector<Mesh> mMeshes;
-	// assuming we will have 64 unique objects
-	// if we have more than that, time to create an array
-	// and index into the uint64 inside the array based on div by 64 and modulo 64
-	uint64_t mLoadedBitMask;
+		const Mesh* GetMesh(MeshID id);
 
-private:
-	static void CreateCubeMesh(Mesh* mesh);
-	bool GetIsLoaded(size_t index);
-	void SetIsLoaded(size_t index);
-	void SetIsUnloaded(size_t index);
-};
+	private:
+		std::vector<Mesh> mMeshes;
+		// assuming we will have 64 unique Meshes
+		// if we have more than that, time to create an array
+		// and index into the uint64 inside the array based on div by 64 and modulo 64
+		uint64_t mLoadedBitMask;
+
+	private:
+		static void CreateCubeMesh(Mesh* mesh);
+		bool GetIsLoaded(size_t index);
+		void SetIsLoaded(size_t index);
+		void SetIsUnloaded(size_t index);
+	};
+}
