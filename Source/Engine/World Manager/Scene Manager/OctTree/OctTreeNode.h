@@ -34,12 +34,12 @@ namespace Engine {
 		static constexpr uint32_t NUMBER_OF_CHILDREN = 8;
 
 	private:
-		Vector3 mCenter;
-		AABB mAABB;
-		float mHalfWidth;
 		// we store the index of the entities 
 		std::vector<uint32_t> mStaticEntities;
 		std::vector<uint32_t> mDynamicEntities;
+		AABB mAABB;
+		Vector3 mCenter;
+		float mHalfWidth;
 		uint32_t mStartIndexOfChildNodes;
 	};
 }

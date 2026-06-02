@@ -56,13 +56,13 @@ namespace Engine {
 
 		// if this isn't the deepest level (leaf nodes)
 		if (depth < OctTree::MAX_DEPTH) {
-			double childrenHalfWidth = node.GetHalfWidth() * 0.5;
+			float childrenHalfWidth = node.GetHalfWidth() * 0.5f;
 
 			// 1. Subdivide the node if it doesn't have children already
 			// known by if start index == uint32_t::max
 			// maybe we can find a better way to know if a node has been subdivided
 			if (node.GetStartIndexOfChildren() == OctTreeNode::INVALID_START_INDEX) {
-				Subdivide(node, (float)childrenHalfWidth);
+				Subdivide(node, childrenHalfWidth);
 			}
 
 			uint32_t startIndex = node.GetStartIndexOfChildren();
