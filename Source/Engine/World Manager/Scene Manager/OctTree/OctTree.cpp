@@ -6,7 +6,7 @@
 namespace Engine {
 
 	OctTree::OctTree() : 
-		mRoot(nullptr)
+		mRoot(allNodes[0])
 	{}
 
 	OctTree::~OctTree() {}
@@ -15,11 +15,11 @@ namespace Engine {
 		SetupRoot(center, halfWidth);
 		IncrementNextAvailableStartIndex();
 
-		return mRoot != nullptr;
+		return true;
 	}
 
-	bool OctTree::Insert(const Entity* entity) {
-		return Insert_Internal(entity, mRoot, 0);
+	bool OctTree::Insert(uint32_t entityIndex, const AABB& entityAABB, bool isStatic) {
+		return Insert_Internal(entityIndex, entityAABB, isStatic, mRoot, 0);
 	}
 
 	void OctTree::ClearDynamicEntities() {
@@ -31,7 +31,7 @@ namespace Engine {
 	void OctTree::GetPotentialCollisionsWithAABB(
 		uint32_t playerID,
 		const AABB& playerPotentialAABB,
-		std::vector<const Entity*>& candidates
+		std::vector<uint32_t>& candidates
 	) {
 		GetPotentalCollisionsWithPlayer_Internal(
 			0,
@@ -43,9 +43,8 @@ namespace Engine {
 #pragma region Private
 
 	void OctTree::SetupRoot(const Vector3& center, float halfWidth) {
-		mRoot = &allNodes[0];
-		mRoot->SetCenter(center);
-		mRoot->SetHalfWidth(halfWidth);
+		mRoot.SetCenter(center);
+		mRoot.SetHalfWidth(halfWidth);
 		CalculateAndUpdateBoundsOfNode(mRoot);
 	}
 
@@ -53,23 +52,20 @@ namespace Engine {
 		mNextAvailableStartIndex += OctTreeNode::NUMBER_OF_CHILDREN;
 	}
 
-	bool OctTree::Insert_Internal(const Entity* entity, OctTreeNode* const node, uint32_t depth) {
-		if (node == nullptr) { return false; }
+	bool OctTree::Insert_Internal(uint32_t entityIndex, const AABB& entityAABB, bool isStatic, OctTreeNode& node, uint32_t depth) {
 
 		// if this isn't the deepest level (leaf nodes)
 		if (depth < OctTree::MAX_DEPTH) {
-			AABB entityAABB = entity->GetAABB();
-
-			double childrenHalfWidth = node->GetHalfWidth() * 0.5;
+			float childrenHalfWidth = node.GetHalfWidth() * 0.5f;
 
 			// 1. Subdivide the node if it doesn't have children already
 			// known by if start index == uint32_t::max
 			// maybe we can find a better way to know if a node has been subdivided
-			if (node->GetStartIndexOfChildren() == OctTreeNode::INVALID_START_INDEX) {
-				Subdivide(node, (float)childrenHalfWidth);
+			if (node.GetStartIndexOfChildren() == OctTreeNode::INVALID_START_INDEX) {
+				Subdivide(node, childrenHalfWidth);
 			}
 
-			uint32_t startIndex = node->GetStartIndexOfChildren();
+			uint32_t startIndex = node.GetStartIndexOfChildren();
 			// 2. Find the child node to insert into
 			for (int i = 0; i < OctTreeNode::NUMBER_OF_CHILDREN; ++i) {
 				uint32_t childIndex = startIndex + i;
@@ -79,16 +75,16 @@ namespace Engine {
 				// maybe the code should be strong enough can this assert isn't necessary
 				assert(childIndex < OctTree::TOTAL_NUMBER_OF_NODES && "Out of OctTree allNodes bounds");
 
-				OctTreeNode* const child = &allNodes[childIndex];
+				OctTreeNode& child = allNodes[childIndex];
 				// now check if the entity can be inserted into any of the child nodes
 				bool entityFitsInsideNode = DoesEntityFitInNode(
 					entityAABB,
-					child->GetAABB()
+					child.GetAABB()
 				);
 
 				if (entityFitsInsideNode) {
 					// if it can fit in the child node, we insert it there and break out of the loop
-					return Insert_Internal(entity, child, depth + 1);
+					return Insert_Internal(entityIndex, entityAABB, isStatic, child, depth + 1);
 				}
 			}
 		}
@@ -96,19 +92,19 @@ namespace Engine {
 		// 3. if we're at a leaf node OR
 		// none of the children could completely insert it even though 
 		// it's small enough, add it to (parent) node's entity list
-		if (entity->GetIsStatic()) {
-			node->UpdateStaticEntities(entity);
+		if (isStatic) {
+			node.UpdateStaticEntities(entityIndex);
 		}
 		else {
-			node->UpdateDynamicEntities(entity);
+			node.UpdateDynamicEntities(entityIndex);
 		}
 
 		return true;
 	}
 
-	void OctTree::Subdivide(OctTreeNode* const node, float childrenHalfWidth) {
+	void OctTree::Subdivide(OctTreeNode& node, float childrenHalfWidth) {
 		uint32_t startIndex = mNextAvailableStartIndex;
-		node->SetStartIndexOfChildNodes(mNextAvailableStartIndex);
+		node.SetStartIndexOfChildNodes(mNextAvailableStartIndex);
 		IncrementNextAvailableStartIndex();
 
 		for (int i = 0; i < OctTreeNode::NUMBER_OF_CHILDREN; ++i) {
@@ -116,7 +112,7 @@ namespace Engine {
 			uint32_t childNodeIndex = startIndex + i;
 			if (childNodeIndex >= OctTree::TOTAL_NUMBER_OF_NODES) { break; }
 
-			OctTreeNode* childNode = &allNodes[childNodeIndex];
+			OctTreeNode& childNode = allNodes[childNodeIndex];
 
 			// calculate center based on the index
 			// 
@@ -128,7 +124,7 @@ namespace Engine {
 			// to map which way  the new center is for this index from parent center
 			// for example if we have index 5 (101 in binary) we will go positive x, negative y and positive z
 
-			Vector3 center = node->GetCenter();
+			Vector3 center = node.GetCenter();
 			// we check the first bit, if it's a 1 we go positive x, else negative x
 			center.x += ((i & 1) ? childrenHalfWidth : -childrenHalfWidth);
 			// we check the second bit, if it's a 1 we go positive y, else negative y
@@ -136,20 +132,20 @@ namespace Engine {
 			// we check the third bit, if it's a 1 we go positive z, else negative z
 			center.z += ((i & 4) ? childrenHalfWidth : -childrenHalfWidth);
 
-			childNode->SetCenter(center);
-			childNode->SetHalfWidth(childrenHalfWidth);
+			childNode.SetCenter(center);
+			childNode.SetHalfWidth(childrenHalfWidth);
 			CalculateAndUpdateBoundsOfNode(childNode);
 		}
 	}
 
-	void OctTree::CalculateAndUpdateBoundsOfNode(OctTreeNode* node) {
-		const Vector3& center = node->GetCenter();
-		float halfWidth = node->GetHalfWidth();
+	void OctTree::CalculateAndUpdateBoundsOfNode(OctTreeNode& node) {
+		const Vector3& center = node.GetCenter();
+		float halfWidth = node.GetHalfWidth();
 
 		Vector3 nodeMin = center - halfWidth;
 		Vector3 nodeMax = center + halfWidth;
 
-		node->SetBounds(nodeMin, nodeMax);
+		node.SetBounds(nodeMin, nodeMax);
 	}
 
 	bool OctTree::DoesEntityFitInNode(
@@ -170,7 +166,7 @@ namespace Engine {
 	void OctTree::GetPotentalCollisionsWithPlayer_Internal(
 		uint32_t startIndex,
 		const AABB& playerPotentialAABB,
-		std::vector<const Entity*>& potentialCandidates
+		std::vector<uint32_t>& potentialCandidates
 	) {
 		if (startIndex >= mNextAvailableStartIndex) { return; }
 
@@ -180,11 +176,11 @@ namespace Engine {
 		if (!GeometryHelper::AABBIntersect(playerPotentialAABB, node.GetAABB())) { return; }
 
 		// add all entities inside this node to candidates
-		for (const Entity* entity : node.GetStaticEntities()) {
-			potentialCandidates.push_back(entity);
+		for (uint32_t entityIndex : node.GetStaticEntities()) {
+			potentialCandidates.push_back(entityIndex);
 		}
-		for (const Entity* entity : node.GetDynamicEntities()) {
-			potentialCandidates.push_back(entity);
+		for (uint32_t entityIndex : node.GetDynamicEntities()) {
+			potentialCandidates.push_back(entityIndex);
 		}
 
 		// recurse through it's children, if it has any

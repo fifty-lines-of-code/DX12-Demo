@@ -19,8 +19,8 @@ Features to implement:
 15. ~~Switch between fullscreen and windowed  - esc to go window, F for fullscreen~~
 16. ~~Collision detection of player with wall~~
 17. ~~Optimized Collision detection using OctTree~~
-18. Remove references to entities in OctTree and just store indexes as our entities are stored in a flat array
-19. Start in fullscreen
+18. ~~Start in fullscreen~~
+19. ~~Remove references to entities in OctTree and just store indexes as our entities are stored in a flat array~~
 20. Player "breathing" animation when idle
 21. Walking animation
 22. Running animation
@@ -37,6 +37,6 @@ Features to implement:
 33. implement waterfall in the heightmap
 34. render waterfall
 35. textures
-36. lighting
+36. Basic lighting
 37. 
 
