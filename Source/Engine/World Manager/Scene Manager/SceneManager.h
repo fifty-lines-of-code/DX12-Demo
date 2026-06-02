@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include "Chunks Manager/ChunksManager.h"
 #include "Entity/Entity.h"
 #include <memory>
 #include "../Scene Manager/Entity/Mesh/Mesh.h"
@@ -32,22 +33,25 @@ namespace Engine {
 		uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
 		uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const;
 
-		std::vector<const Mesh*> GetMeshesToLoad();
+		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
 		Entity& GetPlayerEntity();
 
-		static constexpr uint32_t MAX_ENTITIES = 3;
+		static constexpr uint32_t MAX_ENTITIES = 2;
 		std::array<Entity, MAX_ENTITIES>& GetEntities();
 
 		void PrepareForUpdate();
 
 	private:
 		static constexpr uint8_t PLAYER_INDEX = 0;
-		std::array<Entity, MAX_ENTITIES> mEntities;
-		std::vector<uint32_t> mIndexesOfDynamicEntities;
-		uint32_t mIDOfNextEntityThatWillBeCreated = 0;
-		ResourceManager mResourceManager;
-		std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
+
 		OctTree mOctTree;
+
+		std::array<Entity, MAX_ENTITIES> mEntities;
+		std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
+		ResourceManager mResourceManager;
+		std::vector<uint32_t> mIndexesOfDynamicEntities;
+		ChunksManager mChunksManager;
+		uint32_t mIDOfNextEntityThatWillBeCreated = 0;
 
 	private:
 		bool GeneratePlayerEntity();

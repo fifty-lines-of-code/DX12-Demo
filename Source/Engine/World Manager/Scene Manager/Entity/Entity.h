@@ -39,9 +39,9 @@ public:
 	void SetScale(Engine::Vector3 scale);
 
 private:
-	uint32_t mID;
 	Engine::EnginePhysics::PhysicsBody mPhysicsBody;
-	bool mIsStatic;
 	const Mesh* mMesh;
+	uint32_t mID;
+	bool mIsStatic;
 	bool mIsDirty;
 };

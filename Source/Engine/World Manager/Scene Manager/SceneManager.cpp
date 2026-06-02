@@ -13,7 +13,11 @@ namespace Engine {
 	SceneManager::~SceneManager() {}
 
 	bool SceneManager::Initialize(const Vector3& center, float halfWidth) {
-		if (!mOctTree.Initialize(center, halfWidth)) { return false; }
+		if (!mOctTree.Initialize(halfWidth)) { return false; }
+
+		// todo init chunk's manager from this center
+		// so it loads the 9 chunks at and around this center
+		if (!mChunksManager.Initialize()) { return false; }
 
 		return true;
 	}
@@ -91,15 +95,12 @@ namespace Engine {
 
 #pragma region Private
 
-	std::vector<const Mesh*> SceneManager::GetMeshesToLoad() {
-		std::vector<const Mesh*> meshList;
-		meshList.reserve(mMeshesToLoad.size());
+	void SceneManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
+		meshes.reserve(mMeshesToLoad.size());
 
 		for (auto const& pair : mMeshesToLoad) {
-			meshList.push_back(pair.second);
+			meshes.push_back(pair.second);
 		}
-
-		return meshList;
 	}
 
 	Entity& SceneManager::GetPlayerEntity() {

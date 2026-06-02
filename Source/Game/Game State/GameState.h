@@ -35,5 +35,5 @@ private:
 	bool mMinimized = false;  // is the application minimized?
 	bool mMaximized = false;  // is the application maximized?
 	bool mResizing = false;   // are the resize bars being dragged?
-	bool mIsFullscreen = true; // we start in fullscreen
+	bool mIsFullscreen = false; // we start in windowed
 };

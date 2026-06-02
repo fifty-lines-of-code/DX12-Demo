@@ -18,6 +18,9 @@ namespace Engine {
 	bool WorldManager::Initialize() {
 		// todo
 
+		// todo: load player save data's player center and 
+		// load the world from that center pos
+		// for now it's 0, 0, 0
 		Vector3 center;
 		float halfWidth = WorldDimensions::World_Half_Size;
 
@@ -87,8 +90,8 @@ namespace Engine {
 		return mSceneManager.GetPlayerEntity();
 	}
 
-	std::vector<const Mesh*> WorldManager::GetMeshesToLoad() {
-		return mSceneManager.GetMeshesToLoad();
+	void WorldManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
+		mSceneManager.GetMeshesToLoad(meshes);
 	}
 
 	void WorldManager::PrepareForUpdate() {
