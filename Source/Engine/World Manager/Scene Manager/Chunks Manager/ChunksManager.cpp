@@ -37,6 +37,7 @@ namespace Engine {
 		}
 
 		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount++];
+		// this chunk's center is 0, 0, 0
 		Vector3 center;
 
 		if (!chunkSlotAt0.Initialize(mNextChunkID++, center)) {

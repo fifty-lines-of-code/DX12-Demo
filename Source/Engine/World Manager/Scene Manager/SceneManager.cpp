@@ -6,7 +6,8 @@
 namespace Engine {
 
 	SceneManager::SceneManager() :
-		mChunksManager(&mEntities[1]) // 0th index is always Player stored in scene manager
+		mChunksManager(&mEntities[1]), // 0th index is always Player stored in scene manager
+		mResourceManager(ChunksManager::CHUNK_SIZE)
 	{}
 
 	SceneManager::~SceneManager() {}
@@ -99,10 +100,11 @@ namespace Engine {
 #pragma region Private
 
 	void SceneManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
-		meshes.reserve(mMeshesToLoad.size());
+		auto& meshesArray = mResourceManager.GetMeshes();
+		meshes.reserve(meshesArray.size());
 
-		for (auto const& pair : mMeshesToLoad) {
-			meshes.push_back(pair.second);
+		for (const Mesh& mesh : meshesArray) {
+			meshes.push_back(&mesh);
 		}
 	}
 
@@ -121,8 +123,6 @@ namespace Engine {
 
 		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
 		playerEntity.SetMesh(cubeMesh);
-
-		mMeshesToLoad[cubeMesh->GetMeshID()] = cubeMesh;
 
 		return true;
 	}

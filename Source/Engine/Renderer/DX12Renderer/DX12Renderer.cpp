@@ -277,7 +277,7 @@ void DX12Renderer::BeginFrame() {
 }
 
 bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) {
-	DX12MeshResource* resource = mMeshResourceMap[meshID].get();
+	const DX12MeshResource* const resource = mMeshResourceMap[meshID].get();
 
 	if (resource == nullptr) { return false; }
 

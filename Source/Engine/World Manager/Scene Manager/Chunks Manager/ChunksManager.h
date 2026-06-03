@@ -15,8 +15,8 @@ namespace Engine {
 		bool Initialize();
 		bool LoadChunks(ResourceManager& resourceManager);
 
-	private:
 		static constexpr uint16_t CHUNK_SIZE = 32;
+	private:
 		static constexpr uint16_t MAX_CHUNKS_EACH_XZ_AXIS = WorldDimensions::World_Size / CHUNK_SIZE;
 		static constexpr uint16_t MAX_CHUNKS = MAX_CHUNKS_EACH_XZ_AXIS * MAX_CHUNKS_EACH_XZ_AXIS;
 

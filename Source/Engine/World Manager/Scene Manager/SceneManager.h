@@ -47,7 +47,6 @@ namespace Engine {
 		OctTree mOctTree;
 		std::array<Entity, MAX_ENTITIES> mEntities;
 		ChunksManager mChunksManager;
-		std::unordered_map<MeshID, const Mesh*> mMeshesToLoad;
 		ResourceManager mResourceManager;
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
 

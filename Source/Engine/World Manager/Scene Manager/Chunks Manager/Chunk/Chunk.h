@@ -19,7 +19,7 @@ namespace Engine {
 		static constexpr uint8_t MAX_ENTITIES_IN_A_CHUNK = 64;
 
 	private:
-		// each chunk holds an array of entitiy indices
+		// each chunk holds an array of entity indices
 		// it's the responsibiity of the parents to ensure
 		// correct ids are set in the correct chunks
 		uint32_t mEntities[Chunk::MAX_ENTITIES_IN_A_CHUNK];

@@ -16,31 +16,36 @@ namespace Engine {
 		mID = chunkID;
 		mCenter = center;
 		mTotalNumberOfEntities = 0;
-		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK;
+
+		// +1 because player is always ID 0
+		// todo: find a better way to do this
+		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK + 1;
 
 		return true;
 	}
 
 	bool Chunk::Load(uint8_t* entityStartAddressInBytes, ResourceManager& resourceManager) {
-
 		// calculate the offset
 		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
-		uint32_t offsetForThisEntity = offsetForThisChunk + (mNextEntityID * sizeof(Entity));
+
+		// -1 because player index starts at 1
+		// and within this chunk we want a 0 - based indexing
+		// todo: gotta find a better way to do this
+		uint32_t offsetForThisEntity = offsetForThisChunk + ((mNextEntityID - 1) * sizeof(Entity));
 
 		// get address of this entity
 		uint8_t* targetEntityAddress = entityStartAddressInBytes + offsetForThisEntity;
 
-		// get pointer to the cube mesh
-		const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
+		// get pointer to the terrain mesh
+		const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
 
-		// generate the floor
+		// generate the terrain
 		Entity& floor = *reinterpret_cast<Entity*>(targetEntityAddress);
 		floor.SetIsActive(true);
-
 		floor.SetID(mNextEntityID);
 		floor.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		floor.SetScale(Vector3(10.f, .2f, 10.f));
-		floor.SetMesh(cubeMesh);
+		floor.SetScale(Vector3(1.f));
+		floor.SetMesh(terrain0x0Mesh);
 
 		if (!Insert(mNextEntityID)) { return false; }
 
@@ -48,6 +53,8 @@ namespace Engine {
 		// go to next Entity by walking the Stride(Entity)
 		targetEntityAddress += sizeof(Entity);
 
+		// get pointer to the cube mesh
+		const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
 		Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
 		wall.SetIsActive(true);
 

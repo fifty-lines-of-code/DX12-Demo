@@ -163,6 +163,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldManager.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\SceneManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\WorldManager.cpp" />
     <ClCompile Include="Source\Game\Game State\GameState.cpp" />

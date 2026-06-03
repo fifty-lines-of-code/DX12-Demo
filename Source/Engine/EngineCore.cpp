@@ -121,9 +121,9 @@ namespace Engine {
 
 	void EngineCore::LoadGeometry() {
 		std::vector<const Mesh*> meshesToLoad;
-
 		mWorldManager.GetMeshesToLoad(meshesToLoad);
-		for (auto& mesh : meshesToLoad) {
+
+		for (const Mesh* mesh : meshesToLoad) {
 			mRenderer.LoadGeometry(
 				(uint32_t)mesh->GetMeshID(),
 				sizeof(Vertex),

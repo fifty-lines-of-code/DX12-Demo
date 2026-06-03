@@ -14,8 +14,8 @@ void Mesh::Load(MeshID id, std::vector<Engine::Vertex> vertices, std::vector<uin
 	mVertices = vertices;
 	mIndices = indices;
 
-	mVbByteSize = (UINT)vertices.size() * sizeof(Engine::Vertex);
-	mIbByteSize = (UINT)indices.size() * sizeof(uint16_t);
+	mVbByteSize = (uint32_t)vertices.size() * sizeof(Engine::Vertex);
+	mIbByteSize = (uint32_t)indices.size() * sizeof(uint16_t);
 
 	CalculateLocalMinAndMax();
 }
