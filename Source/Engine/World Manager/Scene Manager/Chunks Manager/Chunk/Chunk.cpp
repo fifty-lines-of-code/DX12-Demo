@@ -59,7 +59,7 @@ namespace Engine {
 		wall.SetIsActive(true);
 
 		wall.SetID(mNextEntityID);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 1.1f, 3.f);
+		wall.GetPhysicsBody().Center = Vector3(0.f, 4.6f, 3.f);
 		wall.SetScale(Vector3(1.5f, 2.f, .2f));
 		wall.SetMesh(cubeMesh);
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../../Math/Geometry.h"
+#include <string>
 #include <vector>
 
 namespace Engine {
@@ -26,8 +27,15 @@ namespace Engine {
 		uint16_t TotalNumberOfVerticesForChunk() const noexcept;
 
 	private:
+		const float mMaxHeight = 7.f;
 		uint16_t mChunkSize;
 		uint16_t mChunkSizeHalf;
 		const uint16_t mNumberOfVerticesPerEdge;
+
+	private:
+		bool LoadHeightmapToArray(
+			const std::string& filename,
+			std::array<uint8_t, 1089>& outPixelArray
+		);
 	};
 }

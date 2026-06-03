@@ -864,8 +864,8 @@ bool DX12Renderer::CreateRootSignature() {
 bool DX12Renderer::CreateShadersAndInputLayout() {
 	HRESULT hr = S_OK;
 
-	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
 
 	mInputLayout =
 	{

@@ -172,6 +172,7 @@
     <ClInclude Include="Source\Game\Game.h" />
     <ClInclude Include="Source\Helper\Helper.h" />
     <ClInclude Include="Source\Helper\Logger.h" />
+    <ClInclude Include="Source\Helper\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
@@ -203,9 +204,10 @@
   <ItemGroup>
     <Image Include="DX12 Demo.ico" />
     <Image Include="small.ico" />
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\Shaders\color.hlsl">
+    <None Include="Source\Resources\Shaders\color.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
