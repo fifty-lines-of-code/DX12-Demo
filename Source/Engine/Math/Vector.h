@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+
 #include "MathHelper.h"
 
 namespace Engine {
@@ -22,6 +23,7 @@ namespace Engine {
         float z;
 
         Vector3() noexcept : x(0.f), y(0.f), z(0.f) {}
+        Vector3(float _a) noexcept : Vector3(_a, _a ,_a) {}
         Vector3(float _x, float _y, float _z) noexcept : x(_x), y(_y), z(_z) {}
         explicit Vector3(_In_reads_(3) const float* pArray) noexcept : x(pArray[0]), y(pArray[1]), z(pArray[2]) {}
         Vector3(const Vector3&) noexcept = default;

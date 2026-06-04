@@ -6,14 +6,20 @@
 namespace Engine {
 
 	SceneManager::SceneManager() :
-		mResourceManager(ResourceManager()),
-		mOctTree(OctTree())
+		mChunksManager(&mEntities[1]), // 0th index is always Player stored in scene manager
+		mResourceManager(ChunksManager::CHUNK_SIZE)
 	{}
 
 	SceneManager::~SceneManager() {}
 
 	bool SceneManager::Initialize(const Vector3& center, float halfWidth) {
-		if (!mOctTree.Initialize(center, halfWidth)) { return false; }
+		if (!mOctTree.Initialize(halfWidth)) { return false; }
+
+		// todo init chunk's manager from this center
+		// so it loads the (x) chunks at and around this center
+		// also gotta decide a good value for that (x)
+
+		if (!mChunksManager.Initialize()) { return false; }
 
 		return true;
 	}
@@ -22,7 +28,9 @@ namespace Engine {
 		// ALWAYS create Player Entity first so it has ID 0
 		// todo: find a better way to enforce this
 		if (!GeneratePlayerEntity()) { return false; }
-		if (!GenerateBasicScene()) { return false; }
+
+		// load the chunks
+		if (!mChunksManager.LoadChunks(mResourceManager)) { return false; }
 
 		// only add static entities to the OctTree during Load
 		for (const auto& entity : mEntities) {
@@ -91,15 +99,13 @@ namespace Engine {
 
 #pragma region Private
 
-	std::vector<const Mesh*> SceneManager::GetMeshesToLoad() {
-		std::vector<const Mesh*> meshList;
-		meshList.reserve(mMeshesToLoad.size());
+	void SceneManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
+		auto& meshesArray = mResourceManager.GetMeshes();
+		meshes.reserve(meshesArray.size());
 
-		for (auto const& pair : mMeshesToLoad) {
-			meshList.push_back(pair.second);
+		for (const Mesh& mesh : meshesArray) {
+			meshes.push_back(&mesh);
 		}
-
-		return meshList;
 	}
 
 	Entity& SceneManager::GetPlayerEntity() {
@@ -108,43 +114,15 @@ namespace Engine {
 
 	bool SceneManager::GeneratePlayerEntity() {
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
+		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
-		playerEntity.GetPhysicsBody().Center = Vector3(0.f, 0.65f, 0.5f);
-		playerEntity.SetScale(Vector3(1.f, 1.f, 1.f));
+		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
+		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
 		playerEntity.SetIsStatic(false);
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 
 		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
 		playerEntity.SetMesh(cubeMesh);
-
-		mMeshesToLoad[cubeMesh->GetMeshID()] = cubeMesh;
-
-		++mIDOfNextEntityThatWillBeCreated;
-
-		return true;
-	}
-
-	bool SceneManager::GenerateBasicScene() {
-		// generate the floor
-		Entity& floor = mEntities[mIDOfNextEntityThatWillBeCreated];
-		floor.SetID(mIDOfNextEntityThatWillBeCreated);
-		floor.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		floor.SetScale(Vector3(10.f, .2f, 10.f));
-
-		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
-		floor.SetMesh(cubeMesh);
-
-		++mIDOfNextEntityThatWillBeCreated;
-
-		// generate the wall
-		Entity& wall = mEntities[mIDOfNextEntityThatWillBeCreated];
-		wall.SetID(mIDOfNextEntityThatWillBeCreated);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 1.1f, 3.f);
-		wall.SetScale(Vector3(1.5f, 2.f, .2f));
-
-		wall.SetMesh(cubeMesh);
-
-		++mIDOfNextEntityThatWillBeCreated;
 
 		return true;
 	}

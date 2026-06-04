@@ -277,7 +277,7 @@ void DX12Renderer::BeginFrame() {
 }
 
 bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) {
-	DX12MeshResource* resource = mMeshResourceMap[meshID].get();
+	const DX12MeshResource* const resource = mMeshResourceMap[meshID].get();
 
 	if (resource == nullptr) { return false; }
 
@@ -864,8 +864,8 @@ bool DX12Renderer::CreateRootSignature() {
 bool DX12Renderer::CreateShadersAndInputLayout() {
 	HRESULT hr = S_OK;
 
-	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
 
 	mInputLayout =
 	{

@@ -14,7 +14,8 @@ public:
 		uint32_t Id, 
 		Engine::Vector3 center,
 		Engine::Vector3 scale,
-		bool isStatic
+		bool isStatic,
+		bool isActive
 	);
 	~Entity();
 
@@ -36,12 +37,16 @@ public:
 	bool GetIsDirty() const;
 	void SetIsDirty(bool dirty);
 
+	bool GetIsActive() const noexcept;
+	void SetIsActive(bool isActive) noexcept;
+
 	void SetScale(Engine::Vector3 scale);
 
 private:
-	uint32_t mID;
 	Engine::EnginePhysics::PhysicsBody mPhysicsBody;
-	bool mIsStatic;
 	const Mesh* mMesh;
+	uint32_t mID;
+	bool mIsStatic;
 	bool mIsDirty;
+	bool mIsActive;
 };

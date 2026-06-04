@@ -39,7 +39,7 @@ private:
 	float mPitch = Engine::MathHelper::ConvertToRadians(30);
 	float mPitchMin = Engine::MathHelper::ConvertToRadians(-1);
 	float mPitchMax = Engine::MathHelper::ConvertToRadians(45);
-	float mRadius = 4.f;
+	float mRadius = 5.f;
 	float mYawSpeed = .75f;
 	float mPitchSpeed = .5f;
 	const float mTrackingSpeed = 4.f;

@@ -14,14 +14,12 @@ namespace Engine {
 		OctTree();
 		~OctTree();
 
-		bool Initialize(const Vector3& center, float halfWidth);
+		bool Initialize(float halfWidth);
 		bool Insert(uint32_t entityIndex, const AABB& entityAABB, bool isStatic);
 		void ClearDynamicEntities();
 		void GetPotentialCollisionsWithAABB(uint32_t playerID, const AABB& playerPotentialAABB, std::vector<uint32_t>& candidates);
 
 	private:
-		OctTreeNode& mRoot;
-
 		// why depth of 3? Because our scene is small and we don't have many entities, so we don't need a very deep tree, but helps to learn the idea
 		// in the real world it's usually between 5 and 8, but it really depends on the scene and the number of entities (or so copiolot says)
 		// Remember: this created 4 layers
@@ -39,10 +37,11 @@ namespace Engine {
 		static constexpr uint32_t TOTAL_NUMBER_OF_NODES =
 			((1 << (3 * (MAX_DEPTH + 1))) - 1) / 7;
 		OctTreeNode allNodes[OctTree::TOTAL_NUMBER_OF_NODES];
+		OctTreeNode& mRoot;
 		uint32_t mNextAvailableStartIndex = 1; // index 0 will store root
 
 	private:
-		void SetupRoot(const Vector3& center, float halfWidth);
+		void SetupRoot(float halfWidth);
 		void IncrementNextAvailableStartIndex();
 		bool Insert_Internal(uint32_t entityIndex, const AABB& entityAABB, bool isStatic, OctTreeNode& node, uint32_t depth);
 		void Subdivide(OctTreeNode& node, float childrenHalfWidth);

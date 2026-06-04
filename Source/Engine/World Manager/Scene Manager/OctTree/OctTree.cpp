@@ -11,8 +11,8 @@ namespace Engine {
 
 	OctTree::~OctTree() {}
 
-	bool OctTree::Initialize(const Vector3& center, float halfWidth) {
-		SetupRoot(center, halfWidth);
+	bool OctTree::Initialize(float halfWidth) {
+		SetupRoot(halfWidth);
 		IncrementNextAvailableStartIndex();
 
 		return true;
@@ -42,8 +42,9 @@ namespace Engine {
 
 #pragma region Private
 
-	void OctTree::SetupRoot(const Vector3& center, float halfWidth) {
-		mRoot.SetCenter(center);
+	void OctTree::SetupRoot(float halfWidth) {
+		// Octtree center is always world center, 0, 0, 0);
+		mRoot.SetCenter(Vector3()); 
 		mRoot.SetHalfWidth(halfWidth);
 		CalculateAndUpdateBoundsOfNode(mRoot);
 	}

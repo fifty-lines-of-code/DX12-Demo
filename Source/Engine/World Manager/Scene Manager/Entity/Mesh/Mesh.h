@@ -6,6 +6,7 @@
 
 enum class MeshID : uint32_t {
 	Cube = 0,
+	Terrain0x0,
 	Count
 };
 
@@ -29,8 +30,8 @@ private:
 	std::vector<uint16_t> mIndices;
 
 	MeshID mMeshID;
-	UINT mVbByteSize;
-	UINT mIbByteSize;
+	uint32_t mVbByteSize;
+	uint32_t mIbByteSize;
 	Engine::Vector3 mLocalMin;
 	Engine::Vector3 mLocalMax;
 

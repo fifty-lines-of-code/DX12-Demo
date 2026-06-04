@@ -21,22 +21,24 @@ Features to implement:
 17. ~~Optimized Collision detection using OctTree~~
 18. ~~Start in fullscreen~~
 19. ~~Remove references to entities in OctTree and just store indexes as our entities are stored in a flat array~~
-20. Player "breathing" animation when idle
-21. Walking animation
-22. Running animation
-23. Smoothly interpolate from breathing into movement
-24. Rolling animation in the direction of controls - infinite direction dictated by controls
-25. PS controller support
-26. FromSoft style lockon
-27. Main menu
-28. Frustum Culling
-29. Dynamic loading and unloading of data as player moves/crosses a boundary
-30. Chunk, ChunkData, ChunksManager
-31. Create and load static height map
-32. integrate dynamic height map into dynamic chunks loader
-33. implement waterfall in the heightmap
-34. render waterfall
-35. textures
-36. Basic lighting
-37. 
+20. ~~Chunk, ChunkSlot, ChunksManager~~
+21. ~~Generate Terrain of Chunk0x0 Programmatically~~
+22. ~~Create and load static height map and set heights and colors of Chunk0x0 generated in step 21~~
+23. Player "breathing" animation when idle
+24. Walking animation
+25. Running animation
+26. Smoothly interpolate from breathing into movement
+27. Rolling animation in the direction of controls - infinite direction dictated by controls
+28. PS controller support
+29. FromSoft style lockon
+30. Main menu
+31. Frustum Culling
+32. Dynamic loading and unloading of data as player moves/crosses a boundary
+33. Create and load static height map
+34. integrate dynamic height map into dynamic chunks loader
+35. implement waterfall in the heightmap
+36. render waterfall
+37. textures
+38. Basic lighting
+39. 
 

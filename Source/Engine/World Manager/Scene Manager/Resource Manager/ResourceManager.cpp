@@ -1,102 +1,133 @@
 #include "ResourceManager.h"
 
-#include "../../Scene Manager/Entity/Mesh/Mesh.h"
 #include <DirectXColors.h>
 
-using namespace DirectX;
+namespace Engine {
 
-ResourceManager::ResourceManager() : mLoadedBitMask(0) {
-	mMeshes.resize(static_cast<size_t>(MeshID::Count));
-}
+	ResourceManager::ResourceManager(uint16_t chunkSize) :
+		mLoadedBitMask(0),
+		mTerrainManager(TerrainManager(chunkSize))
+	{}
 
-ResourceManager::~ResourceManager() {
-}
+	ResourceManager::~ResourceManager() {}
 
-const Mesh* ResourceManager::GetMesh(MeshID id) {
-	if (id >= MeshID::Count) {
-		return nullptr;
-	}
-
-	size_t index = size_t(id);
-	Mesh* mesh = nullptr;
-
-	if (!GetIsLoaded(index)) {
-		switch (id) {
-		case MeshID::Cube:
-			mesh = &mMeshes[index];
-			CreateCubeMesh(mesh);
-			SetIsLoaded(index);
-			break;
-
-		default:
+	const Mesh* ResourceManager::GetMesh(MeshID id) {
+		if (id >= MeshID::Count) {
 			return nullptr;
 		}
+
+		size_t index = size_t(id);
+		Mesh* mesh = nullptr;
+
+		if (!GetIsLoaded(index)) {
+			mesh = &mMeshes[index];
+
+			switch (id) {
+			case MeshID::Cube:
+				CreateCubeMesh(mesh);
+				break;
+
+			case MeshID::Terrain0x0:
+				CreateTerrian0x0(mesh);
+				break;
+			}
+
+			SetIsLoaded(index);
+		}
+		else {
+			mesh = &mMeshes[index];
+		}
+
+		return mesh;
 	}
-	else {
-		mesh = &mMeshes[index];
+
+	const std::array<Mesh, (uint32_t)MeshID::Count>& ResourceManager::GetMeshes() const  {
+		return mMeshes;
 	}
 
-	return mesh;
-}
+#pragma region Private
 
-void ResourceManager::CreateCubeMesh(Mesh* mesh) {
-	std::vector<Engine::Vertex> vertices = {
-		Engine::Vertex({ Engine::Vector3(-.5f, -.5f, -.5f), Engine::Vector4(Colors::White.f) }),
-		Engine::Vertex({ Engine::Vector3(-.5f, +.5f, -.5f), Engine::Vector4(Colors::Black.f) }),
-		Engine::Vertex({ Engine::Vector3(+.5f, +.5f, -.5f), Engine::Vector4(Colors::Red.f) }),
-		Engine::Vertex({ Engine::Vector3(+.5f, -.5f, -.5f), Engine::Vector4(Colors::Green.f) }),
-		Engine::Vertex({ Engine::Vector3(-.5f, -.5f, +.5f), Engine::Vector4(Colors::Blue.f) }),
-		Engine::Vertex({ Engine::Vector3(-.5f, +.5f, +.5f), Engine::Vector4(Colors::Yellow.f) }),
-		Engine::Vertex({ Engine::Vector3(+.5f, +.5f, +.5f), Engine::Vector4(Colors::Cyan.f) }),
-		Engine::Vertex({ Engine::Vector3(+.5f, -.5f, +.5f), Engine::Vector4(Colors::Magenta.f) })
-	};
+	void ResourceManager::CreateCubeMesh(Mesh* mesh) {
+		std::vector<Vertex> vertices = {
+			Vertex({ Vector3(-.5f, -.5f, -.5f), Vector4(DirectX::Colors::White.f) }),
+			Vertex({ Vector3(-.5f, +.5f, -.5f), Vector4(DirectX::Colors::Black.f) }),
+			Vertex({ Vector3(+.5f, +.5f, -.5f), Vector4(DirectX::Colors::Red.f) }),
+			Vertex({ Vector3(+.5f, -.5f, -.5f), Vector4(DirectX::Colors::Green.f) }),
+			Vertex({ Vector3(-.5f, -.5f, +.5f), Vector4(DirectX::Colors::Blue.f) }),
+			Vertex({ Vector3(-.5f, +.5f, +.5f), Vector4(DirectX::Colors::Yellow.f) }),
+			Vertex({ Vector3(+.5f, +.5f, +.5f), Vector4(DirectX::Colors::Cyan.f) }),
+			Vertex({ Vector3(+.5f, -.5f, +.5f), Vector4(DirectX::Colors::Magenta.f) })
+		};
 
-	std::vector<uint16_t> indices = {
-		// front face
-		0, 1, 2,
-		0, 2, 3,
+		std::vector<uint16_t> indices = {
+			// front face
+			0, 1, 2,
+			0, 2, 3,
 
-		// back face
-		4, 6, 5,
-		4, 7, 6,
+			// back face
+			4, 6, 5,
+			4, 7, 6,
 
-		// left face
-		4, 5, 1,
-		4, 1, 0,
+			// left face
+			4, 5, 1,
+			4, 1, 0,
 
-		// right face
-		3, 2, 6,
-		3, 6, 7,
+			// right face
+			3, 2, 6,
+			3, 6, 7,
 
-		// top face
-		1, 5, 6,
-		1, 6, 2,
+			// top face
+			1, 5, 6,
+			1, 6, 2,
 
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
-	};
-	mesh->Load(MeshID::Cube, vertices, indices);
-}
+			// bottom face
+			4, 0, 3,
+			4, 3, 7
+		};
+		mesh->Load(MeshID::Cube, vertices, indices);
+	}
 
-bool ResourceManager::GetIsLoaded(size_t index) {
-	assert(index >= 0 && index < 64);
+	void ResourceManager::CreateTerrian0x0(Mesh* mesh) {
+		std::vector<Engine::Vertex> vertices;
 
-	uint64_t mask = 1ULL << index;
-	return (mLoadedBitMask & mask) != 0;
-}
+		const uint16_t vertexCount = mTerrainManager.TotalNumberOfVerticesForChunk(TerrainLOD::HIGH);
+		vertices.reserve(vertexCount);
 
-void ResourceManager::SetIsLoaded(size_t index) {
-	assert(index >= 0 && index < 64);
+		std::vector<uint16_t> indices;
+		const uint32_t indexCount = mTerrainManager.TotalNumberOfIndicesForChunk(TerrainLOD::HIGH);
+		indices.reserve(indexCount);
 
-	uint64_t mask = 1ULL << index;
-	mLoadedBitMask |= mask;
-}
+		mTerrainManager.GenerateTerrainFor(
+			0,
+			0,
+			TerrainLOD::HIGH,
+			vertices,
+			indices
+		);
+		mesh->Load(MeshID::Terrain0x0, vertices, indices);
+	}
 
-void ResourceManager::SetIsUnloaded(size_t index) {
-	assert(index >= 0 && index < 64);
+	bool ResourceManager::GetIsLoaded(size_t index) {
+		assert(index >= 0 && index < 64);
 
-	uint64_t mask = 1ULL << index;
-	uint64_t maskNegate = ~mask;
-	mLoadedBitMask &= maskNegate;
+		uint64_t mask = 1ULL << index;
+		return (mLoadedBitMask & mask) != 0;
+	}
+
+	void ResourceManager::SetIsLoaded(size_t index) {
+		assert(index >= 0 && index < 64);
+
+		uint64_t mask = 1ULL << index;
+		mLoadedBitMask |= mask;
+	}
+
+	void ResourceManager::SetIsUnloaded(size_t index) {
+		assert(index >= 0 && index < 64);
+
+		uint64_t mask = 1ULL << index;
+		uint64_t maskNegate = ~mask;
+		mLoadedBitMask &= maskNegate;
+	}
+
+#pragma endregion
 }

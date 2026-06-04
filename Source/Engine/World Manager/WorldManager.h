@@ -27,7 +27,7 @@ namespace Engine {
 		std::array<Entity, SceneManager::MAX_ENTITIES>& GetEntities();
 		const Vector3& GetPlayerCenter() const;
 		Entity& GetPlayerEntity();
-		std::vector<const Mesh*> GetMeshesToLoad();
+		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
 
 	private:
 		SceneManager mSceneManager;

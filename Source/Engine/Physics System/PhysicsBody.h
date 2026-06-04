@@ -7,17 +7,17 @@ namespace Engine::EnginePhysics {
 
 	struct PhysicsBody {
 		// current validated spatial state
+		Matrix4x4 WorldMatrix;
+		BasisVectors BasisVectors;
 		Vector3 Center;
 		Vector3 Scale;
-		BasisVectors BasisVectors;
-		Matrix4x4 WorldMatrix;
+
+		// transient simulation state
+		Vector3 VelocityIntent;
 
 		// bounds
 		AABB LocalAABB;
 		AABB WorldAABB;
-
-		// transient simulation state
-		Vector3 VelocityIntent;
 
 		PhysicsBody(const Engine::Vector3& initCenter, const Engine::Vector3& initScale)
 			: Center(initCenter)
