@@ -144,7 +144,6 @@
     <ClInclude Include="Source\Engine\Physics System\CollisionResult.h" />
     <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h" />
     <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h" />
-    <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h" />
