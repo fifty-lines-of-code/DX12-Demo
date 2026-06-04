@@ -134,6 +134,7 @@
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h" />
     <ClInclude Include="Source\Engine\Input System\XBox\XboxInputSystem.h" />
     <ClInclude Include="Source\Engine\Math\BasisVectors.h" />
+    <ClInclude Include="Source\Engine\Math\ColorHelper.h" />
     <ClInclude Include="Source\Engine\Math\EngineMath.h" />
     <ClInclude Include="Source\Engine\Math\Geometry.h" />
     <ClInclude Include="Source\Engine\Math\GeometryHelper.h" />
@@ -204,6 +205,7 @@
   <ItemGroup>
     <Image Include="DX12 Demo.ico" />
     <Image Include="small.ico" />
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
   </ItemGroup>
   <ItemGroup>

@@ -98,6 +98,7 @@ namespace Engine {
 		mTerrainManager.GenerateTerrainFor(
 			0,
 			0,
+			TerrainLOD::HIGH,
 			vertices,
 			indices
 		);

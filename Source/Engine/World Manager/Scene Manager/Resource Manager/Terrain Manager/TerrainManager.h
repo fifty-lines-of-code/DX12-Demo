@@ -19,7 +19,8 @@ namespace Engine {
 
 		void GenerateTerrainFor(
 			float chunkCenterX,
-			float chunkCenterZ, 
+			float chunkCenterZ,
+			TerrainLOD lod,
 			std::vector<Vertex>& vertices, 
 			std::vector<uint16_t>& indices
 		);
@@ -27,7 +28,7 @@ namespace Engine {
 		uint16_t TotalNumberOfVerticesForChunk() const noexcept;
 
 	private:
-		const float mMaxHeight = 7.f;
+		const float mMaxHeight = 3.f;
 		uint16_t mChunkSize;
 		uint16_t mChunkSizeHalf;
 		const uint16_t mNumberOfVerticesPerEdge;

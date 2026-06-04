@@ -31,7 +31,6 @@ namespace Engine {
 
 	private:
 		Chunk mChunk;
-		uint16_t mEntitiesStartIndex = -1; // will wrap around to uint16_t max
 		bool isLoaded = false;
 	};
 }

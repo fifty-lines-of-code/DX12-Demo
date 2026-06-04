@@ -116,8 +116,8 @@ namespace Engine {
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
 		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
-		playerEntity.GetPhysicsBody().Center = Vector3(0.f, 7.6, 0.5f);
-		playerEntity.SetScale(Vector3(1.f, 1.f, 1.f));
+		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
+		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
 		playerEntity.SetIsStatic(false);
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 
