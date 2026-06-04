@@ -25,13 +25,13 @@ namespace Engine {
 			std::vector<uint16_t>& indices
 		);
 
-		uint16_t TotalNumberOfVerticesForChunk() const noexcept;
+		uint16_t TotalNumberOfVerticesForChunk(TerrainLOD lod) const noexcept;
+		uint32_t TotalNumberOfIndicesForChunk(TerrainLOD lod) const noexcept;
 
 	private:
 		const float mMaxHeight = 3.f;
 		uint16_t mChunkSize;
 		uint16_t mChunkSizeHalf;
-		const uint16_t mNumberOfVerticesPerEdge;
 
 	private:
 		bool LoadHeightmapToArray(

@@ -90,10 +90,12 @@ namespace Engine {
 	void ResourceManager::CreateTerrian0x0(Mesh* mesh) {
 		std::vector<Engine::Vertex> vertices;
 
-		const uint16_t vertexCount = mTerrainManager.TotalNumberOfVerticesForChunk();
+		const uint16_t vertexCount = mTerrainManager.TotalNumberOfVerticesForChunk(TerrainLOD::HIGH);
 		vertices.reserve(vertexCount);
 
 		std::vector<uint16_t> indices;
+		const uint32_t indexCount = mTerrainManager.TotalNumberOfIndicesForChunk(TerrainLOD::HIGH);
+		indices.reserve(indexCount);
 
 		mTerrainManager.GenerateTerrainFor(
 			0,

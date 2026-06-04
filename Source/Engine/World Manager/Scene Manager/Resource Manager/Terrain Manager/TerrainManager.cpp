@@ -12,16 +12,34 @@ namespace Engine {
 
 	TerrainManager::TerrainManager(uint16_t chunkSize) :
 		mChunkSize(chunkSize),
-		mChunkSizeHalf(chunkSize / 2),
-		mNumberOfVerticesPerEdge(chunkSize + 1)
+		mChunkSizeHalf(chunkSize / 2)
 	{
 		stbi_set_flip_vertically_on_load(true);
 	}
 
 	TerrainManager::~TerrainManager() {}
 
-	uint16_t TerrainManager::TotalNumberOfVerticesForChunk() const noexcept {
-		return (mChunkSize + 1) * (mChunkSize + 1);
+	uint16_t TerrainManager::TotalNumberOfVerticesForChunk(TerrainLOD lod) const noexcept {
+		int density = 1;
+		if (lod == TerrainLOD::MED) { density = 2; }
+		else if (lod == TerrainLOD::HIGH) { density = 4; }
+
+		int numberOfVertices = mChunkSize * density;
+
+		return (numberOfVertices + 1) * (numberOfVertices + 1);
+	}
+
+	uint32_t TerrainManager::TotalNumberOfIndicesForChunk(TerrainLOD lod) const noexcept {
+		int density = 1;
+		if (lod == TerrainLOD::MED) { density = 2; }
+		else if (lod == TerrainLOD::HIGH) { density = 4; }
+
+		int numberOfVerticesPerEdge = mChunkSize * density + 1;
+		int numberOfQuads = numberOfVerticesPerEdge - 1;
+
+		// 2 * total number of quads = total no of triangles
+		// 3 * total no of triangles = total no of indices
+		return (numberOfQuads * numberOfQuads) * 2 * 3;
 	}
 
 	void TerrainManager::GenerateTerrainFor(
@@ -49,7 +67,7 @@ namespace Engine {
 		else if (lod == TerrainLOD::HIGH)  densityMultiplier = 4;
 
 		// 2. Calculate vertex configurations based on LOD
-		int vertsPerEdgeLOD = ((mNumberOfVerticesPerEdge - 1) * densityMultiplier) + 1;
+		int vertsPerEdgeLOD = (mChunkSize * densityMultiplier) + 1;
 
 		// Perfect world-space spacing to ensure the physical bounds stay locked at mChunkSize (32)
 		float vertexSpacing = static_cast<float>(mChunkSize) / static_cast<float>(vertsPerEdgeLOD - 1);
@@ -74,19 +92,20 @@ namespace Engine {
 
 				// Identify neighboring pixels enclosing our fractional point
 				int x0 = static_cast<int>(std::floor(imgX));
-				int x1 = (x0 < mNumberOfVerticesPerEdge - 1) ? x0 + 1 : x0;
+				int x1 = x0 < mChunkSize ? x0 + 1 : x0;
 				int z0 = static_cast<int>(std::floor(imgZ));
-				int z1 = (z0 < mNumberOfVerticesPerEdge - 1) ? z0 + 1 : z0;
+				int z1 = z0 < mChunkSize ? z0 + 1 : z0;
 
 				// Calculate interpolation weights (0.0 to 1.0 distances)
 				float tx = imgX - static_cast<float>(x0);
 				float tz = imgZ - static_cast<float>(z0);
 
 				// Sample 4 height corners from your 33x33 pixel buffer
-				float h00 = static_cast<float>(heightValues[(z0 * mNumberOfVerticesPerEdge) + x0]);
-				float h10 = static_cast<float>(heightValues[(z0 * mNumberOfVerticesPerEdge) + x1]);
-				float h01 = static_cast<float>(heightValues[(z1 * mNumberOfVerticesPerEdge) + x0]);
-				float h11 = static_cast<float>(heightValues[(z1 * mNumberOfVerticesPerEdge) + x1]);
+				const int imgStride = mChunkSize + 1;
+				float h00 = static_cast<float>(heightValues[(z0 * imgStride) + x0]);
+				float h10 = static_cast<float>(heightValues[(z0 * imgStride) + x1]);
+				float h01 = static_cast<float>(heightValues[(z1 * imgStride) + x0]);
+				float h11 = static_cast<float>(heightValues[(z1 * imgStride) + x1]);
 
 				// Blend the heights horizontally, then combine vertically
 				float h0 = h00 + tx * (h10 - h00);
