@@ -56,7 +56,9 @@ namespace Engine {
 		);
 
 		// store Material ID
-		bufferData.MaterialID = (uint16_t)mMaterialType;
+		uint16_t materialTypeUintval = (uint16_t)mMaterialType;
+		bool isValid = materialTypeUintval < (uint16_t)EngineResources::MaterialType::Count;
+		bufferData.MaterialID = isValid ? materialTypeUintval : 0;
 	}
 
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }

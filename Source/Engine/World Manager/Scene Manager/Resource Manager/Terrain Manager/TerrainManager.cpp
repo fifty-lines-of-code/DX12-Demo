@@ -60,8 +60,8 @@ namespace Engine {
 
 		// 1. Determine our vertex subdivision factor based on LOD
 		int densityMultiplier = 1;
-		if (lod == TerrainLOD::MED)      densityMultiplier = 2;
-		else if (lod == TerrainLOD::HIGH)  densityMultiplier = 4;
+		if (lod == TerrainLOD::MED)       densityMultiplier = 2;
+		else if (lod == TerrainLOD::HIGH) densityMultiplier = 4;
 
 		// 2. Calculate vertex configurations based on LOD
 		int vertsPerEdgeLOD = (mChunkSize * densityMultiplier) + 1;

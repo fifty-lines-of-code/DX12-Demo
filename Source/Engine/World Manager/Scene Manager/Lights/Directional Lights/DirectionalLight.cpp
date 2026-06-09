@@ -9,7 +9,7 @@ namespace Engine {
 	DirectionalLight::~DirectionalLight() {}
 
 	void DirectionalLight::Update(float deltaTime) {
-
+		// todo:
 	}
 
 	void DirectionalLight::SetStrength(Vector3 strength) { mData.Strength = strength; }

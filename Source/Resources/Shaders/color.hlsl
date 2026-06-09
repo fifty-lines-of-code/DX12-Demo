@@ -41,9 +41,7 @@ cbuffer cbPerPass: register(b1)
     Light Lights[MaxLights]; // MaxLights is defined natively inside LightingUtil.hlsl
 };
 
-cbuffer cbMaterial0: register(b2) { cbMaterial PlayerMat; }
-cbuffer cbMaterial1: register(b3) { cbMaterial WallMat; }
-cbuffer cbMaterial2: register(b4) { cbMaterial TerrainMat; }
+ConstantBuffer<cbMaterial> Materials[3] : register(b2);
 
 struct VertexIn
 {
@@ -83,11 +81,8 @@ float4 PS(VertexOut pin) : SV_Target
     // Vector from point being lit to eye
     float3 toEyeW = normalize(EyePosW - pin.PosW); 
 
-    // Build a quick local array matching our descriptor indices
-    // 0 = Player, 1 = Wall, 2 = Terrain
-    // FIX: Removed 'g' prefixes to properly match your defined cbuffer variable names
-    cbMaterial materials[3] = { PlayerMat, WallMat, TerrainMat };
-    cbMaterial matData = materials[MaterialIndex];
+    // get material data using material index
+    cbMaterial matData = Materials[MaterialIndex];
 
     // Indirect ambient lighting computation
     float4 ambient = AmbientLight * matData.DiffuseAlbedo;
@@ -95,7 +90,7 @@ float4 PS(VertexOut pin) : SV_Target
     // Convert material roughness up to shininess for Luna's blinn-phong utility
     const float shininess = 1.0f - matData.Roughness;
 
-    // FIX: Map your specific unpacked matData members into Luna's lighting engine struct
+    // Map specific unpacked matData members into Luna's lighting engine struct
     Material mat = { matData.DiffuseAlbedo, matData.FresnelR0, shininess };
     
     // Shadow factor placeholder (1.0f means completely unshadowed)

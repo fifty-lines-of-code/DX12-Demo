@@ -28,7 +28,6 @@ struct DX12PerPassConstants
     DirectX::XMFLOAT4 AmbientLight; 
     DirectX::XMFLOAT3 EyePosW; 
     float PassPad0;
-
     DX12LightData Lights[16];
 };
 
@@ -39,7 +38,6 @@ struct DX12PerMaterialConstants
     float Roughness = 0.25f;
     DirectX::XMFLOAT4X4 MatTransform;
 };
-
 
 // Stores the resources needed for the CPU to build the command lists
 // for a frame.  

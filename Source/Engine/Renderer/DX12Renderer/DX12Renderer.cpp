@@ -735,13 +735,13 @@ bool DX12Renderer::SetupPipeline(
 	uint32_t numberOfMaterials, 
 	uint32_t sizeOfPerEntityCb, 
 	uint32_t sizeOfPerPassCb, 
-	uint32_t sizeOfPerMaterialCBV
+	uint32_t sizeOfPerMaterialCb
 ) {
 	// Reset the command list to prep for initialization commands.
 	ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
 	CreateFrameResources(numberOfEntities, numberOfMaterials);
-	if (!CreateConstantBufferDescriptor(numberOfEntities, numberOfMaterials, sizeOfPerEntityCb, sizeOfPerPassCb, sizeOfPerMaterialCBV)) { return false; }
+	if (!CreateConstantBufferDescriptor(numberOfEntities, numberOfMaterials, sizeOfPerEntityCb, sizeOfPerPassCb, sizeOfPerMaterialCb)) { return false; }
 	if (!CreateRootSignature(numberOfMaterials)) { return false; }
 	if (!CreateShadersAndInputLayout()) { return false; }
 	if (!CreatePipelineStateObject()) { return false; }
@@ -837,7 +837,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 		mDX12Device->CreateConstantBufferView(&cbvDesc, handle);
 	}
 
-	// sthen per Entity cb are laid out
+	// then per Entity cb are laid out
 	// ((alignedPerItemCB) * numberOfEntities * numberOfFrames)
 
 	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
@@ -945,8 +945,8 @@ bool DX12Renderer::CreateRootSignature(uint32_t numberOfMaterials) {
 bool DX12Renderer::CreateShadersAndInputLayout() {
 	HRESULT hr = S_OK;
 
-	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
+	mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
 
 	mInputLayout =
 	{

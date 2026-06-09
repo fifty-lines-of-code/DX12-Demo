@@ -6,7 +6,7 @@
 
 namespace Engine {
 
-	enum class LightType : uint32_t {
+	enum class LightType : uint16_t {
 		Directional,
 		Point,
 		Spot
