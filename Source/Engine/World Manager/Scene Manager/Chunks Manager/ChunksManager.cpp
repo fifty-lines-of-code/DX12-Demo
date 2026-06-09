@@ -19,7 +19,7 @@ namespace Engine {
 		return true;
 	}
 
-	bool ChunksManager::LoadChunks(ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunks(EngineResources::ResourceManager& resourceManager) {
 		// todo:
 		// multi thread loading of each of the initial (x) chunks 
 		return LoadChunkAtSlot0(resourceManager);
@@ -47,7 +47,7 @@ namespace Engine {
 		return true;
 	}
 
-	bool ChunksManager::LoadChunkAtSlot0(ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager) {
 		ChunkSlot& chunkSlotAt0 = mActiveChunks[0];
 
 		uint8_t* entityStartAddressInBytes = reinterpret_cast<uint8_t*>(const_cast<void*>(mEntitiesStartAddressInMemory));

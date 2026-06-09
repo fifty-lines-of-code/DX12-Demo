@@ -21,10 +21,15 @@ namespace Engine {
 
 		void Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed, const BasisVectors& cameraBasisVectors);
 
-		uint32_t GetEntityCount() const;
+		uint32_t GetEntityCount() const noexcept;
+		uint32_t GetMaterialCount() const noexcept;
 		uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
 		uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const;
+		uint32_t GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept;
+		const Vector4& GetAmbientLight() const noexcept;
+		void GetLightsData(LightsArray16& lights) const;
 		std::array<Entity, SceneManager::MAX_ENTITIES>& GetEntities();
+		std::array<EngineResources::Material, (uint32_t)EngineResources::MaterialType::Count>& GetMaterials() noexcept;
 		const Vector3& GetPlayerCenter() const;
 		Entity& GetPlayerEntity();
 		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);

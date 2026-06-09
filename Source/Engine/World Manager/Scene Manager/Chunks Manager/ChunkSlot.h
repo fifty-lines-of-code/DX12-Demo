@@ -17,7 +17,7 @@ namespace Engine {
 			return true;
 		}
 
-		bool LoadChunk(uint8_t* entityStartAddressInBytes, ResourceManager& resourceManager) {
+		bool LoadChunk(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager) {
 			if (isLoaded) { return false; }
 
 			if (!mChunk.Load(entityStartAddressInBytes, resourceManager)) { return false; }

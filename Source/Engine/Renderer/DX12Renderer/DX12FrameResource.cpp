@@ -2,9 +2,10 @@
 
 #include "../../../Helper/Helper.h"
 
-DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT passCount, UINT objectCount) :
-    mPerPassCB(device, passCount, true),
-    mPerRenderItemCB(device, objectCount, true)
+DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT perPassCbCount, UINT numberOfEntities, UINT numberOfMaterials) :
+    mPerPassCB(device, perPassCbCount, true),
+    mPerRenderItemCB(device, numberOfEntities, true),
+    mPerMaterialCB(device, numberOfMaterials, true)
 {
     ThrowIfFailed(
         device->CreateCommandAllocator(

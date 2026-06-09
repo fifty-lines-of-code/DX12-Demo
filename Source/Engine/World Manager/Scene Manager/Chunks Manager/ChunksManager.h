@@ -13,7 +13,7 @@ namespace Engine {
 		~ChunksManager();
 
 		bool Initialize();
-		bool LoadChunks(ResourceManager& resourceManager);
+		bool LoadChunks(EngineResources::ResourceManager& resourceManager);
 
 		static constexpr uint16_t CHUNK_SIZE = 32;
 	private:
@@ -29,6 +29,6 @@ namespace Engine {
 
 	private:
 		bool InitializeInitialChunks();
-		bool LoadChunkAtSlot0(ResourceManager& resourceManager);
+		bool LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager);
 	};
 }

@@ -139,6 +139,54 @@
     <Filter Include="Source Files\Engine\Physics System">
       <UniqueIdentifier>{ab08eb71-e007-4c55-b5ad-c183255befb9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Chunks Manager">
+      <UniqueIdentifier>{2a9c5895-04e9-40d4-b246-1ac1efc1fa1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Chunks Manager\Chunk">
+      <UniqueIdentifier>{8b24f5a3-0ef7-4baf-a72a-aee52371483c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Terrain Manager">
+      <UniqueIdentifier>{653c9814-bee6-4ef0-93b4-ab90cc68024d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Terrain Manager">
+      <UniqueIdentifier>{eeeb800f-ae1d-4261-8123-0a1d59f8cbb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Chunks Manager">
+      <UniqueIdentifier>{04fc7e89-bfb8-4953-a6d1-2e1e15b28181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Chunks Manager\Chunk">
+      <UniqueIdentifier>{a32d695c-89b1-4031-a8af-50c8b1b56525}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Lights">
+      <UniqueIdentifier>{36d37aa7-5860-42e3-82ab-a2e3986d5042}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Lights">
+      <UniqueIdentifier>{dcae6fcf-d6b8-43b6-bdb4-0006bb04b191}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Lights\Directional">
+      <UniqueIdentifier>{578e80b1-a4cd-461b-8a3b-952492c87cd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Lights\Directional">
+      <UniqueIdentifier>{052dd864-b802-492f-8084-510b0977b58c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Lights\Lights Manager">
+      <UniqueIdentifier>{eba3e0e1-cde9-4955-bc1c-c305c7f5be67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Lights\Lights Manager">
+      <UniqueIdentifier>{a00bd458-c83e-4317-975c-1d838b9824cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager">
+      <UniqueIdentifier>{0e9efc71-6e0b-4517-8792-a244e079f21f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager">
+      <UniqueIdentifier>{78aa5999-96ec-4f8c-b190-4aed05fe9a21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material">
+      <UniqueIdentifier>{6663da2c-bf07-4ab8-8845-777dbe656434}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material">
+      <UniqueIdentifier>{79dccd46-8652-431a-929e-a3eeff0b029c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -246,9 +294,6 @@
     <ClInclude Include="Source\Engine\Input System\GameButton.h">
       <Filter>Header Files\Engine\Input System</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Physics System\RigidBodyComponent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h">
       <Filter>Header Files\Engine\Physics System</Filter>
     </ClInclude>
@@ -263,6 +308,42 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Physics System\CollisionResult.h">
       <Filter>Header Files\Engine\Physics System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunkSlot.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Chunks Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Chunks Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Chunks Manager\Chunk</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Terrain Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Math\ColorHelper.h">
+      <Filter>Header Files\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Helper\stb_image.h">
+      <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\LightData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Lights\Directional</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Lights\Lights Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +413,30 @@
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp">
       <Filter>Source Files\Engine\Physics System</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Terrain Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Chunks Manager\Chunk</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Chunks Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Lights\Directional</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Lights\Lights Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -340,9 +445,18 @@
     <Image Include="DX12 Demo.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\Shaders\color.hlsl">
+    <None Include="Source\Resources\Shaders\color.hlsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

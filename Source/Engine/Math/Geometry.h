@@ -6,7 +6,7 @@ namespace Engine {
 
 	struct Vertex {
 		Vector3 Position;
-		Vector4 Color;
+		Vector3 Normal;
 	};
 
 	struct AABB {
