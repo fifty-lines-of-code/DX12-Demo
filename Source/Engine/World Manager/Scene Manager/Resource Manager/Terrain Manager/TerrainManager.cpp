@@ -141,7 +141,7 @@ namespace Engine {
 				// Cross product gives us a perfect mathematically smooth perpendicular upward normal vector
 				Engine::Vector3 normal = bitangent.Cross(tangent);
 				normal.Normalize();
-				v.Normal = normal; // Injected perfectly at byte offset 12!
+				v.Normal = normal;
 
 				outVertices.push_back(v);
 

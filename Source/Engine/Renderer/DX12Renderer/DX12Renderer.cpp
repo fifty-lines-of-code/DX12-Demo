@@ -867,7 +867,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = materialCB->GetGPUVirtualAddress();
 
 		for (uint32_t i = 0; i < numberOfMaterials; ++i) {
-			// Offset to this render item cbv in the descriptor heap.
+			// Offset to this material cbv in the descriptor heap.
 			int heapIndex = mPerMaterialCbHeapOffset + (numberOfMaterials * frameIndex) + i;
 			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCBVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
