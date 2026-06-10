@@ -66,8 +66,12 @@ namespace Engine {
 		mSceneManager.Update(inputSystem, deltaTime, animationSpeed);
 	}
 
-	uint32_t WorldManager::GetEntityCount() const {
+	uint32_t WorldManager::GetEntityCount() const noexcept {
 		return mSceneManager.GetEntityCount();
+	}
+
+	uint32_t WorldManager::GetMaterialCount() const noexcept {
+		return mSceneManager.GetMaterialCount();
 	}
 
 	uint32_t WorldManager::GetConstantBufferDataByteSizeOfEachEntity() const {
@@ -78,8 +82,24 @@ namespace Engine {
 		return mSceneManager.GetConstantBufferDataByteSizeOfEachPerPassObject();
 	}
 
+	uint32_t WorldManager::GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept {
+		return sizeof(EngineResources::MaterialData);
+	}
+
+	const Vector4& WorldManager::GetAmbientLight() const noexcept {
+		return mSceneManager.GetAmbientLight();
+	}
+
+	void WorldManager::GetLightsData(LightsArray16& lights) const {
+		mSceneManager.GetLightsData(lights);
+	}
+
 	std::array<Entity, SceneManager::MAX_ENTITIES>& WorldManager::GetEntities() {
 		return mSceneManager.GetEntities();
+	}
+
+	std::array<EngineResources::Material, (uint32_t)EngineResources::MaterialType::Count>& WorldManager::GetMaterials() noexcept {
+		return mSceneManager.GetMaterials();
 	}
 
 	const Vector3& WorldManager::GetPlayerCenter() const {
@@ -94,13 +114,10 @@ namespace Engine {
 		mSceneManager.GetMeshesToLoad(meshes);
 	}
 
-	void WorldManager::PrepareForUpdate() {
-		mSceneManager.PrepareForUpdate();
-	}
-
 #pragma endregion
 
 #pragma region Private
+	
 	bool WorldManager::LoadScene() {
 		if (!mSceneManager.LoadScene()) { return false; }
 
@@ -108,5 +125,10 @@ namespace Engine {
 
 		return true;
 	}
+
+	void WorldManager::PrepareForUpdate() {
+		mSceneManager.PrepareForUpdate();
+	}
+
 #pragma endregion
 }

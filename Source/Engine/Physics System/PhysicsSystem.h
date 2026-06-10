@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CollisionResult.h"
+#include "../World Manager/Scene Manager/Entity/Entity.h"
 #include "../Math/GeometryHelper.h"
 #include <vector>
 
@@ -13,9 +14,17 @@ namespace Engine::EnginePhysics {
 		PhysicsSystem() = default;
 		~PhysicsSystem() = default;
 
-		void ResolveEntityMovement(Entity& entity, const std::vector<const Entity*>& candidates, CollisionResult& collisionResult);
+		void ResolveEntityMovement(
+			Entity& entity,
+			const std::vector<const Entity*>& candidates, 
+			CollisionResult& collisionResult
+		);
 
 	private:
-		bool ResolveCollision(uint32_t entityID, const AABB& aabb, const std::vector<const Entity*>& candidates);
+		bool ResolveCollision(
+			uint32_t entityID,
+			const AABB& aabb, 
+			const std::vector<const Entity*>& candidates
+		);
 	};
 }

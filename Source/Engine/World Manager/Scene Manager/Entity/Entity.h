@@ -3,50 +3,57 @@
 #include "../../../Math/Geometry.h"
 #include "../../../Math/BasisVectors.h"
 #include "PerPassAndPerEntityConstantBufferData.h"
+#include "../Resource Manager/Materials Manager/Material/Material.h"
 #include "../../../Physics System/PhysicsBody.h"
 
 class Mesh;
 
-class Entity {
-public:
-	Entity();
-	Entity(
-		uint32_t Id, 
-		Engine::Vector3 center,
-		Engine::Vector3 scale,
-		bool isStatic,
-		bool isActive
-	);
-	~Entity();
+namespace Engine {
 
-	void SetID(uint32_t id);
-	uint32_t GetID() const;
+	class Entity {
+	public:
+		Entity();
+		Entity(
+			uint32_t Id,
+			Vector3 center,
+			Vector3 scale,
+			bool isStatic,
+			bool isActive
+		);
+		~Entity();
 
-	void SetIsStatic(bool isStatic);
-	bool GetIsStatic() const;
+		void SetID(uint32_t id);
+		uint32_t GetID() const;
 
-	void SetMesh(const Mesh* mesh);
-	const Mesh* GetMesh() const;
+		void SetIsStatic(bool isStatic);
+		bool GetIsStatic() const;
 
-	void Update(float stickX, float stickY, float deltaTime, float speed);
+		void SetMesh(const Mesh* mesh);
+		const Mesh* GetMesh() const;
 
-	void CopyToDestinationConstantBufferDataTransposed(Engine::Matrix4x4* destination);
-	Engine::EnginePhysics::PhysicsBody& GetPhysicsBody();
-	const Engine::AABB& GetAABB() const;
+		void Update(float stickX, float stickY, float deltaTime, float speed);
 
-	bool GetIsDirty() const;
-	void SetIsDirty(bool dirty);
+		void CopyToDestinationConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
+		EnginePhysics::PhysicsBody& GetPhysicsBody();
+		const AABB& GetAABB() const;
 
-	bool GetIsActive() const noexcept;
-	void SetIsActive(bool isActive) noexcept;
+		bool GetIsDirty() const;
+		void SetIsDirty(bool dirty);
 
-	void SetScale(Engine::Vector3 scale);
+		bool GetIsActive() const noexcept;
+		void SetIsActive(bool isActive) noexcept;
 
-private:
-	Engine::EnginePhysics::PhysicsBody mPhysicsBody;
-	const Mesh* mMesh;
-	uint32_t mID;
-	bool mIsStatic;
-	bool mIsDirty;
-	bool mIsActive;
-};
+		void SetScale(Vector3 scale);
+
+		void SetMaterialType(EngineResources::MaterialType type);
+
+	private:
+		EnginePhysics::PhysicsBody mPhysicsBody;
+		const Mesh* mMesh;
+		uint32_t mID;
+		EngineResources::MaterialType mMaterialType;
+		bool mIsStatic;
+		bool mIsDirty;
+		bool mIsActive;
+	};
+}

@@ -21,6 +21,13 @@ namespace Engine {
 
 		if (!mChunksManager.Initialize()) { return false; }
 
+		// todo:
+		// load the sun data from somewhere
+		
+		Vector3 strength = { 1.0f, 1.0f, 0.9f };
+		Vector3 direction = { 0.577f, -0.577f, 0.577f };
+		mLightsManager.Initialize(strength, direction);
+
 		return true;
 	}
 
@@ -77,20 +84,40 @@ namespace Engine {
 		}
 	}
 
-	uint32_t SceneManager::GetEntityCount() const {
+	uint32_t SceneManager::GetEntityCount() const noexcept {
 		return MAX_ENTITIES;
 	}
 
-	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachEntity() const {
+	uint32_t SceneManager::GetMaterialCount() const noexcept {
+		return mResourceManager.GetMaterialCount();
+	}
+
+	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachEntity() const noexcept {
 		return sizeof(EntityConstantBufferData);
 	}
 
-	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachPerPassObject() const {
+	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachPerPassObject() const noexcept {
 		return sizeof(PerPassConstantBufferData);
+	}
+
+	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept {
+		return sizeof(EngineResources::MaterialData);
+	}
+
+	const Vector4& SceneManager::GetAmbientLight() const noexcept {
+		return mLightsManager.GetAmbientLight();
+	}
+
+	void SceneManager::GetLightsData(LightsArray16& lights) const {
+		lights[0] = mLightsManager.GetLightsData();
 	}
 
 	std::array<Entity, SceneManager::MAX_ENTITIES>& SceneManager::GetEntities() {
 		return mEntities;
+	}
+
+	std::array<EngineResources::Material, (uint16_t)EngineResources::MaterialType::Count>& SceneManager::GetMaterials() noexcept {
+		return mResourceManager.GetMaterials();
 	}
 
 	void SceneManager::PrepareForUpdate() {
@@ -119,6 +146,7 @@ namespace Engine {
 		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
 		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
 		playerEntity.SetIsStatic(false);
+		playerEntity.SetMaterialType(EngineResources::MaterialType::Player);
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 
 		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);

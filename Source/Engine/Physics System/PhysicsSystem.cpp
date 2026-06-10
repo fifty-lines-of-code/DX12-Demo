@@ -98,7 +98,7 @@ namespace Engine::EnginePhysics {
 		const std::vector<const Entity*>& candidates
 	) {
 
-		for (const Entity* candidate : candidates) {
+		for (const Engine::Entity* candidate : candidates) {
 			if (entityID == candidate->GetID()) { continue; }
 
 			if (GeometryHelper::AABBIntersect(aabb, candidate->GetAABB())) {

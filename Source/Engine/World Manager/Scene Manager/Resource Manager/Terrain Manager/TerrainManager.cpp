@@ -59,12 +59,9 @@ namespace Engine {
 		}
 
 		// 1. Determine our vertex subdivision factor based on LOD
-		// lod == Low    -> 33x33 Vertices  (original setup)
-		// lod == Medium -> 65x65 Vertices  (Double triangle density)
-		// lod == High   -> 129x129 Vertices (Quadruple triangle density)
 		int densityMultiplier = 1;
-		if (lod == TerrainLOD::MED)     densityMultiplier = 2;
-		else if (lod == TerrainLOD::HIGH)  densityMultiplier = 4;
+		if (lod == TerrainLOD::MED)       densityMultiplier = 2;
+		else if (lod == TerrainLOD::HIGH) densityMultiplier = 4;
 
 		// 2. Calculate vertex configurations based on LOD
 		int vertsPerEdgeLOD = (mChunkSize * densityMultiplier) + 1;
@@ -77,6 +74,41 @@ namespace Engine {
 
 		Vertex v;
 
+		// Lambda helper to sample height safely at fractional image coordinates
+		// Lambda helper to sample height safely at fractional image coordinates
+		auto sampleHeightLambda = [&](float imgX, float imgZ) -> float {
+			if (imgX < 0.0f) imgX = 0.0f;
+			if (imgX > static_cast<float>(mChunkSize)) imgX = static_cast<float>(mChunkSize);
+			if (imgZ < 0.0f) imgZ = 0.0f;
+			if (imgZ > static_cast<float>(mChunkSize)) imgZ = static_cast<float>(mChunkSize);
+
+			int x0 = static_cast<int>(std::floor(imgX));
+			int x1 = x0 < mChunkSize ? x0 + 1 : x0;
+			int z0 = static_cast<int>(std::floor(imgZ));
+			int z1 = z0 < mChunkSize ? z0 + 1 : z0;
+
+			float tx = imgX - static_cast<float>(x0);
+			float tz = imgZ - static_cast<float>(z0);
+
+			const int imgStride = mChunkSize + 1;
+			float h00 = static_cast<float>(heightValues[(z0 * imgStride) + x0]);
+			float h10 = static_cast<float>(heightValues[(z0 * imgStride) + x1]);
+			float h01 = static_cast<float>(heightValues[(z1 * imgStride) + x0]);
+			float h11 = static_cast<float>(heightValues[(z1 * imgStride) + x1]);
+
+			float h0 = h00 + tx * (h10 - h00);
+			float h1 = h01 + tx * (h11 - h01);
+			float finalSampledHeight = h0 + tz * (h1 - h0);
+
+			// todo: remove the div by 55 once we have a better bitmap
+			// 55 because currently the "brightest" region has
+			// greyscale value of 55
+
+			float normalizedHeight = finalSampledHeight / 55.f;
+			if (normalizedHeight > 1.f) { normalizedHeight = 1.f; }
+			return normalizedHeight * mMaxHeight;
+		};
+
 		// 3. Loop over our dynamic vertex density limits
 		for (int z = 0; z < vertsPerEdgeLOD; ++z) {
 			for (int x = 0; x < vertsPerEdgeLOD; ++x) {
@@ -85,53 +117,31 @@ namespace Engine {
 				v.Position.x = startX + (static_cast<float>(x) * vertexSpacing);
 				v.Position.z = startZ + (static_cast<float>(z) * vertexSpacing);
 
-				// 4. BILINEAR HEIGHT INTERPOLATION
 				// Map the current loop index back into fractional floating image coordinates
 				float imgX = static_cast<float>(x) * imageSampleStride;
 				float imgZ = static_cast<float>(z) * imageSampleStride;
 
-				// Identify neighboring pixels enclosing our fractional point
-				int x0 = static_cast<int>(std::floor(imgX));
-				int x1 = x0 < mChunkSize ? x0 + 1 : x0;
-				int z0 = static_cast<int>(std::floor(imgZ));
-				int z1 = z0 < mChunkSize ? z0 + 1 : z0;
+				// Sample height for the current vertex
+				v.Position.y = sampleHeightLambda(imgX, imgZ);
 
-				// Calculate interpolation weights (0.0 to 1.0 distances)
-				float tx = imgX - static_cast<float>(x0);
-				float tz = imgZ - static_cast<float>(z0);
+				// 4. VERTEX NORMAL CALCULATION (Sobel/Finite Difference style)
+				// Sample 4 tiny offset steps around our current point to determine the local slope
+				float offset = 0.1f;
+				float hLeft = sampleHeightLambda(imgX - offset, imgZ);
+				float hRight = sampleHeightLambda(imgX + offset, imgZ);
+				float hDown = sampleHeightLambda(imgX, imgZ - offset);
+				float hUp = sampleHeightLambda(imgX, imgZ + offset);
 
-				// Sample 4 height corners from your 33x33 pixel buffer
-				const int imgStride = mChunkSize + 1;
-				float h00 = static_cast<float>(heightValues[(z0 * imgStride) + x0]);
-				float h10 = static_cast<float>(heightValues[(z0 * imgStride) + x1]);
-				float h01 = static_cast<float>(heightValues[(z1 * imgStride) + x0]);
-				float h11 = static_cast<float>(heightValues[(z1 * imgStride) + x1]);
+				// Calculate tangible orthogonal slopes based on world grid dimensions
+				// World space step distance = offset * vertexSpacing
+				float worldStep = offset * vertexSpacing;
+				Engine::Vector3 tangent(2.0f * worldStep, hRight - hLeft, 0.0f);
+				Engine::Vector3 bitangent(0.0f, hUp - hDown, 2.0f * worldStep);
 
-				// Blend the heights horizontally, then combine vertically
-				float h0 = h00 + tx * (h10 - h00);
-				float h1 = h01 + tx * (h11 - h01);
-				float finalSampledHeight = h0 + tz * (h1 - h0);
-
-				float normalizedHeight = finalSampledHeight / 55.f;
-				if (normalizedHeight > 1.f) { normalizedHeight = 1.f; }
-				v.Position.y = normalizedHeight * mMaxHeight;
-
-				// Shading Pipeline
-				Vector4 finalColor;
-				if (normalizedHeight < 0.2f) {
-					float t = normalizedHeight / 0.2f;
-					finalColor = ColorHelper::LerpColor(ColorHelper::ColorValley, ColorHelper::ColorGrass, t);
-					finalColor = ColorHelper::LerpColor(ColorHelper::ColorValley, ColorHelper::ColorGrass, t);
-				}
-				else if (normalizedHeight < 0.6f) {
-					float t = (normalizedHeight - 0.2f) / (0.6f - 0.2f);
-					finalColor = ColorHelper::LerpColor(ColorHelper::ColorGrass, ColorHelper::ColorRock, t);
-				}
-				else {
-					float t = (normalizedHeight - 0.6f) / (1.0f - 0.6f);
-					finalColor = ColorHelper::LerpColor(ColorHelper::ColorRock, ColorHelper::ColorSnow, t);
-				}
-				v.Color = finalColor;
+				// Cross product gives us a perfect mathematically smooth perpendicular upward normal vector
+				Engine::Vector3 normal = bitangent.Cross(tangent);
+				normal.Normalize();
+				v.Normal = normal;
 
 				outVertices.push_back(v);
 

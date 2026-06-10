@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "World Manager/Scene Manager/Entity/Entity.h"
 #include "../Game/Game Timer/GameTimer.h"
+#include "World Manager/Scene Manager/Resource Manager/Materials Manager/Material/Material.h"
 #include "World Manager/Scene Manager/Entity/Mesh/Mesh.h"
 #include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
@@ -27,7 +28,7 @@ namespace Engine {
 
 		mhMainWnd = mainHwnd;
 
-		if (!mRenderer.Initialize(mhMainWnd, EngineCore::NumberOfFrameResources, screenWidth, screenHeight)) { return false; }
+		if (!mRenderer.Initialize(mhMainWnd, NumberOfFrameResources, screenWidth, screenHeight)) { return false; }
 
 		if (!mWorldManager.Initialize()) { return false; }
 
@@ -37,7 +38,13 @@ namespace Engine {
 		mNumberOfDirtyFramesPerEntity.resize(mWorldManager.GetEntityCount());
 		mNumberOfDirtyFramesPerEntity.assign(
 			mWorldManager.GetEntityCount(),
-			EngineCore::NumberOfFrameResources
+			NumberOfFrameResources
+		);
+
+		mNumberOfDirtyFramesPerMaterial.resize(mWorldManager.GetMaterialCount());
+		mNumberOfDirtyFramesPerMaterial.assign(
+			mWorldManager.GetMaterialCount(),
+			NumberOfFrameResources
 		);
 
 		if (!SetupPipeline()) { return false; }
@@ -54,8 +61,10 @@ namespace Engine {
 	bool EngineCore::SetupPipeline() {
 		return mRenderer.SetupPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
+			mWorldManager.GetMaterialCount(),
 			mWorldManager.GetConstantBufferDataByteSizeOfEachEntity(),
-			mWorldManager.GetConstantBufferDataByteSizeOfEachPerPassObject()
+			mWorldManager.GetConstantBufferDataByteSizeOfEachPerPassObject(),
+			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
 		);
 	}
 
@@ -94,7 +103,7 @@ namespace Engine {
 	}
 
 	void EngineCore::Draw() {
-		mRenderer.BeginFrame();
+		mRenderer.BeginFrame(mWorldManager.GetMaterialCount());
 
 		for (auto& entity : mWorldManager.GetEntities()) {
 			mRenderer.Draw(
@@ -114,7 +123,7 @@ namespace Engine {
 		mCamera.OnResize(newClientWidth, newClientHeight);
 	}
 
-	bool EngineCore::InitializeCamera(const Engine::Vector3& playerPosition) {
+	bool EngineCore::InitializeCamera(const Vector3& playerPosition) {
 		mCamera.Initialize(playerPosition);
 		return true;
 	}
@@ -137,42 +146,85 @@ namespace Engine {
 
 	void EngineCore::UpdateConstantBuffers() {
 		// update per-pass constant buffers
+		UpdatePerPassConstantBuffers();
+
+		// update per entity cb
+		UpdatePerEntityConstantBuffers();
 		
+		// update per material cb
+		UpdatePerMaterialConstantBuffers();
+	}
+
+	void EngineCore::UpdatePerPassConstantBuffers() const {
+		PerPassConstantBufferData perPassCB;
+
 		// DirectXMath uses row-major alignment in CPU memory, but 
 		// HLSL defaults to column-major storage for matrix packing. 
 		// We transpose here to prevent skewed vector transformations on the GPU.
-		const Engine::Matrix4x4* viewProj = mCamera.GetViewProjection();
+		const Matrix4x4& viewProj = mCamera.GetViewProjection();
 		DirectX::XMMATRIX viewProjTranspose = DirectX::XMMatrixTranspose(
-			DirectX::XMLoadFloat4x4(&viewProj->AsXMFLOAT4X4())
+			DirectX::XMLoadFloat4x4(&viewProj.AsXMFLOAT4X4())
 		);
 		DirectX::XMStoreFloat4x4(
-			&mViewProjectionTranspose.AsXMFLOAT4X4(),
+			&perPassCB.ViewProjectionTranspose.AsXMFLOAT4X4(),
 			viewProjTranspose
 		);
-		mRenderer.UpdatePerPassCb(
-			&mViewProjectionTranspose,
-			sizeof(Engine::Matrix4x4)
-		);
 
-		// update per entity cb
+		// set camera pos
+		const Vector3& cameraPos = mCamera.GetPosition();
+		perPassCB.EyePosW = cameraPos;
+
+		// set ambient light
+		perPassCB.AmbientLight = mWorldManager.GetAmbientLight();
+
+		// set light data
+		mWorldManager.GetLightsData(perPassCB.Lights);
+
+		mRenderer.UpdatePerPassCb(
+			&perPassCB,
+			sizeof(PerPassConstantBufferData)
+		);
+	}
+
+	void EngineCore::UpdatePerEntityConstantBuffers() {
 		for (auto& entity : mWorldManager.GetEntities()) {
 			uint32_t id = entity.GetID();
 
 			if (entity.GetIsDirty()) {
-				mNumberOfDirtyFramesPerEntity[id] = Engine::EngineCore::NumberOfFrameResources;
+				mNumberOfDirtyFramesPerEntity[id] = NumberOfFrameResources;
 				entity.SetIsDirty(false);
 			}
 
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
-				Engine::Matrix4x4 transposedData;
-				entity.CopyToDestinationConstantBufferDataTransposed(&transposedData);
+				EntityConstantBufferData bufferData;
+				entity.CopyToDestinationConstantBufferDataTransposed(bufferData);
 
 				mRenderer.UpdatePerRenderItemCb(
 					id,
-					&transposedData,
+					&bufferData,
 					mWorldManager.GetConstantBufferDataByteSizeOfEachEntity()
 				);
 				mNumberOfDirtyFramesPerEntity[id]--;
+			}
+		}
+	}
+
+	void EngineCore::UpdatePerMaterialConstantBuffers() {
+		for (auto& material : mWorldManager.GetMaterials()) {
+			uint16_t id = (uint16_t)material.GetType();
+
+			if (material.GetIsDirty()) {
+				mNumberOfDirtyFramesPerMaterial[id] = NumberOfFrameResources;
+				material.SetIsDirty(false);
+			}
+
+			if (mNumberOfDirtyFramesPerMaterial[id] > 0) {
+				mRenderer.UpdatePerMaterialCb(
+					id,
+					&material.GetData(),
+					mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
+				);
+				mNumberOfDirtyFramesPerMaterial[id]--;
 			}
 		}
 	}

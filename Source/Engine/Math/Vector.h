@@ -49,6 +49,19 @@ namespace Engine {
             return *reinterpret_cast<DirectX::XMFLOAT3*>(this);
         }
 
+
+        inline float Dot(const Vector3& rhs) const noexcept {
+            return x * rhs.x + y * rhs.y + z * rhs.z;
+        }
+
+        inline Vector3 Cross(const Vector3& rhs) const noexcept {
+            return Vector3(
+                (y * rhs.z) - (z * rhs.y),
+                (z * rhs.x) - (x * rhs.z),
+                (x * rhs.y) - (y * rhs.x)
+            );
+        }
+
         inline void Normalize() noexcept {
             float sqLen = (x * x) + (y * y) + (z * z);
 

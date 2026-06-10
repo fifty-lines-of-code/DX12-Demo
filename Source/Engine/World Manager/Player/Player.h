@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Physics System/CollisionResult.h"
+#include "../Scene Manager/Entity/Entity.h"
 #include "../../Math/Geometry.h"
 #include "../.././../Engine/Input System/IInputSystem.h"
 #include "../../../Engine/Math/MathHelper.h"
@@ -15,7 +16,7 @@ public:
 	Player();
 	~Player();
 
-	void SetEntity(Entity& entity);
+	void SetEntity(Engine::Entity& entity);
 	void Update(
 		float deltaTime,
 		const IInputSystem* const inputSystem, 
@@ -27,7 +28,7 @@ public:
 	void PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisioNResult);
 
 private:
-	Entity* mEntity = nullptr;
+	Engine::Entity* mEntity = nullptr;
 	PlayerLogic mPlayerLogic;
 	PlayerAnimator mPlayerAnimator;
 

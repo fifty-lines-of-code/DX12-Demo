@@ -12,7 +12,7 @@ namespace Engine {
 		~Chunk();
 
 		bool Initialize(uint16_t id, Vector3& center);
-		bool Load(uint8_t* entityStartAddressInBytes, ResourceManager& resourceManager);
+		bool Load(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager);
 		uint16_t GetID() const noexcept;
 
 	public:

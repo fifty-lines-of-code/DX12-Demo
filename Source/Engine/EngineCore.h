@@ -14,6 +14,7 @@ class Entity;
 class GameTimer;
 
 namespace Engine {
+
 	class EngineCore {
 	public:
 		EngineCore(HINSTANCE hInstance, std::wstring caption);
@@ -36,10 +37,9 @@ namespace Engine {
 		DX12Renderer mRenderer;
 		Camera mCamera;
 		XboxInputSystem mInputSystem;
-		// per pass cb
-		Engine::Matrix4x4 mViewProjectionTranspose;
 		std::wstring mMainWndCaption;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
+		std::vector<uint32_t> mNumberOfDirtyFramesPerMaterial;
 		HINSTANCE mhAppInst = nullptr; // application instance handle
 		HWND mhMainWnd = nullptr;
 		static const int NumberOfFrameResources = 3;
@@ -47,8 +47,11 @@ namespace Engine {
 		const float mAnimationSpeed;
 
 	private:
-		bool InitializeCamera(const Engine::Vector3& playerPosition);
+		bool InitializeCamera(const Vector3& playerPosition);
 		void LoadGeometry();
 		void UpdateConstantBuffers();
+		void UpdatePerPassConstantBuffers() const;
+		void UpdatePerEntityConstantBuffers();
+		void UpdatePerMaterialConstantBuffers();
 	};
 }

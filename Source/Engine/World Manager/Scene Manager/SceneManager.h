@@ -3,12 +3,12 @@
 #include <array>
 #include "Chunks Manager/ChunksManager.h"
 #include "Entity/Entity.h"
+#include "Lights/Lights Manager/LightsManager.h"
 #include <memory>
 #include "../Scene Manager/Entity/Mesh/Mesh.h"
 #include "OctTree/OctTree.h"
 #include "Resource Manager/ResourceManager.h"
 #include <unordered_map>
-#include <vector>
 
 class Camera;
 class IInputSystem;
@@ -29,15 +29,19 @@ namespace Engine {
 
 		void Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed);
 
-		uint32_t GetEntityCount() const;
-		uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
-		uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const;
-
+		uint32_t GetEntityCount() const noexcept;
+		uint32_t GetMaterialCount() const noexcept;
+		uint32_t GetConstantBufferDataByteSizeOfEachEntity() const noexcept;
+		uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const noexcept;
+		uint32_t GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept;
+		const Vector4& GetAmbientLight() const noexcept;
+		void GetLightsData(LightsArray16& lights) const;
 		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
 		Entity& GetPlayerEntity();
 
 		static constexpr uint32_t MAX_ENTITIES = 3;
-		std::array<Entity, MAX_ENTITIES>& GetEntities();
+		std::array<Entity, MAX_ENTITIES>& GetEntities();	
+		std::array<EngineResources::Material, (uint16_t)EngineResources::MaterialType::Count>& GetMaterials() noexcept;
 
 		void PrepareForUpdate();
 
@@ -46,8 +50,9 @@ namespace Engine {
 
 		OctTree mOctTree;
 		std::array<Entity, MAX_ENTITIES> mEntities;
+		EngineResources::ResourceManager mResourceManager;
 		ChunksManager mChunksManager;
-		ResourceManager mResourceManager;
+		LightsManager mLightsManager;
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
 
 	private:

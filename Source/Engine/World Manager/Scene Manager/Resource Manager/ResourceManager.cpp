@@ -2,14 +2,20 @@
 
 #include <DirectXColors.h>
 
-namespace Engine {
+namespace Engine::EngineResources {
 
 	ResourceManager::ResourceManager(uint16_t chunkSize) :
 		mLoadedBitMask(0),
 		mTerrainManager(TerrainManager(chunkSize))
-	{}
+	{
+		mMaterialsManager.Initialize();
+	}
 
 	ResourceManager::~ResourceManager() {}
+
+	uint32_t ResourceManager::GetMaterialCount() const noexcept {
+		return mMaterialsManager.GetMaterialCount();
+	}
 
 	const Mesh* ResourceManager::GetMesh(MeshID id) {
 		if (id >= MeshID::Count) {
@@ -45,45 +51,77 @@ namespace Engine {
 		return mMeshes;
 	}
 
+	std::array<Material, (uint16_t)MaterialType::Count>& ResourceManager::GetMaterials() noexcept {
+		return mMaterialsManager.GetMaterials();
+	}
+
 #pragma region Private
 
 	void ResourceManager::CreateCubeMesh(Mesh* mesh) {
-		std::vector<Vertex> vertices = {
-			Vertex({ Vector3(-.5f, -.5f, -.5f), Vector4(DirectX::Colors::White.f) }),
-			Vertex({ Vector3(-.5f, +.5f, -.5f), Vector4(DirectX::Colors::Black.f) }),
-			Vertex({ Vector3(+.5f, +.5f, -.5f), Vector4(DirectX::Colors::Red.f) }),
-			Vertex({ Vector3(+.5f, -.5f, -.5f), Vector4(DirectX::Colors::Green.f) }),
-			Vertex({ Vector3(-.5f, -.5f, +.5f), Vector4(DirectX::Colors::Blue.f) }),
-			Vertex({ Vector3(-.5f, +.5f, +.5f), Vector4(DirectX::Colors::Yellow.f) }),
-			Vertex({ Vector3(+.5f, +.5f, +.5f), Vector4(DirectX::Colors::Cyan.f) }),
-			Vertex({ Vector3(+.5f, -.5f, +.5f), Vector4(DirectX::Colors::Magenta.f) })
+		std::vector<Vertex> vertices;
+		std::vector<uint16_t> indices;
+
+		// Define the 6 unit directions for a cube's faces based on +Z into screen
+		Engine::Vector3 normals[6] = {
+			Engine::Vector3(0.0f,  0.0f, -1.0f), // Front (pointing out of screen toward eye)
+			Engine::Vector3(0.0f,  0.0f,  1.0f), // Back  (pointing into screen away from eye)
+			Engine::Vector3(1.0f,  0.0f,  0.0f), // Right
+			Engine::Vector3(-1.0f,  0.0f,  0.0f), // Left
+			Engine::Vector3(0.0f,  1.0f,  0.0f), // Top
+			Engine::Vector3(0.0f, -1.0f,  0.0f)  // Bottom
 		};
 
-		std::vector<uint16_t> indices = {
-			// front face
-			0, 1, 2,
-			0, 2, 3,
+		// 1. Front Face (Z = -1, closest to camera. Looking at it, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f, -1.0f), normals[0] }); // 0: Top-Left
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f, -1.0f), normals[0] }); // 1: Top-Right
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f, -1.0f), normals[0] }); // 2: Bottom-Right
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f, -1.0f), normals[0] }); // 3: Bottom-Left
 
-			// back face
-			4, 6, 5,
-			4, 7, 6,
+		// 2. Back Face (Z = 1, furthest away. Looking through the cube, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f,  1.0f), normals[1] }); // 4: Top-Left from back view
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f,  1.0f), normals[1] }); // 5: Top-Right from back view
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f,  1.0f), normals[1] }); // 6: Bottom-Right from back view
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f,  1.0f), normals[1] }); // 7: Bottom-Left from back view
 
-			// left face
-			4, 5, 1,
-			4, 1, 0,
+		// 3. Right Face (X = 1. Looking at it, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f, -1.0f), normals[2] }); // 8: Top-Left
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f,  1.0f), normals[2] }); // 9: Top-Right
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f,  1.0f), normals[2] }); // 10: Bottom-Right
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f, -1.0f), normals[2] }); // 11: Bottom-Left
 
-			// right face
-			3, 2, 6,
-			3, 6, 7,
+		// 4. Left Face (X = -1. Looking at it, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f,  1.0f), normals[3] }); // 12: Top-Left
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f, -1.0f), normals[3] }); // 13: Top-Right
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f, -1.0f), normals[3] }); // 14: Bottom-Right
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f,  1.0f), normals[3] }); // 15: Bottom-Left
 
-			// top face
-			1, 5, 6,
-			1, 6, 2,
+		// 5. Top Face (Y = 1. Looking down at it, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f,  1.0f), normals[4] }); // 16: Top-Left
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f,  1.0f), normals[4] }); // 17: Top-Right
+		vertices.push_back({ Engine::Vector3(1.0f,  1.0f, -1.0f), normals[4] }); // 18: Bottom-Right
+		vertices.push_back({ Engine::Vector3(-1.0f,  1.0f, -1.0f), normals[4] }); // 19: Bottom-Left
 
-			// bottom face
-			4, 0, 3,
-			4, 3, 7
-		};
+		// 6. Bottom Face (Y = -1. Looking up at it, CW order is TL -> TR -> BR -> BL)
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f, -1.0f), normals[5] }); // 20: Top-Left
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f, -1.0f), normals[5] }); // 21: Top-Right
+		vertices.push_back({ Engine::Vector3(1.0f, -1.0f,  1.0f), normals[5] }); // 22: Bottom-Right
+		vertices.push_back({ Engine::Vector3(-1.0f, -1.0f,  1.0f), normals[5] }); // 23: Bottom-Left
+
+		// using the Top-Left (0), Top-Right (1), Bottom-Right (2), Bottom-Left (3) sequence.
+		for (uint16_t i = 0; i < 6; ++i) {
+			uint16_t baseVertex = i * 4;
+
+			// Triangle 1: Top-Left -> Top-Right -> Bottom-Right
+			indices.push_back(baseVertex + 0);
+			indices.push_back(baseVertex + 1);
+			indices.push_back(baseVertex + 2);
+
+			// Triangle 2: Top-Left -> Bottom-Right -> Bottom-Left
+			indices.push_back(baseVertex + 0);
+			indices.push_back(baseVertex + 2);
+			indices.push_back(baseVertex + 3);
+		}
+
 		mesh->Load(MeshID::Cube, vertices, indices);
 	}
 

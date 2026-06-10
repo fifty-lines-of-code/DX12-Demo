@@ -47,34 +47,17 @@ public:
 
 	bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT screenWidth, UINT screenHeight) override;
 	void FinishInitialize() override;
-	bool SetupPipeline(uint32_t numberOfEntities, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV);
-	void CreateFrameResources(uint32_t numberOfEntities);
+	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV, uint32_t sizeOfPerMaterialCBV);
 	void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) override;
 	void PrepareForUpdate() override;
-	void UpdatePerPassCb(void* data, size_t dataSize) override;
+	void UpdatePerPassCb(void* data, size_t dataSize) const override;
 	void UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) override;
-	void BeginFrame() override;
+	void UpdatePerMaterialCb(uint32_t materialIndex, void* data, uint32_t perMaterialCbSize) override;
+	void BeginFrame(uint32_t numberOfMaterials) override;
 	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
 	void EndFrame() override;
 	void Shutdown() override;
 	void OnResize(UINT width, UINT height) override;
-
-private:
-	bool InitializeDevice();
-	void FlushCommandQueue();
-	void LogAdapters();
-	void LogAdapterOutputs(IDXGIAdapter* adapter);
-	void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
-	void CreateCommandObjects();
-	void CreateSwapChain();
-	void CreateRtvDsvDescriptorHeaps();
-	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
-	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb);
-	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB);
-	bool CreateRootSignature();
-	bool CreateShadersAndInputLayout();
-	bool CreatePipelineStateObject();
 
 private:
 	static const int SwapChainBufferCount = 2;
@@ -96,6 +79,7 @@ private:
 	UINT64 mCurrentFence = 0;
 	UINT mCurrentBackBuffer = 0;
 	UINT mPerEntityCbHeapOffset = 0;
+	UINT mPerMaterialCbHeapOffset = 0;
 	UINT mCurrentFrameResourceIndex = 0;
 	DX12FrameResource* mCurrentFrameResource = nullptr;
 
@@ -122,4 +106,22 @@ private:
 
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
+
+private:
+	bool InitializeDevice();
+	void FlushCommandQueue();
+	void LogAdapters();
+	void LogAdapterOutputs(IDXGIAdapter* adapter);
+	void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
+	void CreateCommandObjects();
+	void CreateSwapChain();
+	void CreateRtvDsvDescriptorHeaps();
+	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
+	void CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials);
+	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb, uint32_t sizeOfPerMaterialCb);
+	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB, uint32_t alignedSizeOfPerMaterialCb);
+	bool CreateRootSignature(uint32_t numberOfMaterials);
+	bool CreateShadersAndInputLayout();
+	bool CreatePipelineStateObject();
 };

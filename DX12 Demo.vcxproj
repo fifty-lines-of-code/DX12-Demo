@@ -160,8 +160,14 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\LightData.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
@@ -189,8 +195,13 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\SceneManager.cpp" />
@@ -209,6 +220,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\color.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

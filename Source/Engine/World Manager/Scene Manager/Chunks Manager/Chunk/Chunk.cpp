@@ -24,7 +24,7 @@ namespace Engine {
 		return true;
 	}
 
-	bool Chunk::Load(uint8_t* entityStartAddressInBytes, ResourceManager& resourceManager) {
+	bool Chunk::Load(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager) {
 		// calculate the offset
 		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
 
@@ -40,12 +40,13 @@ namespace Engine {
 		const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
 
 		// generate the terrain
-		Entity& floor = *reinterpret_cast<Entity*>(targetEntityAddress);
-		floor.SetIsActive(true);
-		floor.SetID(mNextEntityID);
-		floor.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		floor.SetScale(Vector3(1.f));
-		floor.SetMesh(terrain0x0Mesh);
+		Entity& terrain = *reinterpret_cast<Entity*>(targetEntityAddress);
+		terrain.SetIsActive(true);
+		terrain.SetID(mNextEntityID);
+		terrain.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
+		terrain.SetScale(Vector3(1.f));
+		terrain.SetMesh(terrain0x0Mesh);
+		terrain.SetMaterialType(EngineResources::MaterialType::Terrain);
 
 		if (!Insert(mNextEntityID)) { return false; }
 
@@ -57,11 +58,11 @@ namespace Engine {
 		const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
 		Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
 		wall.SetIsActive(true);
-
 		wall.SetID(mNextEntityID);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 4.6f, 3.f);
+		wall.GetPhysicsBody().Center = Vector3(0.f, 4.1f, 3.f);
 		wall.SetScale(Vector3(1.5f, 2.f, .2f));
 		wall.SetMesh(cubeMesh);
+		wall.SetMaterialType(EngineResources::MaterialType::Wall);
 
 		if (!Insert(mNextEntityID)) { return false; }
 
