@@ -51,6 +51,8 @@ namespace Engine {
 
 		LoadGeometry();
 
+		LoadTextures();
+
 		mRenderer.FinishInitialize();
 
 		mIsInitialized = true;
@@ -141,6 +143,24 @@ namespace Engine {
 				mesh->GetIbByteSize(),
 				(void*)mesh->GetIndices().data()
 			);
+		}
+	}
+
+	void EngineCore::LoadTextures() {
+		for (EngineResources::TextureAsset& texture : mWorldManager.GetTextures()) {
+			if (texture.isLoaded) { continue; }
+			if (!texture.isReadyToLoad) { continue; }
+
+			bool result = mRenderer.LoadTexture(
+				texture.Name, 
+				texture.FileName,
+				(uint32_t)texture.id
+			);
+
+			if (result) {
+				texture.isLoaded = true;
+				texture.isReadyToLoad = false;
+			}
 		}
 	}
 

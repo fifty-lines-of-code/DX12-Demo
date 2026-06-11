@@ -98,8 +98,12 @@ namespace Engine {
 		return mSceneManager.GetEntities();
 	}
 
-	std::array<EngineResources::Material, (uint32_t)EngineResources::MaterialType::Count>& WorldManager::GetMaterials() noexcept {
+	EngineResources::MaterialArray& WorldManager::GetMaterials() noexcept {
 		return mSceneManager.GetMaterials();
+	}
+
+	EngineResources::TextureArray& WorldManager::GetTextures() noexcept {
+		return mSceneManager.GetTextures();
 	}
 
 	const Vector3& WorldManager::GetPlayerCenter() const {

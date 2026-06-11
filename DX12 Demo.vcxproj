@@ -129,6 +129,8 @@
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
+    <ClInclude Include="Source\Engine\EngineConfig.h" />
+    <ClInclude Include="Source\Engine\EngineConstants.h" />
     <ClInclude Include="Source\Engine\EngineCore.h" />
     <ClInclude Include="Source\Engine\Input System\GameButton.h" />
     <ClInclude Include="Source\Engine\Input System\IInputSystem.h" />
@@ -145,6 +147,8 @@
     <ClInclude Include="Source\Engine\Physics System\PhysicsBody.h" />
     <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.h" />
@@ -170,6 +174,9 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\Texture Asset\TextureAsset.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureID.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldManager.h" />
@@ -186,6 +193,8 @@
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
@@ -204,6 +213,7 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\SceneManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\WorldManager.cpp" />
     <ClCompile Include="Source\Game\Game State\GameState.cpp" />
@@ -217,6 +227,7 @@
     <Image Include="small.ico" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
+    <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\color.hlsl">

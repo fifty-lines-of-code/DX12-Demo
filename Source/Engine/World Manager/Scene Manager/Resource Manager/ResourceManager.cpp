@@ -7,11 +7,17 @@ namespace Engine::EngineResources {
 	ResourceManager::ResourceManager(uint16_t chunkSize) :
 		mLoadedBitMask(0),
 		mTerrainManager(TerrainManager(chunkSize))
-	{
-		mMaterialsManager.Initialize();
-	}
+	{}
 
 	ResourceManager::~ResourceManager() {}
+
+	bool ResourceManager::Initialize() {
+		if (!mMaterialsManager.Initialize()) { return false; }
+
+		if (!mTextureManager.Initialize()) { return false; }
+
+		return true;
+	}
 
 	uint32_t ResourceManager::GetMaterialCount() const noexcept {
 		return mMaterialsManager.GetMaterialCount();
@@ -47,12 +53,16 @@ namespace Engine::EngineResources {
 		return mesh;
 	}
 
-	const std::array<Mesh, (uint32_t)MeshID::Count>& ResourceManager::GetMeshes() const  {
+	const MeshArray& ResourceManager::GetMeshes() const  {
 		return mMeshes;
 	}
 
-	std::array<Material, (uint16_t)MaterialType::Count>& ResourceManager::GetMaterials() noexcept {
+	MaterialArray& ResourceManager::GetMaterials() noexcept {
 		return mMaterialsManager.GetMaterials();
+	}
+
+	TextureArray& ResourceManager::GetTextures() noexcept {
+		return mTextureManager.GetTextures();
 	}
 
 #pragma region Private

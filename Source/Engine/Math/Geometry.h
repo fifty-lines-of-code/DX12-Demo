@@ -7,6 +7,7 @@ namespace Engine {
 	struct Vertex {
 		Vector3 Position;
 		Vector3 Normal;
+		Vector2 TexC;
 	};
 
 	struct AABB {

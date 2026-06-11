@@ -41,7 +41,8 @@ namespace Engine {
 
 		static constexpr uint32_t MAX_ENTITIES = 3;
 		std::array<Entity, MAX_ENTITIES>& GetEntities();	
-		std::array<EngineResources::Material, (uint16_t)EngineResources::MaterialType::Count>& GetMaterials() noexcept;
+		EngineResources::MaterialArray& GetMaterials() noexcept;
+		EngineResources::TextureArray& GetTextures() noexcept;
 
 		void PrepareForUpdate();
 

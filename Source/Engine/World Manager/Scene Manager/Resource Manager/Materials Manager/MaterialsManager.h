@@ -5,20 +5,21 @@
 
 namespace Engine::EngineResources {
 
+	using MaterialArray = std::array<Material, (uint16_t)MaterialType::Count>;
+
 	class MaterialsManager {
 	public:
 		MaterialsManager();
 		~MaterialsManager();
 
-		void Initialize();
-
+		bool Initialize();
 
 		uint32_t GetMaterialCount() const noexcept;
 		uint16_t GetSizeOfEachMaterialForCb() const noexcept;
-		std::array<Material, (uint16_t)MaterialType::Count>& GetMaterials() noexcept;
+		MaterialArray& GetMaterials() noexcept;
 
 	private:
-		std::array<Material, (uint16_t)MaterialType::Count> mMaterials;
+		MaterialArray mMaterials;
 
 	private:
 		void CreateMaterials();

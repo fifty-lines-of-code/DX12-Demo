@@ -29,7 +29,8 @@ namespace Engine {
 		const Vector4& GetAmbientLight() const noexcept;
 		void GetLightsData(LightsArray16& lights) const;
 		std::array<Entity, SceneManager::MAX_ENTITIES>& GetEntities();
-		std::array<EngineResources::Material, (uint32_t)EngineResources::MaterialType::Count>& GetMaterials() noexcept;
+		EngineResources::MaterialArray& GetMaterials() noexcept;
+		EngineResources::TextureArray& GetTextures() noexcept;
 		const Vector3& GetPlayerCenter() const;
 		Entity& GetPlayerEntity();
 		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);

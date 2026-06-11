@@ -49,6 +49,7 @@ namespace Engine {
 	private:
 		bool InitializeCamera(const Vector3& playerPosition);
 		void LoadGeometry();
+		void LoadTextures();
 		void UpdateConstantBuffers();
 		void UpdatePerPassConstantBuffers() const;
 		void UpdatePerEntityConstantBuffers();

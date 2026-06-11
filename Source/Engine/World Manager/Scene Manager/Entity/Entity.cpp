@@ -78,4 +78,8 @@ namespace Engine {
 	void Entity::SetMaterialType(EngineResources::MaterialType type) { 
 		mMaterialType = type; 
 	}
+
+	EngineResources::TextureID Entity::GetTextureID() const { return mTextureID; }
+
+	void Entity::SetTextureID(EngineResources::TextureID tID) { mTextureID = tID; }
 }

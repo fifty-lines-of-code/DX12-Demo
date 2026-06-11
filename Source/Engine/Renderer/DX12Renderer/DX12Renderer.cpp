@@ -1,13 +1,15 @@
 #include "DX12Renderer.h"
 
-#include "DX12RendererHelper.h"
-#include <dxgidebug.h>
-#include <WindowsX.h>
+#include "DDS Loader/DDSTextureLoader.h"
 #include <DirectXColors.h>
-#include "../../../Helper/Helper.h"
-#include "../../../Helper/Logger.h"
 #include "DX12DefaultUploadBuffer.h"
 #include "DX12FrameResource.h"
+#include "DX12RendererHelper.h"
+#include <dxgidebug.h>
+#include <filesystem>
+#include "../../../Helper/Helper.h"
+#include "../../../Helper/Logger.h"
+#include <WindowsX.h>
 
 using namespace DirectX;
 
@@ -750,7 +752,7 @@ bool DX12Renderer::SetupPipeline(
 }
 
 void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials) {
-	for (int i = 0; i < mNumberOfFrameResources; ++i) {
+	for (UINT i = 0; i < mNumberOfFrameResources; ++i) {
 		mFrameResources.push_back(
 			std::make_unique<DX12FrameResource>(
 				mDX12Device.Get(),
@@ -822,7 +824,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 	// PerObjCB0(F0), PerObjCB1(F0), PerObjCB0(F1)..., PerObjCBN-1(FN-1)
 	// PerMatCB0(F0), PerMatCB1(F0), PerMatCB0(F1)..., PerMatCBN-1(FN-1)
 
-	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
 		auto passCB = mFrameResources[frameIndex]->mPerPassCB.Resource();
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = passCB->GetGPUVirtualAddress();
@@ -840,7 +842,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 	// then per Entity cb are laid out
 	// ((alignedPerItemCB) * numberOfEntities * numberOfFrames)
 
-	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
 		auto renderItemCB = mFrameResources[frameIndex]->mPerRenderItemCB.Resource();
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = renderItemCB->GetGPUVirtualAddress();
@@ -861,7 +863,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 
 	// and then our per material cb
 	// ((alignedPerMaterialCB) * numberOfMaterials * numberOfFrames
-	for (int frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
 		auto materialCB = mFrameResources[frameIndex]->mPerMaterialCB.Resource();
 		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = materialCB->GetGPUVirtualAddress();
@@ -950,8 +952,12 @@ bool DX12Renderer::CreateShadersAndInputLayout() {
 
 	mInputLayout =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24,
+		  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	return true;
@@ -1057,6 +1063,32 @@ void DX12Renderer::LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t
 	mMeshResourceMap[meshID] = std::move(meshResource);
 }
 
+bool DX12Renderer::LoadTexture(std::string& name, std::wstring& filename, uint32_t id) {
+	// todo:
+	if (id >= mTextures.size()) { return false; }
+
+	DX12Texture& texture = mTextures[id];
+
+	if (texture.IsLoaded) { return false; }
+
+	texture.Id = id;
+
+	ThrowIfFailed(
+		DirectX::CreateDDSTextureFromFile12(
+			mDX12Device.Get(),
+			mCommandList.Get(),
+			filename.c_str(),
+			texture.Resource,
+			texture.UploadHeap
+		)
+	);
+
+	//std::wstring absolutePath = std::filesystem::absolute(filename).wstring();
+	texture.IsLoaded = true;
+
+	return true;
+}
+
 void DX12Renderer::FinishInitialize() {
 	// Execute the initialization commands.
 	ThrowIfFailed(mCommandList->Close());
@@ -1068,10 +1100,23 @@ void DX12Renderer::FinishInitialize() {
 	FlushCommandQueue();
 
 	// dispose uploaders
+	DisposeUploaders();
+}
+
+void DX12Renderer::DisposeUploaders() {
+
+	// dispose mesh uploaders
 	for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
 		uint32_t id = it->first;
 		auto& meshResource = it->second;
 
 		meshResource->DisposeUploaders();
+	}
+
+	// dispose texture uploaders
+	for (DX12Texture& texture : mTextures) {
+		if (texture.IsLoaded && texture.UploadHeap != nullptr) {
+			texture.DisposeUploader();
+		}
 	}
 }

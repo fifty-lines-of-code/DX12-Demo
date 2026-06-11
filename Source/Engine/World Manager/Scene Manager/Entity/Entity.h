@@ -5,6 +5,7 @@
 #include "PerPassAndPerEntityConstantBufferData.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
 #include "../../../Physics System/PhysicsBody.h"
+#include "../Resource Manager/Texture Manager/TextureID.h"
 
 class Mesh;
 
@@ -47,10 +48,14 @@ namespace Engine {
 
 		void SetMaterialType(EngineResources::MaterialType type);
 
+		EngineResources::TextureID GetTextureID() const;
+		void SetTextureID(EngineResources::TextureID tID);
+
 	private:
 		EnginePhysics::PhysicsBody mPhysicsBody;
 		const Mesh* mMesh;
 		uint32_t mID;
+		EngineResources::TextureID mTextureID;
 		EngineResources::MaterialType mMaterialType;
 		bool mIsStatic;
 		bool mIsDirty;

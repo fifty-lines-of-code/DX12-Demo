@@ -5,8 +5,10 @@ namespace Engine::EngineResources {
 
 	MaterialsManager::~MaterialsManager() {}
 
-	void MaterialsManager::Initialize() {
+	bool MaterialsManager::Initialize() {
 		CreateMaterials();
+
+		return true;
 	}
 
 	uint32_t MaterialsManager::GetMaterialCount() const noexcept {
@@ -17,7 +19,7 @@ namespace Engine::EngineResources {
 		return sizeof(MaterialData);
 	}
 
-	std::array<Material, (uint16_t)MaterialType::Count>& MaterialsManager::GetMaterials() noexcept {
+	MaterialArray& MaterialsManager::GetMaterials() noexcept {
 		return mMaterials;
 	}
 
