@@ -2,7 +2,7 @@
 
 namespace Engine::EngineResources {
 	Material::Material() :
-		mType(MaterialType::Invalid),
+		mType(MaterialType::INVALID),
 		mIsDirty(false),
 		mIsActive(false)
 	{}

@@ -169,6 +169,12 @@ void DX12Renderer::Shutdown() {
 	for (UINT i = 0; i < SwapChainBufferCount; ++i) {
 		mSwapChainBuffer[i].Reset();
 	}
+	for (auto texture : mTextures) {
+		if (texture.Resource != nullptr) {
+			texture.Resource.Reset();
+		}
+	}
+	mSRVDescriptorHeap.Reset();
 	mCBVDescriptorHeap.Reset();
 	mDSVDescriptorHeap.Reset();
 	mRTVDescriptorHeap.Reset();
@@ -275,10 +281,14 @@ void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
 		&depthStencilView
 	);
 
-	// set the per pass cb and materials cb descriptor heaps
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mCBVDescriptorHeap.Get() };
+	// set the per pass cb, materials cb, and texture srv descriptor heaps
+	ID3D12DescriptorHeap* descriptorHeaps[] = { 
+		mCBVDescriptorHeap.Get(),
+		mSRVDescriptorHeap.Get()
+	};
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
+	// set the root signature
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 	// per pass cb
@@ -291,6 +301,9 @@ void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
 	int globalMaterialHeapOffset = mPerMaterialCbHeapOffset + (numberOfMaterials * mCurrentFrameResourceIndex);
 	materialsCbvHandle.Offset(globalMaterialHeapOffset, mCbvSrvUavDescriptorSize);
 	mCommandList->SetGraphicsRootDescriptorTable(2, materialsCbvHandle);
+
+	// textures
+	mCommandList->SetGraphicsRootDescriptorTable(3, mSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
 bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) {
@@ -737,14 +750,16 @@ bool DX12Renderer::SetupPipeline(
 	uint32_t numberOfMaterials, 
 	uint32_t sizeOfPerEntityCb, 
 	uint32_t sizeOfPerPassCb, 
-	uint32_t sizeOfPerMaterialCb
+	uint32_t sizeOfPerMaterialCb,
+	uint32_t numberOfTextures
 ) {
 	// Reset the command list to prep for initialization commands.
 	ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
 	CreateFrameResources(numberOfEntities, numberOfMaterials);
 	if (!CreateConstantBufferDescriptor(numberOfEntities, numberOfMaterials, sizeOfPerEntityCb, sizeOfPerPassCb, sizeOfPerMaterialCb)) { return false; }
-	if (!CreateRootSignature(numberOfMaterials)) { return false; }
+	if (!CreateTextureDescriptor(numberOfTextures)) { return false; }
+	if (!CreateRootSignature(numberOfMaterials, numberOfTextures)) { return false; }
 	if (!CreateShadersAndInputLayout()) { return false; }
 	if (!CreatePipelineStateObject()) { return false; }
 
@@ -859,7 +874,7 @@ bool DX12Renderer::CreateConstantBufferViews(
 
 			mDX12Device->CreateConstantBufferView(&cbvDesc, handle);
 		}
-	}
+	} 
 
 	// and then our per material cb
 	// ((alignedPerMaterialCB) * numberOfMaterials * numberOfFrames
@@ -885,7 +900,66 @@ bool DX12Renderer::CreateConstantBufferViews(
 	return true;
 }
 
-bool DX12Renderer::CreateRootSignature(uint32_t numberOfMaterials) {
+bool DX12Renderer::CreateTextureDescriptor(uint32_t numberOfTextures) {
+	// Describe the CBV descriptor heap
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc;
+	srvHeapDesc.NumDescriptors = numberOfTextures;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	srvHeapDesc.NodeMask = 0;
+
+	// Create the CBV descriptor heap
+	ThrowIfFailed(
+		mDX12Device->CreateDescriptorHeap(
+			&srvHeapDesc,
+			IID_PPV_ARGS(&mSRVDescriptorHeap)
+		)
+	);
+
+	return CreateTextureResourceViews(numberOfTextures);
+}
+
+bool DX12Renderer::CreateTextureResourceViews(uint32_t numberOfTextures) {
+	// go to heap start
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+	// get stride size
+	UINT srvDescriptorSize = mDX12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	for (uint32_t i = 0; i < numberOfTextures; ++i) {
+		// walk to this descriptor in the heap
+		CD3DX12_CPU_DESCRIPTOR_HANDLE currentHandle(hDescriptor, (INT)i, srvDescriptorSize);
+
+		DX12Texture& tex = mTextures[i];
+		ID3D12Resource* resource;;
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+		// if unloaded 
+		if (!tex.IsLoaded || tex.Resource == nullptr) {
+			srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
+			srvDesc.Texture2D.MipLevels = 1;
+			resource = nullptr;
+		}
+		else {
+			srvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
+			srvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
+			resource = tex.Resource.Get();
+		}
+
+		// IF THE SLOT IS USED: Create the real Shader Resource View
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		// Bake the view configuration straight into the descriptor heap slot
+		mDX12Device->CreateShaderResourceView(resource, &srvDesc, currentHandle);
+	}
+
+	return true;
+}
+
+bool DX12Renderer::CreateRootSignature(uint32_t numberOfMaterials, uint32_t numberOfTextures) {
 	// per object cb
 	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
 	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -898,20 +972,28 @@ bool DX12Renderer::CreateRootSignature(uint32_t numberOfMaterials) {
 	CD3DX12_DESCRIPTOR_RANGE cbvTable2;
 	cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numberOfMaterials, 2);
 
-	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
+	// textures buffer
+	CD3DX12_DESCRIPTOR_RANGE cbvTable3;
+	cbvTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numberOfTextures, 0);
+
+	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
 
 	// Create a two descriptor tables of CBVs.
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
 	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
 	slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable2);
+	slotRootParameter[3].InitAsDescriptorTable(1, &cbvTable3, D3D12_SHADER_VISIBILITY_PIXEL);
+
+	std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
+	DX12RendererHelper::GetStaticSamplers(samplers);
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
 	rootSigDesc.Init(
 		_countof(slotRootParameter),
 		slotRootParameter,
-		0,
-		nullptr,
+		(UINT)samplers.size(),
+		samplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 

@@ -154,7 +154,7 @@ namespace Engine {
 		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
 		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
 		playerEntity.SetIsStatic(false);
-		playerEntity.SetMaterialType(EngineResources::MaterialType::Player);
+		playerEntity.SetMaterialType(EngineResources::MaterialType::PLAYER);
 		playerEntity.SetTextureID(EngineResources::TextureID::WOOD_CRATE);
 
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);

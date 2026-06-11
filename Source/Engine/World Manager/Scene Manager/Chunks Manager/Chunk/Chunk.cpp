@@ -46,7 +46,7 @@ namespace Engine {
 		terrain.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
 		terrain.SetScale(Vector3(1.f));
 		terrain.SetMesh(terrain0x0Mesh);
-		terrain.SetMaterialType(EngineResources::MaterialType::Terrain);
+		terrain.SetMaterialType(EngineResources::MaterialType::TERRAIN);
 
 		if (!Insert(mNextEntityID)) { return false; }
 
@@ -62,7 +62,7 @@ namespace Engine {
 		wall.GetPhysicsBody().Center = Vector3(0.f, 4.1f, 3.f);
 		wall.SetScale(Vector3(1.5f, 2.f, .2f));
 		wall.SetMesh(cubeMesh);
-		wall.SetMaterialType(EngineResources::MaterialType::Wall);
+		wall.SetMaterialType(EngineResources::MaterialType::WALL);
 
 		if (!Insert(mNextEntityID)) { return false; }
 

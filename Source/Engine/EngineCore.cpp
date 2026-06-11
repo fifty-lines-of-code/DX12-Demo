@@ -63,10 +63,12 @@ namespace Engine {
 	bool EngineCore::SetupPipeline() {
 		return mRenderer.SetupPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
+			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
 			mWorldManager.GetConstantBufferDataByteSizeOfEachEntity(),
 			mWorldManager.GetConstantBufferDataByteSizeOfEachPerPassObject(),
-			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
+			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject(),
+			EngineConfig::EngineConfig::MAX_TEXTURES
 		);
 	}
 

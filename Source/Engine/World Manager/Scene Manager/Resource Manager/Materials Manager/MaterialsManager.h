@@ -5,7 +5,7 @@
 
 namespace Engine::EngineResources {
 
-	using MaterialArray = std::array<Material, (uint16_t)MaterialType::Count>;
+	using MaterialArray = std::array<Material, (uint16_t)MaterialType::COUNT>;
 
 	class MaterialsManager {
 	public:

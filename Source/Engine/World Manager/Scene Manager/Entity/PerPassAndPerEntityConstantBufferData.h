@@ -8,6 +8,7 @@ namespace Engine {
 	struct EntityConstantBufferData {
 		Engine::Matrix4x4 World;
 		uint32_t MaterialID;
+		uint32_t TextureID;
 	};
 
 	using LightsArray16 = LightData[16];

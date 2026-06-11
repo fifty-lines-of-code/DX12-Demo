@@ -17,7 +17,7 @@ namespace Engine {
 		mMesh(nullptr),
 		mIsDirty(true),
 		mIsActive(false),
-		mMaterialType(EngineResources::MaterialType::Invalid)
+		mMaterialType(EngineResources::MaterialType::INVALID)
 	{}
 
 	Entity::~Entity() {}
@@ -57,8 +57,13 @@ namespace Engine {
 
 		// store Material ID
 		uint16_t materialTypeUintval = (uint16_t)mMaterialType;
-		bool isValid = materialTypeUintval < (uint16_t)EngineResources::MaterialType::Count;
+		bool isValid = materialTypeUintval < (uint16_t)EngineResources::MaterialType::COUNT;
 		bufferData.MaterialID = isValid ? materialTypeUintval : 0;
+
+		// store Texture ID
+		uint32_t textureIDUintVal = (uint32_t)mTextureID;
+		bool isTextureIdValid = textureIDUintVal < (uint32_t)EngineResources::TextureID::COUNT;
+		bufferData.TextureID = isValid ? textureIDUintVal : 0;
 	}
 
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }

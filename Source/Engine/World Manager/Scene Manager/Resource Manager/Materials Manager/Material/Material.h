@@ -13,11 +13,11 @@ namespace Engine::EngineResources {
 	};
 
 	enum class MaterialType: uint16_t {
-		Player,
-		Wall,
-		Terrain,
-		Count,
-		Invalid
+		PLAYER,
+		WALL,
+		TERRAIN,
+		COUNT,
+		INVALID
 	};
 
 	class Material {
