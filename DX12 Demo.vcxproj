@@ -129,6 +129,9 @@
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugLimits.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugSystem.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h" />
     <ClInclude Include="Source\Engine\EngineConfig.h" />
     <ClInclude Include="Source\Engine\EngineConstants.h" />
     <ClInclude Include="Source\Engine\EngineCore.h" />
@@ -191,6 +194,7 @@
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
+    <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
