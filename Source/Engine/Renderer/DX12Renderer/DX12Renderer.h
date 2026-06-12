@@ -107,8 +107,6 @@ private:
 	// Set true to use 4X MSAA (§4.1.8).  The default is false.
 	UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
 	UINT mCurrentBackBuffer = 0;
-	UINT mPerEntityCbHeapOffset = 0;
-	UINT mPerMaterialCbHeapOffset = 0;
 	UINT mTexturesCbHeapOffset = 0;
 	UINT mCurrentFrameResourceIndex = 0;
 	bool      m4xMsaaState = false;    // 4X MSAA enabled

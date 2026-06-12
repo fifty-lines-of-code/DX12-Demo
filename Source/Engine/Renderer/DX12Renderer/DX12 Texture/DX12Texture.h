@@ -10,5 +10,5 @@ struct DX12Texture {
 	uint32_t Id = -1; // wraps around to uint32_t max
 	bool IsLoaded = false;
 
-	void DisposeUploader() { UploadHeap = nullptr; }
+	void DisposeUploader() { UploadHeap.Reset(); }
 };
