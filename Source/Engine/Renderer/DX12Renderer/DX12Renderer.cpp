@@ -747,12 +747,10 @@ bool DX12Renderer::SetupPipeline(
 	uint32_t numberOfEntities, 
 	uint32_t numberOfMaterials,
 	uint32_t numberOfTextures,
-	uint32_t sizeOfPerEntityCb, 
-	uint32_t sizeOfPerPassCb, 
 	uint32_t sizeOfPerMaterialCb
 ) {
 	CreateFrameResources(numberOfEntities, numberOfMaterials);
-	if (!CreateConstantBufferDescriptor(numberOfEntities, numberOfMaterials, numberOfTextures, sizeOfPerEntityCb, sizeOfPerPassCb, sizeOfPerMaterialCb)) { return false; }
+	if (!CreateConstantBufferDescriptor(numberOfMaterials, numberOfTextures, sizeOfPerMaterialCb)) { return false; }
 	if (!CreateRootSignature(numberOfMaterials, numberOfTextures)) { return false; }
 	if (!CreateShadersAndInputLayout()) { return false; }
 	if (!CreatePipelineStateObject()) { return false; }
@@ -774,15 +772,10 @@ void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities, uint32_t numb
 }
 
 bool DX12Renderer::CreateConstantBufferDescriptor(
-	uint32_t numberOfEntities,
 	uint32_t numberOfMaterials,
 	uint32_t numberOfTextures,
-	uint32_t sizeOfPerEntityCb,
-	uint32_t sizeOfPerPassCb,
 	uint32_t sizeOfPerMaterialCb
 ) {
-	uint32_t alignedSizeOfPerPassCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerPassCb);
-	uint32_t alignedSizeOfPerEntityCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerEntityCb);
 	uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
 
 	// Textures sit at the very end after the 3 frames of per material cb
@@ -809,21 +802,15 @@ bool DX12Renderer::CreateConstantBufferDescriptor(
 
 	// Pass the offsets and sizes forward to generate the views
 	return CreateConstantBufferViews(
-		numberOfEntities,
 		numberOfMaterials,
 		numberOfTextures,
-		alignedSizeOfPerPassCb,
-		alignedSizeOfPerEntityCb,
 		alignedSizeOfPerMaterialCb
 	);
 }
 
 bool DX12Renderer::CreateConstantBufferViews(
-	uint32_t numberOfEntities,
 	uint32_t numberOfMaterials,
 	uint32_t numberOfTextures,
-	uint32_t alignedSizeOfPerPassCb,
-	uint32_t alignedSizeOfPerEntityCb,
 	uint32_t alignedSizeOfPerMaterialCb
 ) {
 	// per material cbs are laid out first per frame

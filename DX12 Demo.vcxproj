@@ -172,6 +172,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\Texture Asset\TextureAsset.h" />

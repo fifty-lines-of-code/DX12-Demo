@@ -393,6 +393,9 @@
     <ClInclude Include="Source\Engine\EngineConfig.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">

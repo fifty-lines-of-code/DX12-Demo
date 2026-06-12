@@ -19,15 +19,12 @@ namespace Engine {
 		// todo init chunk's manager from this center
 		// so it loads the (x) chunks at and around this center
 		// also gotta decide a good value for that (x)
-
 		if (!mChunksManager.Initialize()) { return false; }
 
 		if (!mOctTree.Initialize(halfWidth)) { return false; }
 
-
 		// todo:
 		// load the sun data from somewhere
-		
 		Vector3 strength = { 1.0f, 1.0f, 0.9f };
 		Vector3 direction = { 0.577f, -0.577f, 0.577f };
 		mLightsManager.Initialize(strength, direction);

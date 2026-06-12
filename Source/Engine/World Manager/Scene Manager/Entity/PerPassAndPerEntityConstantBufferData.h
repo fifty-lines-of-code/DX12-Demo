@@ -10,7 +10,7 @@ namespace Engine {
 		uint32_t MaterialID;
 		uint32_t TextureID;
 
-		// remember wher you update this struct
+		// remember when you update this struct
 		// also update 
 		// 1. DX12FrameResource
 		// 2. cbuffer in the shaders
@@ -25,7 +25,7 @@ namespace Engine {
 		float PassPad0;
 		LightsArray16 Lights;
 
-		// remember wher you update this struct
+		// remember when you update this struct
 		// also update 
 		// 1. DX12FrameResource
 		// 2. cbuffer in the shaders

@@ -32,7 +32,6 @@ namespace Engine::EngineResources {
 		}
 
 		if (!std::filesystem::exists(fileName)) {
-			// Breakpoint here! Your path is wrong.
 			Logger::ERR(L"ERROR: Texture file not found at path: " + fileName + L"\n");
 			return false;
 		}

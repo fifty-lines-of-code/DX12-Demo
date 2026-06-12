@@ -49,7 +49,7 @@ public:
 	bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT screenWidth, UINT screenHeight) override;
 	void FinishInitialize() override;
 	bool LoadTexture(std::wstring& filename, uint32_t id) override;
-	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV, uint32_t sizeOfPerMaterialCBV);
+	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerMaterialCBV);
 	void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) override;
 	void PrepareForUpdate() override;
 	void UpdatePerPassCb(void* data, size_t dataSize) const override;
@@ -98,18 +98,18 @@ private:
 	UINT mNumberOfFrameResources = 0;
 
 	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.
-	UINT mRtvDescriptorSize = 0;
-	UINT mDsvDescriptorSize = 0;
-	UINT mCbvSrvUavDescriptorSize = 0;
-	D3D_DRIVER_TYPE md3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
-	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	UINT				mRtvDescriptorSize = 0;
+	UINT				mDsvDescriptorSize = 0;
+	UINT				mCbvSrvUavDescriptorSize = 0;
+	D3D_DRIVER_TYPE		mD3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
+	DXGI_FORMAT			mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT			mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	UINT				m4xMsaaQuality = 0;      // quality level of 4X MSAA
+	UINT				mCurrentBackBuffer = 0;
+	UINT				mTexturesCbHeapOffset = 0;
+	UINT				mCurrentFrameResourceIndex = 0;
 	// Set true to use 4X MSAA (§4.1.8).  The default is false.
-	UINT      m4xMsaaQuality = 0;      // quality level of 4X MSAA
-	UINT mCurrentBackBuffer = 0;
-	UINT mTexturesCbHeapOffset = 0;
-	UINT mCurrentFrameResourceIndex = 0;
-	bool      m4xMsaaState = false;    // 4X MSAA enabled
+	bool				m4xMsaaState = false;
 
 private:
 	bool InitializeDevice();
@@ -123,8 +123,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 	void CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials);
-	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb, uint32_t sizeOfPerMaterialCb);
-	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB, uint32_t alignedSizeOfPerMaterialCb);
+	bool CreateConstantBufferDescriptor(uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerMaterialCb);
+	bool CreateConstantBufferViews(uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t alignedSizeOfPerMaterialCb);
 	bool CreateRootSignature(uint32_t numberOfMaterials, uint32_t numberOfTextures);
 	bool CreateShadersAndInputLayout();
 	bool CreatePipelineStateObject();

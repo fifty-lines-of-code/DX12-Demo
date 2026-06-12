@@ -70,8 +70,6 @@ namespace Engine {
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
 			EngineConfig::EngineConfig::MAX_TEXTURES,
-			mWorldManager.GetConstantBufferDataByteSizeOfEachEntity(),
-			mWorldManager.GetConstantBufferDataByteSizeOfEachPerPassObject(),
 			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
 		);
 	}
