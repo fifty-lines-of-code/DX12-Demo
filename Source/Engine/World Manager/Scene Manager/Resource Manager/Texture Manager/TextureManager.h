@@ -22,6 +22,6 @@ namespace Engine::EngineResources {
 
 	private:
 		bool LoadTextures();
-		bool RegisterTexture(std::string& name, std::wstring& fileName, uint32_t id);
+		bool RegisterTexture(std::wstring& fileName, uint32_t id);
 	};
 }

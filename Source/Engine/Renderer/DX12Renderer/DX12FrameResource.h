@@ -11,6 +11,7 @@ struct DX12PerRenderItemConstants
 {
     DirectX::XMFLOAT4X4 World = DX12RendererHelper::Identity4X4();
     uint32_t MaterialID = 0;
+    uint32_t TextureID = 0;
 };
 
 struct DX12LightData {

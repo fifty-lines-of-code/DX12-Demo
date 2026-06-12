@@ -48,8 +48,8 @@ public:
 
 	bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT screenWidth, UINT screenHeight) override;
 	void FinishInitialize() override;
-	bool LoadTexture(std::string& name, std::wstring& filename, uint32_t id) override;
-	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV, uint32_t sizeOfPerMaterialCBV, uint32_t numberOfTextures);
+	bool LoadTexture(std::wstring& filename, uint32_t id) override;
+	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerPassCBV, uint32_t sizeOfPerObjectCBV, uint32_t sizeOfPerMaterialCBV);
 	void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) override;
 	void PrepareForUpdate() override;
 	void UpdatePerPassCb(void* data, size_t dataSize) const override;
@@ -85,8 +85,7 @@ private:
 	ComPtr<IDXGISwapChain> mSwapChain;
 	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mCBVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mSRVDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
 	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
@@ -110,6 +109,7 @@ private:
 	UINT mCurrentBackBuffer = 0;
 	UINT mPerEntityCbHeapOffset = 0;
 	UINT mPerMaterialCbHeapOffset = 0;
+	UINT mTexturesCbHeapOffset = 0;
 	UINT mCurrentFrameResourceIndex = 0;
 	bool      m4xMsaaState = false;    // 4X MSAA enabled
 
@@ -125,10 +125,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 	void CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials);
-	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb, uint32_t sizeOfPerMaterialCb);
-	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB, uint32_t alignedSizeOfPerMaterialCb);
-	bool CreateTextureDescriptor(uint32_t numberOfTextures);
-	bool CreateTextureResourceViews(uint32_t numberOfTextures);
+	bool CreateConstantBufferDescriptor(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOPerPassCb, uint32_t sizeOfPerObjectCb, uint32_t sizeOfPerMaterialCb);
+	bool CreateConstantBufferViews(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t alignedSizeOPerPassCb, uint32_t alignedSizeOfPerObjectCB, uint32_t alignedSizeOfPerMaterialCb);
 	bool CreateRootSignature(uint32_t numberOfMaterials, uint32_t numberOfTextures);
 	bool CreateShadersAndInputLayout();
 	bool CreatePipelineStateObject();

@@ -10,6 +10,10 @@ namespace Engine::EngineResources {
 		Vector3 FresnelR0;
 		float Roughness = 0.25f;
 		Matrix4x4 MatTransform;
+		// remember wher you update this struct
+		// also update 
+		// 1. DX12FrameResource
+		// 2. cbuffer in the shaders
 	};
 
 	enum class MaterialType: uint16_t {

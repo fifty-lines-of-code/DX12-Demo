@@ -47,6 +47,8 @@ namespace Engine {
 		terrain.SetScale(Vector3(1.f));
 		terrain.SetMesh(terrain0x0Mesh);
 		terrain.SetMaterialType(EngineResources::MaterialType::TERRAIN);
+		terrain.SetTextureID(EngineResources::TextureID::INVALID);
+		terrain.SetIsDirty(true);
 
 		if (!Insert(mNextEntityID)) { return false; }
 
@@ -63,6 +65,8 @@ namespace Engine {
 		wall.SetScale(Vector3(1.5f, 2.f, .2f));
 		wall.SetMesh(cubeMesh);
 		wall.SetMaterialType(EngineResources::MaterialType::WALL);
+		wall.SetTextureID(EngineResources::TextureID::INVALID);
+		wall.SetIsDirty(true);
 
 		if (!Insert(mNextEntityID)) { return false; }
 

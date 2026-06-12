@@ -64,7 +64,7 @@ cbuffer cbPerPass: register(b1)
     float4 AmbientLight;
     float3 EyePosW;
     float PassPad0;
-    Light Lights[MaxLights]; // MaxLights is defined natively inside LightingUtil.hlsl
+    Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
 };
 
 ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b2);
@@ -105,8 +105,13 @@ float4 PS(VertexOut pin) : SV_Target
     // get material data using material index
     cbMaterial matData = gMaterials[MaterialIndex];
 
-    // calculate diffuse albedo by texture sample * matData.gDiffuseAlbedo
-    float4 diffuseAlbedo = gTextures[TextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * matData.gDiffuseAlbedo;
+    // calculate diffuse albedo by texture sample * matData.gDiffuseAlbedo 
+    // if we have a valid texture id
+
+    float4 diffuseAlbedo = matData.gDiffuseAlbedo;
+    if (TextureIndex < 2) {
+        diffuseAlbedo = gTextures[TextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * diffuseAlbedo;
+    }
  
     // Interpolating a normal can unnormalize it, so renormalize it
     pin.NormalW = normalize(pin.NormalW);

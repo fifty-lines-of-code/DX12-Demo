@@ -156,6 +156,7 @@ namespace Engine {
 		playerEntity.SetIsStatic(false);
 		playerEntity.SetMaterialType(EngineResources::MaterialType::PLAYER);
 		playerEntity.SetTextureID(EngineResources::TextureID::WOOD_CRATE);
+		playerEntity.SetIsDirty(true);
 
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 

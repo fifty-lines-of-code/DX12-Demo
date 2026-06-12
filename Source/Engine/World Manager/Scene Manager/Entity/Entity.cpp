@@ -61,9 +61,7 @@ namespace Engine {
 		bufferData.MaterialID = isValid ? materialTypeUintval : 0;
 
 		// store Texture ID
-		uint32_t textureIDUintVal = (uint32_t)mTextureID;
-		bool isTextureIdValid = textureIDUintVal < (uint32_t)EngineResources::TextureID::COUNT;
-		bufferData.TextureID = isValid ? textureIDUintVal : 0;
+		bufferData.TextureID = (uint32_t)mTextureID;
 	}
 
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }

@@ -10,5 +10,5 @@ namespace Engine::EngineResources {
 		COUNT,
 		INVALID
 	};
-	static_assert((size_t)TextureID::COUNT <= EngineConfig::EngineConfig::MAX_TEXTURES && "Number of Textures defined should be less than MAX_TEXTURES");
+	static_assert((size_t)TextureID::COUNT < EngineConfig::EngineConfig::MAX_TEXTURES && "Number of Textures defined should be less than MAX_TEXTURES");
 }
