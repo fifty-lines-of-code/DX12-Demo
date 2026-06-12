@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
@@ -147,6 +148,74 @@ public:
 			0.f, 0.f, 1.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		};
+	}
+
+	static const size_t DX12_MAX_SAMPLERS = 6;
+
+	// Credit for below method: Frank Luna
+	static void GetStaticSamplers(std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12_MAX_SAMPLERS>& array)
+	{
+		// Applications usually only need a handful of samplers.  So just define them all up front
+		// and keep them available as part of the root signature.  
+
+		const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
+			0, // shaderRegister
+			D3D12_FILTER_MIN_MAG_MIP_POINT,   // filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP 
+		);
+
+		const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
+			1, // shaderRegister
+			D3D12_FILTER_MIN_MAG_MIP_POINT,    // filter
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
+		); 
+
+		const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+			2, // shaderRegister
+			D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP   // addressW
+		); 
+
+		const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
+			3, // shaderRegister
+			D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
+		); 
+
+		const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
+			4, // shaderRegister
+			D3D12_FILTER_ANISOTROPIC, // filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
+			0.0f,                             // mipLODBias
+			8                                 // maxAnisotropy
+		);                              
+
+		const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
+			5, // shaderRegister
+			D3D12_FILTER_ANISOTROPIC, // filter
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
+			0.0f,                              // mipLODBias
+			8                                  // maxAnisotropy
+		);                                
+
+		array[0] = pointWrap;
+		array[1] = pointClamp;
+		array[2] = linearWrap;
+		array[3] = linearClamp;
+		array[4] = anisotropicWrap;
+		array[5] = anisotropicClamp;
 	}
 
 	private:

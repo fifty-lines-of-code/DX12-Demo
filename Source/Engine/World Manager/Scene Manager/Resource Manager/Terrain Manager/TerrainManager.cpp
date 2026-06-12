@@ -159,7 +159,7 @@ namespace Engine {
 					outIndices.push_back(topLeft);
 					outIndices.push_back(topRight);
 
-					// Triangle 2
+					// Triangle 2 
 					outIndices.push_back(bottomLeft);
 					outIndices.push_back(topRight);
 					outIndices.push_back(bottomRight);

@@ -71,6 +71,8 @@ public:
         return mUploadBuffer.Get();
     }
 
+    UINT ElementByteSize() const { return mElementByteSize; }
+
     void CopyData(int elementIndex, const void* data)
     {
         memcpy(

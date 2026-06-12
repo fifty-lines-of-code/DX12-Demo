@@ -17,19 +17,45 @@
     #define NUM_SPOT_LIGHTS 0
 #endif
 
+#ifndef NUM_MATERIALS
+    #define NUM_MATERIALS 3
+#endif
+
+#ifndef NUM_TEXTURES
+    #define NUM_TEXTURES 128
+#endif
+
 #include "LightingUtil.hlsl"
 
+// data structures
 struct cbMaterial {
-    float4 DiffuseAlbedo;
+    float4 gDiffuseAlbedo;
     float3 FresnelR0;
     float  Roughness;
     float4x4 MatTransform;
 };
 
+struct VertexIn
+{
+    float3 PosL    : POSITION;
+    float3 NormalL : NORMAL;
+    float2 TexC    : TEXCOORD;
+};
+
+struct VertexOut
+{
+    float4 PosH    : SV_POSITION;
+    float3 PosW    : POSITION;
+    float3 NormalW : NORMAL;
+    float2 TexC    : TEXCOORD;
+};
+
+// buffers passed in per vertex and pixel
 cbuffer cbPerObject : register(b0)
 {
     float4x4 World;
     uint MaterialIndex;
+    uint TextureIndex;
 };
 
 cbuffer cbPerPass: register(b1) 
@@ -38,24 +64,21 @@ cbuffer cbPerPass: register(b1)
     float4 AmbientLight;
     float3 EyePosW;
     float PassPad0;
-    Light Lights[MaxLights]; // MaxLights is defined natively inside LightingUtil.hlsl
+    Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
 };
 
-ConstantBuffer<cbMaterial> Materials[3] : register(b2);
+ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b2);
 
-struct VertexIn
-{
-    float3 PosL    : POSITION;
-    float3 NormalL : NORMAL;
-};
+Texture2D gTextures[NUM_TEXTURES] : register(t0);
 
-struct VertexOut
-{
-    float4 PosH    : SV_POSITION;
-    float3 PosW    : POSITION;
-    float3 NormalW : NORMAL;
-};
+SamplerState gsamPointWrap        : register(s0);
+SamplerState gsamPointClamp       : register(s1);
+SamplerState gsamLinearWrap       : register(s2);
+SamplerState gsamLinearClamp      : register(s3);
+SamplerState gsamAnisotropicWrap  : register(s4);
+SamplerState gsamAnisotropicClamp : register(s5);
 
+// vertex shader
 VertexOut VS(VertexIn vin)
 {
     VertexOut vout;
@@ -69,29 +92,41 @@ VertexOut VS(VertexIn vin)
     
     // Transform normals to world space
     vout.NormalW = mul(vin.NormalL, (float3x3)World);
+
+    // transform texcoords once we want to animate some texture
+    vout.TexC = vin.TexC;
     
     return vout;
 }
 
+// pixel shader
 float4 PS(VertexOut pin) : SV_Target
 {
+    // get material data using material index
+    cbMaterial matData = gMaterials[MaterialIndex];
+
+    // calculate diffuse albedo by texture sample * matData.gDiffuseAlbedo 
+    // if we have a valid texture id
+
+    float4 diffuseAlbedo = matData.gDiffuseAlbedo;
+    if (TextureIndex < 2) {
+        diffuseAlbedo = gTextures[TextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * diffuseAlbedo;
+    }
+ 
     // Interpolating a normal can unnormalize it, so renormalize it
     pin.NormalW = normalize(pin.NormalW);
     
     // Vector from point being lit to eye
     float3 toEyeW = normalize(EyePosW - pin.PosW); 
 
-    // get material data using material index
-    cbMaterial matData = Materials[MaterialIndex];
-
     // Indirect ambient lighting computation
-    float4 ambient = AmbientLight * matData.DiffuseAlbedo;
+    float4 ambient = AmbientLight * diffuseAlbedo;
 
     // Convert material roughness up to shininess for Luna's blinn-phong utility
     const float shininess = 1.0f - matData.Roughness;
 
     // Map specific unpacked matData members into Luna's lighting engine struct
-    Material mat = { matData.DiffuseAlbedo, matData.FresnelR0, shininess };
+    Material mat = { diffuseAlbedo, matData.FresnelR0, shininess };
     
     // Shadow factor placeholder (1.0f means completely unshadowed)
     float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);
@@ -102,7 +137,7 @@ float4 PS(VertexOut pin) : SV_Target
     float4 litColor = ambient + directLight;
 
     // Common convention to take alpha from diffuse material
-    litColor.a = matData.DiffuseAlbedo.a;
+    litColor.a = matData.gDiffuseAlbedo.a;
 
     return litColor;
 }

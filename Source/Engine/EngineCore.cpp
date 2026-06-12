@@ -47,6 +47,12 @@ namespace Engine {
 			NumberOfFrameResources
 		);
 
+		// Following order of operations is important
+		// Load textures first
+		LoadTextures();
+
+		// then setup the pipeline
+		// which internally sets up the descriptors of the textures
 		if (!SetupPipeline()) { return false; }
 
 		LoadGeometry();
@@ -61,9 +67,9 @@ namespace Engine {
 	bool EngineCore::SetupPipeline() {
 		return mRenderer.SetupPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
+			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
-			mWorldManager.GetConstantBufferDataByteSizeOfEachEntity(),
-			mWorldManager.GetConstantBufferDataByteSizeOfEachPerPassObject(),
+			EngineConfig::EngineConfig::MAX_TEXTURES,
 			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
 		);
 	}
@@ -144,6 +150,23 @@ namespace Engine {
 		}
 	}
 
+	void EngineCore::LoadTextures() {
+		for (EngineResources::TextureAsset& texture : mWorldManager.GetTextures()) {
+			if (texture.isLoaded) { continue; }
+			if (!texture.isReadyToLoad) { continue; }
+
+			bool result = mRenderer.LoadTexture(
+				texture.FileName,
+				(uint32_t)texture.id
+			);
+
+			if (result) {
+				texture.isLoaded = true;
+				texture.isReadyToLoad = false;
+			}
+		}
+	}
+
 	void EngineCore::UpdateConstantBuffers() {
 		// update per-pass constant buffers
 		UpdatePerPassConstantBuffers();
@@ -187,6 +210,8 @@ namespace Engine {
 	}
 
 	void EngineCore::UpdatePerEntityConstantBuffers() {
+		EntityConstantBufferData bufferData;
+
 		for (auto& entity : mWorldManager.GetEntities()) {
 			uint32_t id = entity.GetID();
 
@@ -196,7 +221,6 @@ namespace Engine {
 			}
 
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
-				EntityConstantBufferData bufferData;
 				entity.CopyToDestinationConstantBufferDataTransposed(bufferData);
 
 				mRenderer.UpdatePerRenderItemCb(

@@ -17,6 +17,31 @@ namespace Engine {
     // the only way around it is to write the SIMD operations that happen in
     // XMMatrixMultiply, etc, ourselves
 
+    struct Vector2 {
+        float x;
+        float y;
+
+        Vector2() noexcept : x(0.f), y(0.f) {}
+        Vector2(float _a) noexcept : Vector2(_a, _a) {}
+        Vector2(float _x, float _y) noexcept : x(_x), y(_y) {}
+        explicit Vector2(_In_reads_(2) const float* pArray) noexcept : x(pArray[0]), y(pArray[1]) {}
+        Vector2(const Vector2&) noexcept = default;
+        Vector2& operator=(const Vector2&) noexcept = default;
+
+        inline const DirectX::XMFLOAT2& AsXMFLOAT2() const noexcept {
+            return *reinterpret_cast<const DirectX::XMFLOAT2*>(this);
+        }
+
+        inline DirectX::XMFLOAT2& AsXMFLOAT2() noexcept {
+            return *reinterpret_cast<DirectX::XMFLOAT2*>(this);
+        }
+
+        inline void Reset() noexcept {
+            x = 0.f;
+            y = 0.f;
+        }
+    };
+
     struct Vector3 {
         float x;
         float y;
@@ -35,10 +60,6 @@ namespace Engine {
 
         inline Vector3 operator+(float scalar) const noexcept {
             return Vector3(x + scalar, y + scalar, z + scalar);
-        }
-
-        inline static Vector3 Zero() noexcept {
-            return Vector3(0.f, 0.f, 0.f);
         }
 
         inline const DirectX::XMFLOAT3& AsXMFLOAT3() const noexcept {

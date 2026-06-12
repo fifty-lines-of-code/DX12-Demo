@@ -26,21 +26,21 @@ Features to implement:
 22. ~~Create and load static height map and set heights and colors of Chunk0x0 generated in step 21~~
 23. ~~Basic lighting~~
 24. ~~Create and load static height map~~
-25. Player "breathing" animation when idle
-26. Walking animation
-27. Running animation
-28. Smoothly interpolate from breathing into movement
-29. Rolling animation in the direction of controls - infinite direction dictated by controls
-30. PS controller support
-31. FromSoft style lockon
-32. Main menu
-33. Frustum Culling
-34. Dynamic loading and unloading of data as player moves/crosses a boundary
-35. integrate dynamic height map into dynamic chunks loader
-36. implement waterfall in the heightmap
-37. render waterfall
-38. textures
-39. Load fbx models - use ue5 model
+25. ~~Setup pipeline and Load a single texture and apply it to player cube~~
+26. Player "breathing" animation when idle
+27. Walking animation
+28. Running animation
+29. Smoothly interpolate from breathing into movement
+30. Rolling animation in the direction of controls - infinite direction dictated by controls
+31. PS controller support
+32. FromSoft style lockon
+33. Main menu
+34. Frustum Culling
+35. Dynamic loading and unloading of data as player moves/crosses a boundary
+36. integrate dynamic height map into dynamic chunks loader
+37. implement waterfall in the heightmap
+38. render waterfall
+39. Load fbx models - use ue5 models
 40. 
 41. 
 

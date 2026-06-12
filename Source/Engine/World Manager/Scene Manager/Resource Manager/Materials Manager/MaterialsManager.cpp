@@ -5,19 +5,21 @@ namespace Engine::EngineResources {
 
 	MaterialsManager::~MaterialsManager() {}
 
-	void MaterialsManager::Initialize() {
+	bool MaterialsManager::Initialize() {
 		CreateMaterials();
+
+		return true;
 	}
 
 	uint32_t MaterialsManager::GetMaterialCount() const noexcept {
-		return (uint32_t)MaterialType::Count;
+		return (uint32_t)MaterialType::COUNT;
 	}
 
 	uint16_t MaterialsManager::GetSizeOfEachMaterialForCb() const noexcept { 
 		return sizeof(MaterialData);
 	}
 
-	std::array<Material, (uint16_t)MaterialType::Count>& MaterialsManager::GetMaterials() noexcept {
+	MaterialArray& MaterialsManager::GetMaterials() noexcept {
 		return mMaterials;
 	}
 
@@ -30,7 +32,7 @@ namespace Engine::EngineResources {
 	}
 
 	void MaterialsManager::CreatePlayerMaterial() {
-		MaterialType type = MaterialType::Player;
+		MaterialType type = MaterialType::PLAYER;
 		Material& playerMaterial = mMaterials[(uint16_t)type];
 		MaterialData playerMaterialData;
 
@@ -51,7 +53,7 @@ namespace Engine::EngineResources {
 	}
 
 	void MaterialsManager::CreateWallMaterial() {
-		MaterialType type = MaterialType::Wall;
+		MaterialType type = MaterialType::WALL;
 		Material& wallMaterial = mMaterials[(uint16_t)type];
 		MaterialData wallMaterialData;
 
@@ -75,7 +77,7 @@ namespace Engine::EngineResources {
 	}
 
 	void MaterialsManager::CreateTerrainMaterial() {
-		MaterialType type = MaterialType::Terrain;
+		MaterialType type = MaterialType::TERRAIN;
 		Material& terrianMaterial = mMaterials[(uint16_t)type];
 		MaterialData terrainMaterialData;
 

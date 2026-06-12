@@ -1,23 +1,16 @@
 #pragma once
 
 #include <cstdint>
-#include "../../../../../Math/EngineMath.h"
+#include "MaterialData.h"
 
 namespace Engine::EngineResources {
 
-	struct MaterialData {
-		Vector4 DiffuseAlbedo;
-		Vector3 FresnelR0;
-		float Roughness = 0.25f;
-		Matrix4x4 MatTransform;
-	};
-
 	enum class MaterialType: uint16_t {
-		Player,
-		Wall,
-		Terrain,
-		Count,
-		Invalid
+		PLAYER,
+		WALL,
+		TERRAIN,
+		COUNT,
+		INVALID
 	};
 
 	class Material {

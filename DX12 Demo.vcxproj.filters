@@ -187,6 +187,33 @@
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material">
       <UniqueIdentifier>{79dccd46-8652-431a-929e-a3eeff0b029c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DDS Texture Loader">
+      <UniqueIdentifier>{f1cb90c5-0e1c-4ba8-b8fa-16cbaa135f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DDS Texture Loader">
+      <UniqueIdentifier>{b3badeb2-f80a-4f65-b934-37757801c05a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Texture">
+      <UniqueIdentifier>{71599d4b-9423-4c97-88b3-60fd0350fe0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager">
+      <UniqueIdentifier>{8e033669-0403-4ae9-b460-c29e4d16f5c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager\Texture Asset">
+      <UniqueIdentifier>{289b039e-faa3-43e2-a843-8f3cafe59cf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager">
+      <UniqueIdentifier>{cde72cb7-b80d-4b85-92cf-4e35a799adca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager\Texture Asset">
+      <UniqueIdentifier>{a5b5a49a-ecc0-4a7b-b1ed-8c31bd66f3d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Heightmaps">
+      <UniqueIdentifier>{e6288bf2-8b7d-4829-805e-70edcba6c061}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{e82c2f15-33f8-48df-8634-7177dd2a27c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -345,6 +372,30 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DDS Texture Loader</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\Texture Asset\TextureAsset.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager\Texture Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureID.h">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\EngineConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\EngineConfig.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -437,6 +488,12 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DDS Texture Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -445,11 +502,14 @@
     <Image Include="DX12 Demo.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Heightmaps</Filter>
+    </Image>
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png">
+      <Filter>Resource Files\Heightmaps</Filter>
+    </Image>
+    <Image Include="Source\Resources\Textures\WoodCrate01.dds">
+      <Filter>Resource Files\Textures</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

@@ -19,5 +19,10 @@ namespace Engine {
 		Vector3 Position;
 		// spot lights only
 		float SpotPower;
+
+		// remember when you update this struct
+		// also update 
+		// 1. DX12FrameResource
+		// 2. cbuffer in the shaders
 	};
 }

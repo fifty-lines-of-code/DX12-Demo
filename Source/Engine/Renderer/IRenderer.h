@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include "../EngineConfig.h"
+#include <string>
 #include <windows.h>
 
 class IRenderer {
@@ -9,6 +11,7 @@ public:
 
 	virtual bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT fullscreenWidth, UINT fullscreenHeight) = 0;
 	virtual void FinishInitialize() = 0;
+	virtual bool LoadTexture(std::wstring& filename, uint32_t id) = 0;
 	virtual void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) = 0;
 	virtual void Shutdown() = 0;
 	virtual void PrepareForUpdate() = 0;

@@ -13,17 +13,18 @@ namespace Engine {
 	SceneManager::~SceneManager() {}
 
 	bool SceneManager::Initialize(const Vector3& center, float halfWidth) {
-		if (!mOctTree.Initialize(halfWidth)) { return false; }
+
+		if (!mResourceManager.Initialize()) { return false; }
 
 		// todo init chunk's manager from this center
 		// so it loads the (x) chunks at and around this center
 		// also gotta decide a good value for that (x)
-
 		if (!mChunksManager.Initialize()) { return false; }
+
+		if (!mOctTree.Initialize(halfWidth)) { return false; }
 
 		// todo:
 		// load the sun data from somewhere
-		
 		Vector3 strength = { 1.0f, 1.0f, 0.9f };
 		Vector3 direction = { 0.577f, -0.577f, 0.577f };
 		mLightsManager.Initialize(strength, direction);
@@ -116,8 +117,12 @@ namespace Engine {
 		return mEntities;
 	}
 
-	std::array<EngineResources::Material, (uint16_t)EngineResources::MaterialType::Count>& SceneManager::GetMaterials() noexcept {
+	EngineResources::MaterialArray& SceneManager::GetMaterials() noexcept {
 		return mResourceManager.GetMaterials();
+	}
+
+	EngineResources::TextureArray& SceneManager::GetTextures() noexcept {
+		return mResourceManager.GetTextures();
 	}
 
 	void SceneManager::PrepareForUpdate() {
@@ -146,7 +151,10 @@ namespace Engine {
 		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
 		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
 		playerEntity.SetIsStatic(false);
-		playerEntity.SetMaterialType(EngineResources::MaterialType::Player);
+		playerEntity.SetMaterialType(EngineResources::MaterialType::PLAYER);
+		playerEntity.SetTextureID(EngineResources::TextureID::WOOD_CRATE);
+		playerEntity.SetIsDirty(true);
+
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 
 		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
