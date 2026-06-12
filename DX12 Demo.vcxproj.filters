@@ -196,9 +196,6 @@
     <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Texture">
       <UniqueIdentifier>{71599d4b-9423-4c97-88b3-60fd0350fe0c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Texture">
-      <UniqueIdentifier>{d1e71b2a-1879-4895-a87e-045a4578dc87}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager">
       <UniqueIdentifier>{8e033669-0403-4ae9-b460-c29e4d16f5c1}</UniqueIdentifier>
     </Filter>
@@ -490,9 +487,6 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer\DDS Texture Loader</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.cpp">
-      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Texture</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>

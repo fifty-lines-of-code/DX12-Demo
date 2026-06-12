@@ -194,7 +194,6 @@
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp" />
-    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
