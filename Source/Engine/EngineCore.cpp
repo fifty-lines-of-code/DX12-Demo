@@ -103,7 +103,7 @@ namespace Engine {
 		// todo: 
 
 		// calculate our geometry and related data of Debug System
-		DebugSystem::DebugSystem::GetInstance().CompileFramePositions();
+		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
@@ -148,6 +148,7 @@ namespace Engine {
 
 		mRenderer.EndFrame();
 
+		// clear the cache for next frame
 		DebugSystem::DebugSystem::GetInstance().ClearFrameCache();
 	}
 

@@ -155,7 +155,7 @@ void Game::CalculateFrameStats() {
 	std::string fpsStr = 
 		"FPS:" + 
 		std::to_string(previousFPS) + 
-		" MSPF:" +
+		",MSPF:" +
 		std::to_string(previousMSPF) +
 		"\n";
 	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
@@ -167,12 +167,13 @@ void Game::CalculateFrameStats() {
 		float mspf = 1000.0f / frameCnt;
 
 		// create wstring for window
-		std::wstring wfpsStr = L"FPS: " + std::to_wstring(frameCnt);
-		std::wstring mspfStr = std::to_wstring(mspf);
+		std::wstring wfpsStr =
+			L"FPS: " + 
+			std::to_wstring(frameCnt) +
+			L" MSPF: " +
+			std::to_wstring(mspf);
 
-		std::wstring windowText = mMainWndCaption +
-			wfpsStr +
-			L"  mspf: " + mspfStr;
+		std::wstring windowText = mMainWndCaption + wfpsStr;
 
 		SetWindowText(mhMainWnd, windowText.c_str());
 

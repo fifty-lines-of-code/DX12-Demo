@@ -7,8 +7,8 @@ namespace Engine::DebugSystem::DebugLimits {
     constexpr uint32_t MAX_CHARACTERS = 2048;
     constexpr uint32_t MARGIN = 10;
     constexpr uint32_t LINE_SPACING = 2;
-    constexpr uint32_t QUAD_WIDTH = 30;
-    constexpr uint32_t QUAD_HEIGHT = 30;
+    constexpr uint32_t QUAD_WIDTH = 25;
+    constexpr uint32_t QUAD_HEIGHT = 25;
 
     // --- ASCII Character Set Mapping Bound Limits ---
     constexpr char FIRST_PRINTABLE_CHAR = 32;   // Space ' '

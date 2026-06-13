@@ -26,7 +26,7 @@ namespace Engine::DebugSystem {
         void Initialize(uint32_t windowWidth, uint32_t windowHeight);
         void LogText(const std::string& text, const Vector4& color = {1.f, 0.f, 0.f, 1.f});
 
-        void CompileFramePositions();
+        void CalculateFramePositions();
         void ClearFrameCache();
         void UpdateWindowDimensions(uint32_t width, uint32_t height);
 
@@ -37,7 +37,7 @@ namespace Engine::DebugSystem {
         void GetPerPassCbData(DebugSystemPerPassCbData& data) const noexcept;
 
     private:
-        TextVerticesArray mCompiledVertices;
+        TextVerticesArray mVertices;
         TextLogArray mTextPool;
         FontAtlasDesc mFontAtlasDesc;
         uint32_t mWindowWidth;

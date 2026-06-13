@@ -38,7 +38,7 @@ namespace Engine::DebugSystem {
 		}
 	}
 
-	void DebugSystem::CompileFramePositions() {
+	void DebugSystem::CalculateFramePositions() {
 		if (!mIsDirty) { return; }
 
 		uint32_t penX = DebugLimits::MARGIN;
@@ -68,7 +68,7 @@ namespace Engine::DebugSystem {
 
 			// in the case of \n we don't draw it so 
 			// we index into the compiled vertices array using mTotalNumberOfCharactersDrawn
-			DebugSystemPerCharacterData& vertex = mCompiledVertices[mTotalNumberOfCharactersDrawn];
+			DebugSystemPerCharacterData& vertex = mVertices[mTotalNumberOfCharactersDrawn];
 
 			vertex.Position.x = penX;
 			vertex.Position.y = penY;
@@ -106,7 +106,7 @@ namespace Engine::DebugSystem {
 	}
 
 	const TextVerticesArray& DebugSystem::GetVertices() const noexcept {
-		return mCompiledVertices;
+		return mVertices;
 	}
 
 	uint32_t DebugSystem::GetTotalNumberOfCharacersToDraw() const noexcept { 
