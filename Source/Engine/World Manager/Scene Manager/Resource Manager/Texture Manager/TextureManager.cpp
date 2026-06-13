@@ -19,9 +19,14 @@ namespace Engine::EngineResources {
 	TextureArray& TextureManager::GetTextures() noexcept { return mTextureAssets; }
 
 	bool TextureManager::LoadTextures() {
+
 		// load the wood crate texture
 		std::wstring filename = L"Source\\Resources\\Textures\\WoodCrate01.dds";
 		if (!RegisterTexture(filename, (uint32_t)TextureID::WOOD_CRATE)) { return false; }
+
+		// load the font texture
+		filename = L"Source\\Resources\\Fonts\\Font.dds";
+		if (!RegisterTexture(filename, (uint32_t)TextureID::FONT)) { return false; }
 		
 		return true;
 	}

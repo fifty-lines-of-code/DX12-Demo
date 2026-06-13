@@ -1,6 +1,7 @@
 #include "EngineCore.h"
 
 #include "Camera/Camera.h"
+#include "Debug System/DebugSystem.h"
 #include <DirectXMath.h>
 #include "World Manager/Scene Manager/Entity/Entity.h"
 #include "../Game/Game Timer/GameTimer.h"
@@ -18,8 +19,13 @@ namespace Engine {
 		mRenderer(DX12Renderer()),
 		mWorldManager(WorldManager()),
 		mCamera(Camera()),
-		mInputSystem(XboxInputSystem())
-	{}
+		mInputSystem(XboxInputSystem()),
+		mIsDebugBuild(false)
+	{
+#ifdef _DEBUG
+		mIsDebugBuild = true;
+#endif
+	}
 
 	EngineCore::~EngineCore() {}
 
@@ -65,12 +71,21 @@ namespace Engine {
 	}
 
 	bool EngineCore::SetupPipeline() {
-		return mRenderer.SetupPipeline(
+		bool result = mRenderer.SetupPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
 			EngineConfig::EngineConfig::MAX_TEXTURES,
-			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject()
+			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject(),
+			1,
+			DebugSystem::DebugLimits::MAX_CHARACTERS
+		);
+
+		if (!result) { return false; }
+
+		return mRenderer.SetupDebugPipeline(
+			DebugSystem::DebugLimits::MAX_CHARACTERS,
+			(uint32_t)EngineResources::TextureID::FONT
 		);
 	}
 
@@ -86,6 +101,9 @@ namespace Engine {
 
 	void EngineCore::Update(float deltaTime) {
 		// todo: 
+
+		// calculate our geometry and related data of Debug System
+		DebugSystem::DebugSystem::GetInstance().CompileFramePositions();
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
@@ -108,9 +126,10 @@ namespace Engine {
 		UpdateConstantBuffers();
 	}
 
-	void EngineCore::Draw() {
+	void EngineCore::Draw(bool drawDebugLayer) {
 		mRenderer.BeginFrame(mWorldManager.GetMaterialCount());
 
+		// draw our 3D objects
 		for (auto& entity : mWorldManager.GetEntities()) {
 			mRenderer.Draw(
 				(uint32_t)entity.GetMesh()->GetMeshID(),
@@ -119,7 +138,18 @@ namespace Engine {
 				mWorldManager.GetEntityCount()
 			);
 		}
+
+		// draw our debug system
+		// todo: only draw when we toggle 'D' key
+		uint32_t noCharsToDraw = DebugSystem::DebugSystem::GetInstance().GetTotalNumberOfCharacersToDraw();
+
+		if (mIsDebugBuild && noCharsToDraw > 0 && drawDebugLayer) {
+			mRenderer.DrawDebugSystem(noCharsToDraw);
+		}
+
 		mRenderer.EndFrame();
+
+		DebugSystem::DebugSystem::GetInstance().ClearFrameCache();
 	}
 
 	void EngineCore::OnResize(UINT newClientWidth, UINT newClientHeight) {
@@ -127,6 +157,7 @@ namespace Engine {
 
 		mRenderer.OnResize(newClientWidth, newClientHeight);
 		mCamera.OnResize(newClientWidth, newClientHeight);
+		DebugSystem::DebugSystem::GetInstance().UpdateWindowDimensions(newClientWidth, newClientHeight);
 	}
 
 	bool EngineCore::InitializeCamera(const Vector3& playerPosition) {
@@ -176,6 +207,9 @@ namespace Engine {
 		
 		// update per material cb
 		UpdatePerMaterialConstantBuffers();
+
+		// update debug system cb
+		UpdateDebugSystemConstantBuffers();
 	}
 
 	void EngineCore::UpdatePerPassConstantBuffers() const {
@@ -250,6 +284,30 @@ namespace Engine {
 				);
 				mNumberOfDirtyFramesPerMaterial[id]--;
 			}
+		}
+	}
+
+	void EngineCore::UpdateDebugSystemConstantBuffers() {
+		DebugSystem::DebugSystem& dSystem = DebugSystem::DebugSystem::GetInstance();
+
+		// update per pass buffer
+		DebugSystem::DebugSystemPerPassConstantBuffer perPassCb;
+		dSystem.GetPerPassCbData(perPassCb);
+		mRenderer.UpdateDebugSystemPerPassCb(&perPassCb);
+
+		// update per glyph buffers
+		if (dSystem.GetIsDirty()) {
+			mNumberOfDirtyFramesDebugSystem = NumberOfFrameResources;
+			dSystem.SetIsDirty(false);
+		}
+
+		if (mNumberOfDirtyFramesDebugSystem > 0) {
+			mNumberOfDirtyFramesDebugSystem--;
+			// fire off the data to the renderer to upload to gpu
+			const DebugSystem::TextVerticesArray& vertices = dSystem.GetVertices();
+			uint32_t numberOfGlyphsToDraw = dSystem.GetTotalNumberOfCharacersToDraw();
+
+			mRenderer.UpdateDebugSystemStructuredBuffer(numberOfGlyphsToDraw, &vertices);
 		}
 	}
 }

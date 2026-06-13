@@ -4,6 +4,7 @@
 #include <wrl.h>
 #include <memory>
 #include "DX12DefaultUploadBuffer.h"
+#include "DX12StructuredUploadBuffer.h"
 
 // Copyright: Frank Luna
 
@@ -40,13 +41,38 @@ struct DX12PerMaterialConstants
     DirectX::XMFLOAT4X4 MatTransform;
 };
 
+struct DX12DebugSystemPerPassConstants {
+    float WindowWidth;
+    float WindowHeight;
+    float QuadWidth;
+    float QuadHeight;
+    float UV_CellWidth;
+    float UV_CellHeight;
+    float Padding[2];
+};
+
+struct DX12DebugSystemPerCharacterData {
+    DirectX::XMFLOAT4 Color;
+    DirectX::XMFLOAT2 Position;
+    uint32_t Ascii;
+    uint32_t Padding0;
+};
+
 // Stores the resources needed for the CPU to build the command lists
 // for a frame.  
 struct DX12FrameResource
 {
 public:
 
-    DX12FrameResource(ID3D12Device* device, UINT perPassCbCount, UINT numberOfEntities, UINT numberOfMaterials);
+    DX12FrameResource(
+        ID3D12Device* device, 
+        UINT perPassCbCount, 
+        UINT numberOfEntities, 
+        UINT numberOfMaterials, 
+        UINT debugSystemPerPassCBCount, 
+        UINT debugSystemMaxCharacters
+    );
+
     DX12FrameResource(const DX12FrameResource& rhs) = delete;
     DX12FrameResource& operator=(const DX12FrameResource& rhs) = delete;
     ~DX12FrameResource();
@@ -60,6 +86,8 @@ public:
     DX12ConstantBuffersUploadBuffer<DX12PerPassConstants> mPerPassCB;
     DX12ConstantBuffersUploadBuffer<DX12PerRenderItemConstants> mPerRenderItemCB;
     DX12ConstantBuffersUploadBuffer<DX12PerMaterialConstants> mPerMaterialCB;
+    DX12ConstantBuffersUploadBuffer<DX12DebugSystemPerPassConstants> mDebugSystemPerPassCB;
+    DX12StructuredUploadBuffer<DX12DebugSystemPerCharacterData> mDebugSystemPerCharacterCB;
     // Fence value to mark commands up to this fence point.  This lets us
     // check if these frame resources are still in use by the GPU.
     UINT64 mFenceValue = 0;

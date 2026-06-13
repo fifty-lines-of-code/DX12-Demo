@@ -222,6 +222,14 @@ void DX12Renderer::UpdatePerMaterialCb(uint32_t materialIndex, void* data, uint3
 	mCurrentFrameResource->mPerMaterialCB.CopyData(materialIndex, data);
 }
 
+void DX12Renderer::UpdateDebugSystemPerPassCb(void* data) {
+	mCurrentFrameResource->mDebugSystemPerPassCB.CopyData(0, data);
+}
+
+void DX12Renderer::UpdateDebugSystemStructuredBuffer(uint32_t count, const void* data) {
+	mCurrentFrameResource->mDebugSystemPerCharacterCB.CopyData(count, data);
+}
+
 void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
 	auto commandAllocator = mCurrentFrameResource->mCommandListAllocator;
 	// Reuse the memory associated with command recording.
@@ -338,6 +346,39 @@ bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityInd
 		indexCount,
 		1, 0, 0, 0
 	);
+
+	return true;
+}
+
+bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
+	// Grab the active command list for the current frame
+	auto cmdList = mCommandList.Get();
+
+	cmdList->SetPipelineState(mDebugPipelineStateObject.Get());
+	cmdList->SetGraphicsRootSignature(mDebugRootSignature.Get());
+
+	// 1. Bind ONLY the debug heap—holding both the structured buffer and the font copy!
+	ID3D12DescriptorHeap* activeHeaps[] = { mDebugCBVSRVDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(1, activeHeaps);
+
+	// 2. Parameter 0: Direct Virtual Address for Constant Buffer
+	auto perPassResource = mFrameResources[mCurrentFrameResourceIndex]->mDebugSystemPerPassCB.Resource();
+	cmdList->SetGraphicsRootConstantBufferView(0, perPassResource->GetGPUVirtualAddress());
+
+	// 3. Parameter 1: Structured Buffer table
+	CD3DX12_GPU_DESCRIPTOR_HANDLE sbHandle(mDebugCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	sbHandle.Offset(mCurrentFrameResourceIndex, mCbvSrvUavDescriptorSize);
+	cmdList->SetGraphicsRootDescriptorTable(1, sbHandle);
+
+	// 4. Parameter 2: Font Texture table
+	CD3DX12_GPU_DESCRIPTOR_HANDLE fontHandle(mDebugCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	fontHandle.Offset(mNumberOfFrameResources, mCbvSrvUavDescriptorSize);
+	cmdList->SetGraphicsRootDescriptorTable(2, fontHandle);
+
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// 5. Fire off the procedural magic
+	cmdList->DrawInstanced(4, numberOfCharacters, 0, 0);
 
 	return true;
 }
@@ -747,9 +788,11 @@ bool DX12Renderer::SetupPipeline(
 	uint32_t numberOfEntities, 
 	uint32_t numberOfMaterials,
 	uint32_t numberOfTextures,
-	uint32_t sizeOfPerMaterialCb
+	uint32_t sizeOfPerMaterialCb,
+	uint32_t debugSystemPerPassCBCount,
+	uint32_t debugSystemMaxCharacters
 ) {
-	CreateFrameResources(numberOfEntities, numberOfMaterials);
+	CreateFrameResources(numberOfEntities, numberOfMaterials, debugSystemPerPassCBCount, debugSystemMaxCharacters);
 	if (!CreateConstantBufferDescriptor(numberOfMaterials, numberOfTextures, sizeOfPerMaterialCb)) { return false; }
 	if (!CreateRootSignature(numberOfMaterials, numberOfTextures)) { return false; }
 	if (!CreateShadersAndInputLayout()) { return false; }
@@ -757,15 +800,16 @@ bool DX12Renderer::SetupPipeline(
 
 	return true;
 }
-
-void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials) {
+void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t debugSystemPerPassCBCount, uint32_t debugSystemMaxCharacters) {
 	for (UINT i = 0; i < mNumberOfFrameResources; ++i) {
 		mFrameResources.push_back(
 			std::make_unique<DX12FrameResource>(
 				mDX12Device.Get(),
 				1,
 				numberOfEntities,
-				numberOfMaterials
+				numberOfMaterials,
+				debugSystemPerPassCBCount,
+				debugSystemMaxCharacters
 			)
 		);
 	}
@@ -991,6 +1035,250 @@ bool DX12Renderer::CreatePipelineStateObject() {
 		mDX12Device->CreateGraphicsPipelineState(
 			&psoDesc, 
 			IID_PPV_ARGS(&mPipelineStateObject)
+		)
+	);
+
+	return true;
+}
+
+bool DX12Renderer::SetupDebugPipeline(
+	uint32_t debugSystemMaxCharacters,
+	uint32_t fontAtlasIndex
+) {
+	if (!CreateDebugConstantBufferDescriptors(debugSystemMaxCharacters, fontAtlasIndex)) { return false; }
+
+	if (!CreateDebugRootSignature()) { return false; }
+	if (!CreateDebugShadersAndInputLayout()) { return false; }
+	if (!CreateDebugPipelineStateObject()) { return false; }
+
+	return true;
+}
+
+bool DX12Renderer::CreateDebugConstantBufferDescriptors(uint32_t debugSystemMaxCharacters, uint32_t fontAtlasIndex) {
+	uint32_t alignedSizeOfPerPassCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeof(DX12DebugSystemPerPassConstants));
+
+	// Compute the global total of descriptors across all frames
+	// (1 for SRV) * NoFrames + 1 for Font Atlaas
+	UINT numberOfDescriptors = (1 * mNumberOfFrameResources) + 1;
+
+	// Describe the CBV descriptor heap
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+	cbvHeapDesc.NumDescriptors = numberOfDescriptors;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.NodeMask = 0;
+
+	// Create the CBV descriptor heap
+	ThrowIfFailed(
+		mDX12Device->CreateDescriptorHeap(
+			&cbvHeapDesc,
+			IID_PPV_ARGS(&mDebugCBVSRVDescriptorHeap)
+		)
+	);
+
+	return CreateDebugConstantBufferViews(debugSystemMaxCharacters, fontAtlasIndex);
+}
+
+bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharacters, uint32_t fontAtlasIndex) {
+	// create our srv per frame
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+
+	srvDesc.Buffer.FirstElement = 0;
+	// The structural upper boundary limit of your glyph storage pool
+	srvDesc.Buffer.NumElements = debugSystemMaxCharacters;
+	// Tell the hardware the exact stride width of a single character vertex element
+	srvDesc.Buffer.StructureByteStride = sizeof(DX12DebugSystemPerCharacterData);
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	// 4. Loop through each frame resource and bake the view into its assigned slot
+	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(mDebugCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		cpuHandle.Offset(frameIndex, mCbvSrvUavDescriptorSize);
+
+		// Grab the raw GPU resource pointer from the active frame tracking element
+		auto perCharacterCbResource = mFrameResources[frameIndex]->mDebugSystemPerCharacterCB.Resource();
+
+		// Instantiate the SRV hardware descriptor directly into the heap slot
+		mDX12Device->CreateShaderResourceView(perCharacterCbResource, &srvDesc, cpuHandle);
+	}
+
+	// create Font Atlas View
+
+	// 1. Point to the new 4th slot at the very end of the debug heap
+	CD3DX12_CPU_DESCRIPTOR_HANDLE debugHeapFontCpuHandle(mDebugCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	debugHeapFontCpuHandle.Offset(mNumberOfFrameResources, mCbvSrvUavDescriptorSize);
+
+	// 2. Set up Font texture view description
+	// todo: pass in the Font Atlas index
+	DX12Texture& tex = mTextures[1];
+	ID3D12Resource* resource;
+	D3D12_SHADER_RESOURCE_VIEW_DESC fontSrvDesc = {};
+
+	// if unloaded 
+	if (!tex.IsLoaded || tex.Resource == nullptr) {
+		fontSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
+		fontSrvDesc.Texture2D.MipLevels = 1;
+		resource = nullptr;
+	}
+	else {
+		fontSrvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
+		fontSrvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
+		resource = tex.Resource.Get();
+	}
+
+	// Create the Shader Resource View
+	fontSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	fontSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	fontSrvDesc.Texture2D.MostDetailedMip = 0;
+	fontSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+	mDX12Device->CreateShaderResourceView(resource, &fontSrvDesc, debugHeapFontCpuHandle);
+
+	return true;
+}
+
+bool DX12Renderer::CreateDebugRootSignature()
+{
+	CD3DX12_DESCRIPTOR_RANGE slotRootRanges[2];
+
+	// Range 0: The Structured Buffer SRV -> register(t0)
+	slotRootRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+	// Range 1: The Font Atlas Texture SRV -> register(t1)
+	slotRootRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+
+	CD3DX12_ROOT_PARAMETER rootParameters[3];
+
+	// Parameter 0: Direct Root CBV -> register(b0)
+	rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+	// Parameter 1: Descriptor Table pointing to your Structured Buffer range
+	rootParameters[1].InitAsDescriptorTable(1, &slotRootRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+
+	// Parameter 2: Descriptor Table pointing to your Font Texture range
+	rootParameters[2].InitAsDescriptorTable(1, &slotRootRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+
+	// Static Sampler for smooth texel mapping interpolation
+	CD3DX12_STATIC_SAMPLER_DESC linearClamp(
+		0, // register(s0)
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+	);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+		_countof(rootParameters),
+		rootParameters,
+		1,
+		&linearClamp,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
+
+	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(),
+		errorBlob.GetAddressOf()
+	);
+
+	if (errorBlob != nullptr)
+	{
+		// todo: Move to Logger
+		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+	ThrowIfFailed(hr);
+
+	ThrowIfFailed(
+		mDX12Device->CreateRootSignature(
+			0,
+			serializedRootSig->GetBufferPointer(),
+			serializedRootSig->GetBufferSize(),
+			IID_PPV_ARGS(&mDebugRootSignature)
+		)
+	);
+
+	return true;
+}
+
+bool DX12Renderer::CreateDebugShadersAndInputLayout() {
+	HRESULT hr = S_OK;
+
+	mDebugVsByteCode = DX12RendererHelper::CompileShader(
+		L"Source\\Resources\\Shaders\\Debug\\debug_vs.hlsl",
+		nullptr,
+		"VS_Main",
+		"vs_5_1"
+	);
+
+	mDebugPsByteCode = DX12RendererHelper::CompileShader(
+		L"Source\\Resources\\Shaders\\Debug\\debug_ps.hlsl", 
+		nullptr,
+		"PS_Main",
+		"ps_5_1"
+	);
+
+	return true;
+}
+
+bool DX12Renderer::CreateDebugPipelineStateObject() {
+	// describe the debug pso
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+
+	psoDesc.pRootSignature = mDebugRootSignature.Get();
+	psoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(mDebugVsByteCode->GetBufferPointer()),
+		mDebugVsByteCode->GetBufferSize()
+	};
+	psoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(mDebugPsByteCode->GetBufferPointer()),
+		mDebugPsByteCode->GetBufferSize()
+	};
+
+	// disable culling
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+	// enable blending
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	// don't write depth values
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	psoDesc.DSVFormat = mDepthStencilFormat;
+
+	// build the pso
+	ThrowIfFailed(
+		mDX12Device->CreateGraphicsPipelineState(
+			&psoDesc,
+			IID_PPV_ARGS(&mDebugPipelineStateObject)
 		)
 	);
 

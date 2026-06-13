@@ -2,13 +2,15 @@
 
 #include <cstdint>
 
-namespace DebugLimits {
-    constexpr uint32_t MaxLogInstances = 128;      // Maximum lines of text per frame
-    constexpr uint32_t MaxCharacters = 2048;     // Maximum total characters allowed on screen
-    constexpr uint32_t MaxVertices = MaxCharacters * 4; // 4 Vertices per character quad
-    constexpr uint32_t MaxIndices = MaxCharacters * 6; // 6 Indices per character quad
+namespace Engine::DebugSystem::DebugLimits {
+    // Maximum total characters allowed on screen
+    constexpr uint32_t MAX_CHARACTERS = 2048;
+    constexpr uint32_t MARGIN = 10;
+    constexpr uint32_t LINE_SPACING = 2;
+    constexpr uint32_t QUAD_WIDTH = 30;
+    constexpr uint32_t QUAD_HEIGHT = 30;
 
     // --- ASCII Character Set Mapping Bound Limits ---
-    constexpr char FirstPrintableChar = 32;   // Space ' '
-    constexpr char LastPrintableChar = 126;  // Tilde '~'
+    constexpr char FIRST_PRINTABLE_CHAR = 32;   // Space ' '
+    constexpr char LAST_PRINTABLE_CHAR = 126;  // Tilde '~'
 }

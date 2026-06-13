@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "../Engine/Camera/Camera.h"
+#include "../Engine/Debug System/DebugSystem.h"
 #include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 
 Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
@@ -146,25 +147,31 @@ void Game::CalculateFrameStats() {
 
 	static int frameCnt = 0;
 	static float timeElapsed = 0.0f;
+	static int previousFPS = 0;
 
 	frameCnt++;
+
+	std::string fpsStr = "FPS:" + std::to_string(previousFPS) + "\n";;
+	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
 
 	// Compute averages over one second period.
 	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)
 	{
-		float fps = (float)frameCnt; // fps = frameCnt / 1
+		int fps = frameCnt; // fps = frameCnt / 1
 		float mspf = 1000.0f / fps;
 
-		std::wstring fpsStr = std::to_wstring(fps);
+		// create wstring for window
+		std::wstring wfpsStr = L"FPS: " + std::to_wstring((int)fps);
 		std::wstring mspfStr = std::to_wstring(mspf);
 
 		std::wstring windowText = mMainWndCaption +
-			L"  fps: " + fpsStr +
+			wfpsStr +
 			L"  mspf: " + mspfStr;
 
 		SetWindowText(mhMainWnd, windowText.c_str());
 
 		// Reset for next average.
+		previousFPS = frameCnt;
 		frameCnt = 0;
 		timeElapsed += 1.0f;
 	}
@@ -340,5 +347,6 @@ void Game::Update() {
 }
 
 void Game::Draw() {
-	mEngineCore.Draw();
+	// todo: draw or not debug layer based on the 'D' key press
+	mEngineCore.Draw(true);
 }

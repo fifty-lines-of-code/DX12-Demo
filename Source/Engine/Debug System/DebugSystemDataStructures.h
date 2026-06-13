@@ -1,14 +1,35 @@
 #pragma once
 
 #include "../Math/EngineMath.h"
-#include <string>
 
 namespace Engine::DebugSystem {
 
-	struct TextVertex {
-		Vector2 Position;
-		Vector2 TexCoord;
+	struct DebugTextSlot {
 		Vector4 Color;
+		char Character = '\0';
+	};
+
+	struct DebugSystemPerCharacterData {
+		Vector4 Color;
+		Vector2 Position;
+		uint32_t Ascii;
+		uint32_t Padding0;
+
+		// make sure to update DX12FrameResource and Debug Shader
+		// when we update this
+	};
+
+	struct DebugSystemPerPassConstantBuffer {
+		float WindowWidth;
+		float WindowHeight;
+		float QuadWidth = DebugLimits::QUAD_WIDTH;
+		float QuadHeight = DebugLimits::QUAD_HEIGHT;
+		float UV_CellWidth;
+		float UV_CellHeight = 1.f;
+		float Padding[2] = { 0.f, 0.f };
+
+		// make sure to update DX12FrameResource and Debug Shader
+		// when we update this
 	};
 
 	struct FontAtlasDesc {
@@ -17,14 +38,7 @@ namespace Engine::DebugSystem {
 		uint32_t TextureHeight;
 		uint32_t CellWidth;
 		uint32_t CellHeight;
-		uint32_t GridColumns = 16;  // How many characters wide the font sheet image is
-		uint32_t GridRows = 16;  // How many characters high the font sheet image is
-	};
-
-	struct DebugTextInstance {
-		std::string Text;
-		float X = 0.f;
-		float Y = 0.f;
-		Vector4 Color;
+		uint32_t GridColumns;
+		uint32_t GridRows; 
 	};
 }

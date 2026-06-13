@@ -121,6 +121,7 @@ namespace Engine {
         };
 
         Vector4() noexcept : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
+        Vector4(float _a) : Vector4(_a, _a, _a, _a) {}
         Vector4(float _x, float _y, float _z, float _w) noexcept : x(_x), y(_y), z(_z), w(_w) {}
         explicit Vector4(_In_reads_(4) const float* pArray) noexcept : x(pArray[0]), y(pArray[1]), z(pArray[2]), w(pArray[3]) {}
         Vector4(const Vector4&) noexcept = default;

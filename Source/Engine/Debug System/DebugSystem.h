@@ -4,11 +4,12 @@
 #include "DebugLimits.h"
 #include "DebugSystemDataStructures.h"
 #include "../Math/EngineMath.h"
+#include <string>
 
 namespace Engine::DebugSystem {
 
-    using TextLogArray = std::array<DebugTextInstance, DebugLimits::MaxLogInstances>;
-    using TextVeticesArray = std::array<TextVertex, DebugLimits::MaxVertices>;
+    using TextLogArray = std::array<DebugTextSlot, DebugLimits::MAX_CHARACTERS>;
+    using TextVerticesArray = std::array<DebugSystemPerCharacterData, DebugLimits::MAX_CHARACTERS>;
 
     class DebugSystem {
     public:
@@ -20,42 +21,35 @@ namespace Engine::DebugSystem {
         DebugSystem(const DebugSystem&) = delete;
         DebugSystem& operator=(const DebugSystem&) = delete;
 
-        void Initialize(const FontAtlasDesc& fontDesc, uint32_t windowWidth, uint32_t windowHeight);
-        void LogText(const std::string& text, const Vector4& color);
+        void Initialize(uint32_t windowWidth, uint32_t windowHeight);
+        void LogText(const std::string& text, const Vector4& color = {1.f, 0.f, 0.f, 1.f});
 
-        void CompileFrameGeometry();
+        void CompileFramePositions();
         void ClearFrameCache();
+        void UpdateWindowDimensions(uint32_t width, uint32_t height);
 
-        const TextVeticesArray& GetVertices() const noexcept;
-        const std::array<uint16_t, DebugLimits::MaxIndices>& GetIndices() const noexcept;
-        uint32_t GetActiveVertexCount() const noexcept;
-        uint32_t GetActiveIndexCount()  const noexcept;
+        bool GetIsDirty() const noexcept;
+        void SetIsDirty(bool isDirty) noexcept;
+        const TextVerticesArray& GetVertices() const noexcept;
+        uint32_t GetTotalNumberOfCharacersToDraw() const noexcept;
+        uint32_t GetPerCharacterConstantBufferByteSize() const noexcept;
+        void GetPerPassCbData(DebugSystemPerPassConstantBuffer& data) const noexcept;
 
     private:
-        TextVeticesArray                                mCompiledVertices;
-        std::array<uint16_t, DebugLimits::MaxIndices>   mCompiledIndices;
-        TextLogArray                                    mTextInstancesPool;
-        FontAtlasDesc                                   mFontDesc;
-        uint32_t                                        mWindowWidth;
-        uint32_t                                        mWindowHeight;
-        uint32_t                                        mActiveLogCount;
-        uint32_t                                        mActiveVertexCount;
-        uint32_t                                        mActiveIndexCount;
-
-        // Layout Configuration Constants
- 
-        // Safe space: 20 pixels from the left edge
-        const float                                     mMarginX = 20.f;
-        // Safe space: 20 pixels down from the top edge
-        const float                                     mMarginY = 20.f;       
-        // Pixels of padding to leave between lines of text
-        const float                                     mLineSpacing = 4.f;
-        // Runtime Tracking Counter - Tracks the current Y offset for the next log entry
-        float                                           mNextLineY = 0.f;         
+        TextVerticesArray mCompiledVertices;
+        TextLogArray mTextPool;
+        FontAtlasDesc mFontAtlasDesc;
+        uint32_t mWindowWidth;
+        uint32_t mWindowHeight;
+        uint32_t mActiveLogCount;
+        uint32_t mTotalNumberOfCharactersDrawn;   
+        float mUVCellWidth;
+        bool mIsDirty;
 
     private:
         DebugSystem();
         ~DebugSystem();
-    };
 
+        void SetupFontAtlasForDebugFont();
+    };
 }
