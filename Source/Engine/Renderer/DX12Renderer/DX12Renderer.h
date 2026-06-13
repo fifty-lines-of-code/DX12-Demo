@@ -46,17 +46,69 @@ public:
 	DX12Renderer();
 	~DX12Renderer();
 
-	bool Initialize(HWND mainHwnd, int numberOfFrameResources, UINT screenWidth, UINT screenHeight) override;
+	bool Initialize(
+		HWND mainHwnd,
+		int numberOfFrameResources, 
+		UINT screenWidth,
+		UINT screenHeight
+	) override;
+
 	void FinishInitialize() override;
 	bool LoadTexture(std::wstring& filename, uint32_t id) override;
-	bool SetupPipeline(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerMaterialCBV);
-	void LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) override;
+
+	bool SetupPipeline(
+		uint32_t numberOfEntities,
+		uint32_t numberOfMaterials,
+		uint32_t numberOfTextures, 
+		uint32_t sizeOfPerMaterialCBV,
+		uint32_t debugSystemPerPassCBCount,
+		uint32_t debugSystemMaxCharacters
+	);
+
+	bool SetupDebugPipeline(
+		uint32_t debugSystemMaxCharacters,
+		uint32_t fontAtlasIndex
+	);
+
+	void LoadGeometry(
+		uint32_t meshID,
+		uint16_t sizeOfVertex, 
+		uint32_t vertexBufferByteSize,
+		void* vertices,
+		uint32_t indexBufferByteSize,
+		void* indices
+	) override;
+
 	void PrepareForUpdate() override;
 	void UpdatePerPassCb(void* data, size_t dataSize) const override;
-	void UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) override;
-	void UpdatePerMaterialCb(uint32_t materialIndex, void* data, uint32_t perMaterialCbSize) override;
+
+	void UpdatePerRenderItemCb(
+		uint32_t renderItemIndex,
+		void* data, 
+		uint32_t perRenderItemCbSize
+	) override;
+
+	void UpdatePerMaterialCb(
+		uint32_t materialIndex, 
+		void* data, 
+		uint32_t perMaterialCbSize
+	) override;
+
+	void UpdateDebugSystemPerPassCb(void* data) override;
+	void UpdateDebugSystemStructuredBuffer(
+		uint32_t count,
+		const void* data
+	);
+
 	void BeginFrame(uint32_t numberOfMaterials) override;
-	bool Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) override;
+	bool Draw(
+		uint32_t meshID, 
+		uint32_t indexCount,
+		uint32_t entityIndex, 
+		uint32_t entityCount
+	) override;
+
+	bool DrawDebugSystem(uint32_t numberOfCharacters) override;
 	void EndFrame() override;
 	void Shutdown() override;
 	void OnResize(UINT width, UINT height) override;
@@ -86,12 +138,17 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mDebugCBVSRVDescriptorHeap;
 	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+	ComPtr<ID3D12RootSignature> mDebugRootSignature = nullptr;
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
+	ComPtr<ID3DBlob> mDebugVsByteCode = nullptr;
+	ComPtr<ID3DBlob> mDebugPsByteCode = nullptr;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
+	ComPtr<ID3D12PipelineState> mDebugPipelineStateObject = nullptr;
 
 	WindowDimensions mWindowDimensions;
 	HWND mhMainWnd = nullptr;
@@ -122,11 +179,44 @@ private:
 	void CreateRtvDsvDescriptorHeaps();
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
-	void CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials);
-	bool CreateConstantBufferDescriptor(uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t sizeOfPerMaterialCb);
-	bool CreateConstantBufferViews(uint32_t numberOfMaterials, uint32_t numberOfTextures, uint32_t alignedSizeOfPerMaterialCb);
-	bool CreateRootSignature(uint32_t numberOfMaterials, uint32_t numberOfTextures);
+
+	void CreateFrameResources(
+		uint32_t numberOfEntities, 
+		uint32_t numberOfMaterials, 
+		uint32_t debugSystemPerPassCBCount,
+		uint32_t debugSystemMaxCharacters
+	);
+
+	bool CreateConstantBufferDescriptor(
+		uint32_t numberOfMaterials,
+		uint32_t numberOfTextures, 
+		uint32_t sizeOfPerMaterialCb
+	);
+
+	bool CreateConstantBufferViews(
+		uint32_t numberOfMaterials, 
+		uint32_t numberOfTextures,
+		uint32_t alignedSizeOfPerMaterialCb
+	);
+	bool CreateRootSignature(
+		uint32_t numberOfMaterials, 
+		uint32_t numberOfTextures
+	);
+
 	bool CreateShadersAndInputLayout();
 	bool CreatePipelineStateObject();
+
+	bool CreateDebugConstantBufferDescriptors(
+		uint32_t debugSystemMaxCharacters,
+		uint32_t fontAtlasIndex
+	);
+	bool CreateDebugConstantBufferViews(
+		uint32_t alignedSizeOfPerPassCb,
+		uint32_t debugSystemMaxCharacters
+	);
+	bool CreateDebugRootSignature();
+	bool CreateDebugShadersAndInputLayout();
+	bool CreateDebugPipelineStateObject();
+
 	void DisposeUploaders();
 };

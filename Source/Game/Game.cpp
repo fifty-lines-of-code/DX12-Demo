@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "../Engine/Camera/Camera.h"
+#include "../Engine/Debug System/DebugSystem.h"
 #include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 
 Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
@@ -146,25 +147,39 @@ void Game::CalculateFrameStats() {
 
 	static int frameCnt = 0;
 	static float timeElapsed = 0.0f;
+	static int previousFPS = 0;
+	static float previousMSPF = 0.f;
 
 	frameCnt++;
+
+	std::string fpsStr = 
+		"FPS:" + 
+		std::to_string(previousFPS) + 
+		",MSPF:" +
+		std::to_string(previousMSPF) +
+		"\n";
+	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
 
 	// Compute averages over one second period.
 	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)
 	{
-		float fps = (float)frameCnt; // fps = frameCnt / 1
-		float mspf = 1000.0f / fps;
+		// fps = frameCnt / 1
+		float mspf = 1000.0f / frameCnt;
 
-		std::wstring fpsStr = std::to_wstring(fps);
-		std::wstring mspfStr = std::to_wstring(mspf);
+		// create wstring for window
+		std::wstring wfpsStr =
+			L"FPS: " + 
+			std::to_wstring(frameCnt) +
+			L" MSPF: " +
+			std::to_wstring(mspf);
 
-		std::wstring windowText = mMainWndCaption +
-			L"  fps: " + fpsStr +
-			L"  mspf: " + mspfStr;
+		std::wstring windowText = mMainWndCaption + wfpsStr;
 
 		SetWindowText(mhMainWnd, windowText.c_str());
 
 		// Reset for next average.
+		previousFPS = frameCnt;
+		previousMSPF = mspf;
 		frameCnt = 0;
 		timeElapsed += 1.0f;
 	}
@@ -321,6 +336,10 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				SetWindowed();
 			}
 		}
+		else if (wParam == 'D') {
+			bool isDrawingDebugState = mGameState.GetIsDrawingDebugState();
+			mGameState.SetIsDrawingDebugState(!isDrawingDebugState);
+		}
 
 		return 0;
 	}
@@ -340,5 +359,5 @@ void Game::Update() {
 }
 
 void Game::Draw() {
-	mEngineCore.Draw();
+	mEngineCore.Draw(mGameState.GetIsDrawingDebugState());
 }

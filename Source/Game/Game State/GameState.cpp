@@ -19,6 +19,10 @@ bool GameState::GetIsResizing() const { return mResizing; }
 
 bool GameState::GetIsFullscreen() const { return mIsFullscreen; }
 
+bool GameState::GetIsDrawingDebugState() const { 
+	return mDebugGameState.IsDrawingDebugState;
+}
+
 UINT GameState::GetWindowedClientWidth() const { return mWindowedClientWidth; } 
 
 UINT GameState::GetWindowedClientHeight() const { return mWindowedClientHeight; }
@@ -36,6 +40,10 @@ void GameState::SetIsMaximized(bool maximized) { mMaximized = maximized; }
 void GameState::SetIsResizing(bool resizing) { mResizing = resizing; }
 
 void GameState::SetIsFullscreen(bool fullscreenEnabled) { mIsFullscreen = fullscreenEnabled; }
+
+void GameState::SetIsDrawingDebugState(bool isDrawingDebugState) { 
+	mDebugGameState.IsDrawingDebugState = isDrawingDebugState;
+}
 
 void GameState::SetWindowedClientWidth(UINT windowedClientWidth) {
 	mWindowedClientWidth = windowedClientWidth;

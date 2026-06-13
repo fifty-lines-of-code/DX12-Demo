@@ -7,6 +7,7 @@ namespace Engine::EngineResources {
 
 	enum class TextureID : uint32_t {
 		WOOD_CRATE,
+		FONT,
 		COUNT,
 		INVALID
 	};

@@ -129,6 +129,9 @@
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugLimits.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugSystem.h" />
+    <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h" />
     <ClInclude Include="Source\Engine\EngineConfig.h" />
     <ClInclude Include="Source\Engine\EngineConstants.h" />
     <ClInclude Include="Source\Engine\EngineCore.h" />
@@ -154,6 +157,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12StructuredUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\IRenderer.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
@@ -181,6 +185,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldManager.h" />
+    <ClInclude Include="Source\Game\Game State\DebugGameState.h" />
     <ClInclude Include="Source\Game\Game State\GameState.h" />
     <ClInclude Include="Source\Game\Game Timer\GameTimer.h" />
     <ClInclude Include="Source\Game\Game.h" />
@@ -191,6 +196,7 @@
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
+    <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
@@ -225,6 +231,7 @@
   <ItemGroup>
     <Image Include="DX12 Demo.ico" />
     <Image Include="small.ico" />
+    <Image Include="Source\Resources\Fonts\Font.dds" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
     <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
@@ -236,6 +243,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Resources\Shaders\Debug\debug_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Source\Resources\Shaders\Debug\debug_vs.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

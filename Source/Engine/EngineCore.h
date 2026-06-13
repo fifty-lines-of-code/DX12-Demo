@@ -28,7 +28,7 @@ namespace Engine {
 		void UpdateInputSystemAndCamera(float deltaTime);
 		void Update(float deltaTime);
 
-		void Draw();
+		void Draw(bool drawDebugLayer);
 
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
 
@@ -42,9 +42,11 @@ namespace Engine {
 		std::vector<uint32_t> mNumberOfDirtyFramesPerMaterial;
 		HINSTANCE mhAppInst = nullptr; // application instance handle
 		HWND mhMainWnd = nullptr;
+		uint32_t mNumberOfDirtyFramesDebugSystem = NumberOfFrameResources;
 		static const int NumberOfFrameResources = 3;
-		bool mIsInitialized;
 		const float mAnimationSpeed;
+		bool mIsInitialized;
+		bool mIsDebugBuild;
 
 	private:
 		bool InitializeCamera(const Vector3& playerPosition);
@@ -54,5 +56,6 @@ namespace Engine {
 		void UpdatePerPassConstantBuffers() const;
 		void UpdatePerEntityConstantBuffers();
 		void UpdatePerMaterialConstantBuffers();
+		void UpdateDebugSystemConstantBuffers();
 	};
 }

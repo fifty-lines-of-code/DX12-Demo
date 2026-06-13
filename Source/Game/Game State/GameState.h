@@ -1,4 +1,6 @@
 #pragma once
+
+#include "DebugGameState.h"
 #include <wtypes.h>
 
 class GameState {
@@ -11,6 +13,7 @@ public:
 	bool GetIsMaximized() const;
 	bool GetIsResizing() const;
 	bool GetIsFullscreen() const;
+	bool GetIsDrawingDebugState() const;
 	UINT GetWindowedClientWidth() const;
 	UINT GetWindowedClientHeight() const;
 	UINT GetFullscreenClientWidth() const;
@@ -25,6 +28,7 @@ public:
 	void SetWindowedClientHeight(UINT windowedClientHeight);
 	void SetFullscreenClientWidth(UINT fullscreenClientWidth);
 	void SetFullscreenClientHeight(UINT fullscreenClientHeight);
+	void SetIsDrawingDebugState(bool isDrawingDebugState);
 
 private:
 	UINT mWindowedClientWidth;
@@ -36,4 +40,5 @@ private:
 	bool mMaximized = false;  // is the application maximized?
 	bool mResizing = false;   // are the resize bars being dragged?
 	bool mIsFullscreen = false; // we start in windowed
+	DebugGameState mDebugGameState;
 };
