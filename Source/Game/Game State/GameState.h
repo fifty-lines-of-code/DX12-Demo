@@ -1,4 +1,6 @@
 #pragma once
+
+#include "DebugGameState.h"
 #include <wtypes.h>
 
 class GameState {
@@ -38,5 +40,5 @@ private:
 	bool mMaximized = false;  // is the application maximized?
 	bool mResizing = false;   // are the resize bars being dragged?
 	bool mIsFullscreen = false; // we start in windowed
-	bool mIsDrawingDebugState = false; // we start not drawing debug state
+	DebugGameState mDebugGameState;
 };

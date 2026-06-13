@@ -19,7 +19,7 @@ namespace Engine::DebugSystem {
 		// when we update this
 	};
 
-	struct DebugSystemPerPassConstantBuffer {
+	struct DebugSystemPerPassCbData {
 		float WindowWidth;
 		float WindowHeight;
 		float QuadWidth = DebugLimits::QUAD_WIDTH;
@@ -33,12 +33,7 @@ namespace Engine::DebugSystem {
 	};
 
 	struct FontAtlasDesc {
-		uint32_t TextureAtlasSlot;
 		uint32_t TextureWidth;
-		uint32_t TextureHeight;
 		uint32_t CellWidth;
-		uint32_t CellHeight;
-		uint32_t GridColumns;
-		uint32_t GridRows; 
 	};
 }

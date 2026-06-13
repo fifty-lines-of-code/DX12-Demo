@@ -1046,7 +1046,6 @@ bool DX12Renderer::SetupDebugPipeline(
 	uint32_t fontAtlasIndex
 ) {
 	if (!CreateDebugConstantBufferDescriptors(debugSystemMaxCharacters, fontAtlasIndex)) { return false; }
-
 	if (!CreateDebugRootSignature()) { return false; }
 	if (!CreateDebugShadersAndInputLayout()) { return false; }
 	if (!CreateDebugPipelineStateObject()) { return false; }
@@ -1080,6 +1079,7 @@ bool DX12Renderer::CreateDebugConstantBufferDescriptors(uint32_t debugSystemMaxC
 }
 
 bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharacters, uint32_t fontAtlasIndex) {
+	if (fontAtlasIndex >= mTextures.size()) { return false; }
 	// create our srv per frame
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -1095,7 +1095,7 @@ bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharact
 	srvDesc.Buffer.StructureByteStride = sizeof(DX12DebugSystemPerCharacterData);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	// 4. Loop through each frame resource and bake the view into its assigned slot
+	// Loop through each frame resource and bake the view into its assigned slot
 	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(mDebugCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -1116,7 +1116,7 @@ bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharact
 
 	// 2. Set up Font texture view description
 	// todo: pass in the Font Atlas index
-	DX12Texture& tex = mTextures[1];
+	DX12Texture& tex = mTextures[fontAtlasIndex];
 	ID3D12Resource* resource;
 	D3D12_SHADER_RESOURCE_VIEW_DESC fontSrvDesc = {};
 
@@ -1165,19 +1165,19 @@ bool DX12Renderer::CreateDebugRootSignature()
 	rootParameters[2].InitAsDescriptorTable(1, &slotRootRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
 	// Static Sampler for smooth texel mapping interpolation
-	CD3DX12_STATIC_SAMPLER_DESC linearClamp(
-		0, // register(s0)
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP
-	);
+	std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers;
+	DX12RendererHelper::GetStaticSamplers(samplers);
+
+	// index 3 is the linear clamp we want
+	CD3DX12_STATIC_SAMPLER_DESC fontSampler = samplers[3];
+	// map to register(s0) since by default it's mapped to register 3
+	fontSampler.ShaderRegister = 0; 
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
 		_countof(rootParameters),
 		rootParameters,
 		1,
-		&linearClamp,
+		&fontSampler,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
 

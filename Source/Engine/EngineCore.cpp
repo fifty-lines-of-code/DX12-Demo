@@ -140,7 +140,6 @@ namespace Engine {
 		}
 
 		// draw our debug system
-		// todo: only draw when we toggle 'D' key
 		uint32_t noCharsToDraw = DebugSystem::DebugSystem::GetInstance().GetTotalNumberOfCharacersToDraw();
 
 		if (mIsDebugBuild && noCharsToDraw > 0 && drawDebugLayer) {
@@ -291,7 +290,7 @@ namespace Engine {
 		DebugSystem::DebugSystem& dSystem = DebugSystem::DebugSystem::GetInstance();
 
 		// update per pass buffer
-		DebugSystem::DebugSystemPerPassConstantBuffer perPassCb;
+		DebugSystem::DebugSystemPerPassCbData perPassCb;
 		dSystem.GetPerPassCbData(perPassCb);
 		mRenderer.UpdateDebugSystemPerPassCb(&perPassCb);
 

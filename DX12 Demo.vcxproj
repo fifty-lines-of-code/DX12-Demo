@@ -185,6 +185,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldManager.h" />
+    <ClInclude Include="Source\Game\Game State\DebugGameState.h" />
     <ClInclude Include="Source\Game\Game State\GameState.h" />
     <ClInclude Include="Source\Game\Game Timer\GameTimer.h" />
     <ClInclude Include="Source\Game\Game.h" />

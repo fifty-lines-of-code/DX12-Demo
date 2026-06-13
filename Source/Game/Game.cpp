@@ -148,20 +148,26 @@ void Game::CalculateFrameStats() {
 	static int frameCnt = 0;
 	static float timeElapsed = 0.0f;
 	static int previousFPS = 0;
+	static float previousMSPF = 0.f;
 
 	frameCnt++;
 
-	std::string fpsStr = "FPS:" + std::to_string(previousFPS) + "\n";;
+	std::string fpsStr = 
+		"FPS:" + 
+		std::to_string(previousFPS) + 
+		" MSPF:" +
+		std::to_string(previousMSPF) +
+		"\n";
 	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
 
 	// Compute averages over one second period.
 	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)
 	{
-		int fps = frameCnt; // fps = frameCnt / 1
-		float mspf = 1000.0f / fps;
+		// fps = frameCnt / 1
+		float mspf = 1000.0f / frameCnt;
 
 		// create wstring for window
-		std::wstring wfpsStr = L"FPS: " + std::to_wstring((int)fps);
+		std::wstring wfpsStr = L"FPS: " + std::to_wstring(frameCnt);
 		std::wstring mspfStr = std::to_wstring(mspf);
 
 		std::wstring windowText = mMainWndCaption +
@@ -172,6 +178,7 @@ void Game::CalculateFrameStats() {
 
 		// Reset for next average.
 		previousFPS = frameCnt;
+		previousMSPF = mspf;
 		frameCnt = 0;
 		timeElapsed += 1.0f;
 	}

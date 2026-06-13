@@ -13,6 +13,8 @@ namespace Engine::DebugSystem {
 
     class DebugSystem {
     public:
+        // inspiration for private Constructor and Getter
+        // my experience with Objective-C
         static DebugSystem& GetInstance() {
             static DebugSystem instance;
             return instance;
@@ -32,8 +34,7 @@ namespace Engine::DebugSystem {
         void SetIsDirty(bool isDirty) noexcept;
         const TextVerticesArray& GetVertices() const noexcept;
         uint32_t GetTotalNumberOfCharacersToDraw() const noexcept;
-        uint32_t GetPerCharacterConstantBufferByteSize() const noexcept;
-        void GetPerPassCbData(DebugSystemPerPassConstantBuffer& data) const noexcept;
+        void GetPerPassCbData(DebugSystemPerPassCbData& data) const noexcept;
 
     private:
         TextVerticesArray mCompiledVertices;

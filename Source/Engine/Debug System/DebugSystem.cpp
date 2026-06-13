@@ -113,31 +113,18 @@ namespace Engine::DebugSystem {
 		return mTotalNumberOfCharactersDrawn; 
 	}
 
-	uint32_t DebugSystem::GetPerCharacterConstantBufferByteSize() const noexcept {
-		return sizeof(DebugSystemPerCharacterData);
-	}
-
-	void DebugSystem::GetPerPassCbData(DebugSystemPerPassConstantBuffer& data) const noexcept {
+	void DebugSystem::GetPerPassCbData(DebugSystemPerPassCbData& data) const noexcept {
 		data.WindowWidth = mWindowWidth;
 		data.WindowHeight = mWindowHeight;
 		data.UV_CellWidth = mUVCellWidth;
 	}
 
 	void DebugSystem::SetupFontAtlasForDebugFont() {
-		mFontAtlasDesc.TextureAtlasSlot = 0; 
 		// 950 and 20 come from inspecting the dds file
 		// todo: maybe write a parser of some sort
 		mFontAtlasDesc.TextureWidth = 950;
-		mFontAtlasDesc.TextureHeight = 20;
 
 		// again obtained from inspecting the dds
 		mFontAtlasDesc.CellWidth = 10;
-		mFontAtlasDesc.CellHeight = 20;
-
-		// dds seems to have 95 chars all laid out horizontally
-		mFontAtlasDesc.GridColumns = 95;
-
-		// There is only 1 row total in the entire texture asset
-		mFontAtlasDesc.GridRows = 1;
 	}
 }

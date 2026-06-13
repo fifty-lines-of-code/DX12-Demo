@@ -19,8 +19,7 @@ public:
         mElementByteSize = sizeof(T);
 
         auto uploadHepProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize * elementCount
-        );
+        auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize * elementCount);
 
         ThrowIfFailed(
             device->CreateCommittedResource(
