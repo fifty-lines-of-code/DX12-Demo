@@ -142,7 +142,7 @@ namespace Engine {
 		// draw our debug system
 		uint32_t noCharsToDraw = DebugSystem::DebugSystem::GetInstance().GetTotalNumberOfCharacersToDraw();
 
-		if (mIsDebugBuild && noCharsToDraw > 0 && drawDebugLayer) {
+		if (mIsDebugBuild && drawDebugLayer && noCharsToDraw > 0) {
 			mRenderer.DrawDebugSystem(noCharsToDraw);
 		}
 
