@@ -328,6 +328,10 @@ LRESULT Game::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				SetWindowed();
 			}
 		}
+		else if (wParam == 'D') {
+			bool isDrawingDebugState = mGameState.GetIsDrawingDebugState();
+			mGameState.SetIsDrawingDebugState(!isDrawingDebugState);
+		}
 
 		return 0;
 	}
@@ -347,6 +351,5 @@ void Game::Update() {
 }
 
 void Game::Draw() {
-	// todo: draw or not debug layer based on the 'D' key press
-	mEngineCore.Draw(true);
+	mEngineCore.Draw(mGameState.GetIsDrawingDebugState());
 }

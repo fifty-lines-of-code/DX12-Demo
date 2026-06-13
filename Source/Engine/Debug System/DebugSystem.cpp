@@ -81,7 +81,7 @@ namespace Engine::DebugSystem {
 			}
 
 			// we send zero based indexing into the shader
-			vertex.Ascii = slot.Character - DebugLimits::FIRST_PRINTABLE_CHAR;;
+			vertex.Ascii = slot.Character - DebugLimits::FIRST_PRINTABLE_CHAR;
 
 			penX += DebugLimits::QUAD_WIDTH;
 			mTotalNumberOfCharactersDrawn++;
