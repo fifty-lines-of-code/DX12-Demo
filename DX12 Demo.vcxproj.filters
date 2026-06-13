@@ -214,6 +214,18 @@
     <Filter Include="Resource Files\Textures">
       <UniqueIdentifier>{e82c2f15-33f8-48df-8634-7177dd2a27c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Debug System">
+      <UniqueIdentifier>{e54918be-cfb3-4e57-be2f-f4b3f9881d79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Fonts">
+      <UniqueIdentifier>{4034f9fa-ebcb-4253-9168-d18a8046e5a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders\Debug System">
+      <UniqueIdentifier>{3e06e42d-5a7e-48f3-af1f-b942bd6ddf60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Debug System">
+      <UniqueIdentifier>{01c1bd44-2aa0-4c71-96b2-8f517577f749}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -387,14 +399,26 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\EngineConstants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\EngineConfig.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Materials Manager\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Game State\DebugGameState.h">
+      <Filter>Header Files\Engine\Debug System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Debug System\DebugLimits.h">
+      <Filter>Header Files\Engine\Debug System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Debug System\DebugSystem.h">
+      <Filter>Header Files\Engine\Debug System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h">
+      <Filter>Header Files\Engine\Debug System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12StructuredUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -494,6 +518,9 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp">
+      <Filter>Source Files\Engine\Debug System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -511,6 +538,9 @@
     <Image Include="Source\Resources\Textures\WoodCrate01.dds">
       <Filter>Resource Files\Textures</Filter>
     </Image>
+    <Image Include="Source\Resources\Fonts\Font.dds">
+      <Filter>Resource Files\Fonts</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\color.hlsl">
@@ -518,6 +548,12 @@
     </None>
     <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
       <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\Debug\debug_ps.hlsl">
+      <Filter>Resource Files\Shaders\Debug System</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\Debug\debug_vs.hlsl">
+      <Filter>Resource Files\Shaders\Debug System</Filter>
     </None>
   </ItemGroup>
 </Project>
