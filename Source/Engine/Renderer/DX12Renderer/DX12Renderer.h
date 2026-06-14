@@ -70,6 +70,8 @@ public:
 		uint32_t fontAtlasIndex
 	);
 
+	bool SetupBlurPipeline();
+
 	void LoadGeometry(
 		uint32_t meshID,
 		uint16_t sizeOfVertex, 
@@ -139,16 +141,21 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDebugCBVSRVDescriptorHeap;
-	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
+	ComPtr<ID3D12DescriptorHeap> mBlurSRVUAVDescriptorHeap;
+	ComPtr<ID3D12Resource> mSwapChainBuffers[SwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	ComPtr<ID3D12Resource> mBlurScratchTextureResource;
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 	ComPtr<ID3D12RootSignature> mDebugRootSignature = nullptr;
+	ComPtr<ID3D12RootSignature> mBlurRootSignature = nullptr;
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
 	ComPtr<ID3DBlob> mDebugVsByteCode = nullptr;
 	ComPtr<ID3DBlob> mDebugPsByteCode = nullptr;
+	ComPtr<ID3DBlob> mBlurCsByteCode = nullptr;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 	ComPtr<ID3D12PipelineState> mDebugPipelineStateObject = nullptr;
+	ComPtr<ID3D12PipelineState> mBlurPipelineStateObject = nullptr;
 
 	WindowDimensions mWindowDimensions;
 	HWND mhMainWnd = nullptr;
@@ -206,6 +213,7 @@ private:
 	bool CreateShadersAndInputLayout();
 	bool CreatePipelineStateObject();
 
+	// debug UI pipeline setup
 	bool CreateDebugConstantBufferDescriptors(
 		uint32_t debugSystemMaxCharacters,
 		uint32_t fontAtlasIndex
@@ -217,6 +225,15 @@ private:
 	bool CreateDebugRootSignature();
 	bool CreateDebugShadersAndInputLayout();
 	bool CreateDebugPipelineStateObject();
+
+	// blur effect pipeline setup
+	bool CreateBlurDescriptorHeap();
+	bool CreateBlurTextureViewDescriptors();
+	bool CreateBlurScratchTexture();
+	bool CreateBlurRootSignature();
+	bool CreateBlurShaders();
+	bool CreateBlurPipelineStateObject();
+	void DrawBlurPass();
 
 	void DisposeUploaders();
 };
