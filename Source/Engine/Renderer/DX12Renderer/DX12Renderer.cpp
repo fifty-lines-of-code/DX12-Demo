@@ -1566,9 +1566,13 @@ void DX12Renderer::DrawBlurPass() {
 
 	// blur constants
 	DX12BlurComputeConstants constants = {};
-	constants.ScreenSize = DirectX::XMFLOAT2((float)mWindowDimensions.Width, (float)mWindowDimensions.Height);
+	// set screen size
+	constants.ScreenSize = DirectX::XMFLOAT2(
+		(float)mWindowDimensions.Width, 
+		(float)mWindowDimensions.Height
+	);
 	// Adjust radius intensity here (e.g., 3 to 7)
-	constants.BlurRadius = 5; 
+	constants.BlurRadius = 10; 
 
 	// ========================================================================
 	// PASS 1: HORIZONTAL BLUR
