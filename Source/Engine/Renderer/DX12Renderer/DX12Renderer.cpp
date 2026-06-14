@@ -1309,7 +1309,7 @@ bool DX12Renderer::CreateBlurScratchTexture() {
 		D3D12_HEAP_FLAG_NONE,
 		&scratchDesc,
 		D3D12_RESOURCE_STATE_COMMON, // Standard starting resource state
-		nullptr,                     // Clear values aren't strictly optimized for UAV writes
+		nullptr,                     
 		IID_PPV_ARGS(&mBlurScratchTextureResource)
 	);
 	ThrowIfFailed(hr);
@@ -1322,7 +1322,7 @@ bool DX12Renderer::CreateBlurScratchTexture() {
 bool DX12Renderer::CreateBlurDescriptorHeap() {
 
 	// 3 for our scratch buffer we'll write to and read from
-	// 2 for reading the back buffer (2 sinice we are double buffered)
+	// 2 for reading the back buffer (2 since we are double buffered)
 	UINT numberOfDescriptors = 5;
 
 	// Describe the CBV descriptor heap
@@ -1571,7 +1571,8 @@ void DX12Renderer::DrawBlurPass() {
 		(float)mWindowDimensions.Width, 
 		(float)mWindowDimensions.Height
 	);
-	// Adjust radius intensity here (e.g., 3 to 7)
+	// set radius intensity
+	// todo: move this out to somewhere else
 	constants.BlurRadius = 10; 
 
 	// ========================================================================
@@ -1579,11 +1580,13 @@ void DX12Renderer::DrawBlurPass() {
 	// ========================================================================
 
 	D3D12_RESOURCE_BARRIER pass1Barriers[2] = {
+		// transition back buffer to non pixel resource so we can read it
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			currentBackBuffer, 
 			D3D12_RESOURCE_STATE_RENDER_TARGET, 
 			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
 		),
+		// transition our scratch texture resource to unordered access so we can write to it
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			mBlurScratchTextureResource.Get(),
 			D3D12_RESOURCE_STATE_COMMON,
@@ -1628,7 +1631,7 @@ void DX12Renderer::DrawBlurPass() {
 	constants.BlurDirection = DirectX::XMFLOAT2(0.0f, 1.0f); // Vertical vector step
 	cmdList->SetComputeRoot32BitConstants(0, 8, &constants, 0);
 
-	// Table 1 (t0): Points to slice 0 (slot 2) to read it as SRV
+	// Table 1 (t0): Points to slice 0 of blur scratch descriptor (slot 2) to read it as SRV
 	CD3DX12_GPU_DESCRIPTOR_HANDLE scratchAsSRV(
 		heapStart, 
 		2,
@@ -1644,7 +1647,7 @@ void DX12Renderer::DrawBlurPass() {
 	);
 	cmdList->SetComputeRootDescriptorTable(2, scratchAsUAV);
 
-	// Unleash Pass 2 hardware threads
+	// Pass 2 hardware threads
 	cmdList->Dispatch(groupCountX, groupCountY, 1);
 
 	// ========================================================================
@@ -1652,13 +1655,14 @@ void DX12Renderer::DrawBlurPass() {
 	// ========================================================================
 
 	D3D12_RESOURCE_BARRIER midBarriers[3] = {
+		// transition slice 0 of our blur scratch resource to common
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			mBlurScratchTextureResource.Get(),
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 			D3D12_RESOURCE_STATE_COMMON,
-			0
+			0 // slice 0
 		),
-		// transition scratch resource slice 1 to copy source
+		// transition blur scratch resource slice 1 to copy source
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			mBlurScratchTextureResource.Get(),
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
@@ -1674,26 +1678,29 @@ void DX12Renderer::DrawBlurPass() {
 	};
 	mCommandList->ResourceBarrier(_countof(midBarriers), midBarriers);
 
-	// perform the copy
+	// perform the copy from slice 1 of blur scratch to back buffer
 	CD3DX12_TEXTURE_COPY_LOCATION destLocation(currentBackBuffer, 0);
 	CD3DX12_TEXTURE_COPY_LOCATION sourceLocation(
 		mBlurScratchTextureResource.Get(),
 		1
 	); // Index 1 = Slice 1
 
+	// actual copy command
 	mCommandList->CopyTextureRegion(&destLocation, 0, 0, 0, &sourceLocation, nullptr);
 
 	// ========================================================================
 	// CLEANUP BARRIER: Return Backbuffer to Render Target state
 	// ========================================================================
-	// Bring the backbuffer back to its standard state so your engine can draw standard UI text/elements on top 
-	// or finish the frame execution loop cleanly.
+	// Bring the backbuffer back to its standard state so engine can keep drawing as usual
 	D3D12_RESOURCE_BARRIER cleanupBarriers[2] = {
+		// transition back buffer to render target
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			currentBackBuffer,
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			D3D12_RESOURCE_STATE_RENDER_TARGET
 		),
+		// transition slice 1 of blur scratch to common
+		// slice 0 has already been set to common (see line 1637)
 		CD3DX12_RESOURCE_BARRIER::Transition(
 			mBlurScratchTextureResource.Get(), 
 			D3D12_RESOURCE_STATE_COPY_SOURCE,
