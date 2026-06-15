@@ -62,7 +62,8 @@ struct DX12BlurComputeConstants {
     DirectX::XMFLOAT2 ScreenSize = { 1.f, 1.f };
     DirectX::XMFLOAT2 BlurDirection = { 1.f, 0.f };
     int32_t BlurRadius = 5;
-    DirectX::XMFLOAT3 Padding0 = { 0.f, 0.f, 0.f };
+    float OneOverTwoSigmaSq = 0.f;
+    DirectX::XMFLOAT2 Padding0 = { 0.f, 0.f };
 
     // when you update this, make sure to update the Blur Compute shader
 };

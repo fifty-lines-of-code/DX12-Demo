@@ -1460,18 +1460,12 @@ bool DX12Renderer::CreateBlurRootSignature() {
 	);
 	rootParameters[2].InitAsDescriptorTable(1, &uavRange);
 
-	// 2. Define the Static Sampler
-	// We clamp to the edges so the blur doesn't bleed random artifacts from outside the screen bounds
-	std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers;
-	DX12RendererHelper::GetStaticSamplers(samplers);
-	samplers[3].ShaderRegister = 0;
-
 	// 3. Serialize and Create the Root Signature
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
 		_countof(rootParameters),
 		rootParameters, 
-		1,
-		&samplers[3],
+		0,
+		nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_NONE
 	);
 
@@ -1550,7 +1544,7 @@ void DX12Renderer::DrawBlurPass() {
 
 	// Fetch the current back buffer
 	UINT currentBackBufferIdx = swapChain3->GetCurrentBackBufferIndex();
-	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[currentBackBufferIdx].Get();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentFrameResourceIndex].Get();
 
 	// Bind the Blur Descriptor Heap
 	ID3D12DescriptorHeap* heaps[] = { mBlurSRVUAVDescriptorHeap.Get() };
@@ -1566,14 +1560,24 @@ void DX12Renderer::DrawBlurPass() {
 
 	// blur constants
 	DX12BlurComputeConstants constants = {};
-	// set screen size
-	constants.ScreenSize = DirectX::XMFLOAT2(
-		(float)mWindowDimensions.Width, 
-		(float)mWindowDimensions.Height
-	);
+
+
+	// Blur constants 
 	// set radius intensity
 	// todo: move this out to somewhere else
-	constants.BlurRadius = 10; 
+	float blurRadius = 10.f;
+	constants.BlurRadius = (int) blurRadius;
+	// Standard deviation controls the spread
+	float sigma = blurRadius / 1.5f;
+	float twoSigmaSq = 2.0f * sigma * sigma;
+	float oneOverTwoSigmaSq = 1.0f / twoSigmaSq;
+	constants.OneOverTwoSigmaSq = oneOverTwoSigmaSq;
+	// set screen size
+	DirectX::XMFLOAT2 screenSize = DirectX::XMFLOAT2(
+		(float)mWindowDimensions.Width,
+		(float)mWindowDimensions.Height
+	);
+	constants.ScreenSize = screenSize;
 
 	// ========================================================================
 	// PASS 1: HORIZONTAL BLUR
