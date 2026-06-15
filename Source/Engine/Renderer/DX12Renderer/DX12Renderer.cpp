@@ -1587,7 +1587,7 @@ void DX12Renderer::DrawBlurPass() {
 
 	// Fetch the current back buffer
 	UINT currentBackBufferIdx = swapChain3->GetCurrentBackBufferIndex();
-	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentFrameResourceIndex].Get();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[currentBackBufferIdx].Get();
 
 	// Bind the Blur Descriptor Heap
 	ID3D12DescriptorHeap* heaps[] = { mBlurSRVUAVDescriptorHeap.Get() };
