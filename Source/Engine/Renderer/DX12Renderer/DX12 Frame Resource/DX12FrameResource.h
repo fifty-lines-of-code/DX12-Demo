@@ -2,7 +2,7 @@
 
 #include "../DX12 Upload Buffers/DX12DefaultUploadBuffer.h"
 #include "../DX12 Upload Buffers/DX12StructuredUploadBuffer.h"
-#include "DX12ResourceDataStructures.h"
+#include "../DX12ResourceDataStructures.h"
 
 // Copyright: Frank Luna
 

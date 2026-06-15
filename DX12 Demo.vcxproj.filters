@@ -244,6 +244,12 @@
     <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass">
       <UniqueIdentifier>{79a91fca-8590-45ef-9d48-11baf5f9eb03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug System Pass">
+      <UniqueIdentifier>{242693ba-6ae9-4aeb-b609-0dc7008c8da1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Debug System">
+      <UniqueIdentifier>{d233ff54-66e5-4958-8060-ec9f135542bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -438,8 +444,14 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12ResourceDataStructures.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource</Filter>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug System Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12ResourceDataStructures.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -541,6 +553,12 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Frame Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Debug System</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

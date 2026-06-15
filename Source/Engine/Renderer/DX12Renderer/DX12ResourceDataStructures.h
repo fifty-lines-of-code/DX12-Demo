@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DX12RendererHelper.h"
+#include "DX12RendererHelper.h"
 
 // Copyright: Frank Luna
 

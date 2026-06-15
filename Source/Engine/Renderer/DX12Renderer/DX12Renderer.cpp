@@ -678,6 +678,9 @@ void DX12Renderer::CreateCommandObjects() {
 			IID_PPV_ARGS(&mCommandQueue)
 		)
 	);
+	
+	// set the name of the command queue
+	mCommandQueue->SetName(L"Command Queue");
 
 	// create init and resize command allocator
 	ThrowIfFailed(
@@ -686,6 +689,9 @@ void DX12Renderer::CreateCommandObjects() {
 			IID_PPV_ARGS(mInitAndResizeCommandAllocator.GetAddressOf())
 		)
 	);
+
+	// set the name of the init and resize command allocator
+	mInitAndResizeCommandAllocator->SetName(L"Init and Resize Command Allocator");
 
 	// create command list
 	ThrowIfFailed(
@@ -697,6 +703,9 @@ void DX12Renderer::CreateCommandObjects() {
 			IID_PPV_ARGS(mCommandList.GetAddressOf())
 		)
 	);
+
+	// set the name of the command list
+	mCommandList->SetName(L"Command List");
 
 	// Start off in a closed state.  This is because the first time we refer 
 	// to the command list we will Reset it, and it needs to be closed before
@@ -1170,8 +1179,7 @@ bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharact
 	return true;
 }
 
-bool DX12Renderer::CreateDebugRootSignature()
-{
+bool DX12Renderer::CreateDebugRootSignature() {
 	CD3DX12_DESCRIPTOR_RANGE slotRootRanges[2];
 
 	// Range 0: The Structured Buffer SRV -> register(t0)
