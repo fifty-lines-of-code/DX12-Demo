@@ -157,26 +157,33 @@ void DX12Renderer::Shutdown() {
 		resource.reset();
 	}
 	mCurrentFrameResource = nullptr;
-	for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
-		uint32_t id = it->first;
-		auto& meshResource = it->second;
-
-		meshResource->VertexBufferGPU.Reset();
-		meshResource->IndexBufferGPU.Reset();
+	for (auto& pair : mMeshResourceMap) {
+		pair.second->VertexBufferGPU.Reset();
+		pair.second->IndexBufferGPU.Reset();
 	}
+	mBlurPipelineStateObject.Reset();
+	mDebugPipelineStateObject.Reset();
 	mPipelineStateObject.Reset();
+	mBlurCsByteCode.Reset();
+	mDebugPsByteCode.Reset();
+	mDebugVsByteCode.Reset();
 	mpsByteCode.Reset();
 	mvsByteCode.Reset();
+	mBlurRootSignature.Reset();
+	mDebugRootSignature.Reset();
 	mRootSignature.Reset();
+	mBlurScratchTextureResource.Reset();
 	mDepthStencilBuffer.Reset();
 	for (UINT i = 0; i < SwapChainBufferCount; ++i) {
-		mSwapChainBuffer[i].Reset();
+		mSwapChainBuffers[i].Reset();
 	}
-	for (auto texture : mTextures) {
+	for (auto& texture : mTextures) {
 		if (texture.Resource != nullptr) {
 			texture.Resource.Reset();
 		}
 	}
+	mBlurSRVUAVDescriptorHeap.Reset();
+	mDebugCBVSRVDescriptorHeap.Reset();
 	mCBVSRVDescriptorHeap.Reset();
 	mDSVDescriptorHeap.Reset();
 	mRTVDescriptorHeap.Reset();
@@ -208,7 +215,6 @@ void DX12Renderer::PrepareForUpdate() {
 		CloseHandle(eventHandle);
 	}
 }
-
 
 void DX12Renderer::UpdatePerPassCb(void* data, size_t dataSize) const {
 	mCurrentFrameResource->mPerPassCB.CopyData(0, data);
@@ -248,7 +254,7 @@ void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 	
 	// transition this frame's back buffer to render target
-	ID3D12Resource* currentBackBuffer = mSwapChainBuffer[mCurrentBackBuffer].Get();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBuffer].Get();
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		currentBackBuffer,
@@ -351,6 +357,9 @@ bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityInd
 }
 
 bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
+	// todo: remove this from here in the future
+	DrawBlurPass();
+
 	// Grab the active command list for the current frame
 	auto cmdList = mCommandList.Get();
 
@@ -384,7 +393,7 @@ bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
 }
 
 void DX12Renderer::EndFrame() {
-	ID3D12Resource* currentBackBuffer = mSwapChainBuffer[mCurrentBackBuffer].Get();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBuffer].Get();
 
 	// transition the current back buffer to present
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -417,30 +426,30 @@ void DX12Renderer::EndFrame() {
 }
 
 void DX12Renderer::OnResize(UINT width, UINT height) {
+	// make sure we have a valid device
 	if (mDX12Device == nullptr) { return; }
 
 	mWindowDimensions.Width = width;
 	mWindowDimensions.Height = height;
 
-	// ensure if we have devicewe also have swap chain, allocator
+	// make sure we have a valid swap chain and command allocator
 	assert(mSwapChain);
 	assert(mInitAndResizeCommandAllocator);
 
-	// flush before changing any resources
+	// flush all preivous commands
 	FlushCommandQueue();
 
-	// reset command list allocator
-	ThrowIfFailed(
-		mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr)
-	);
+	// reset the command allocator
+	ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
-	// release the previous resources
+	// reset the back buffers
 	for (int i = 0; i < SwapChainBufferCount; ++i) {
-		mSwapChainBuffer[i].Reset();
+		mSwapChainBuffers[i].Reset();
 	}
+	// reset the depth stencil buffer
 	mDepthStencilBuffer.Reset();
 
-	// resize the swap chain
+	// resize the actual back buffers
 	ThrowIfFailed(
 		mSwapChain->ResizeBuffers(
 			SwapChainBufferCount,
@@ -453,23 +462,31 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 
 	mCurrentBackBuffer = 0;
 
-	// create the rtv for each buffer
-	CD3DX12_CPU_DESCRIPTOR_HANDLE mRTVHeapHandle(mRTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
+	CD3DX12_CPU_DESCRIPTOR_HANDLE mRTVHeapHandle(
+		mRTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 	);
+
+	// recreate the back buffer views
 	for (int i = 0; i < SwapChainBufferCount; ++i) {
-		ThrowIfFailed(
-			mSwapChain->GetBuffer(
-				i,
-				IID_PPV_ARGS(&mSwapChainBuffer[i])
-			)
-		);
+		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffers[i])));
 		mDX12Device->CreateRenderTargetView(
-			mSwapChainBuffer[i].Get(),
+			mSwapChainBuffers[i].Get(), 
 			nullptr,
 			mRTVHeapHandle
 		);
+
+		mSwapChainBuffers[i].Get()->SetName(
+			(L"Swap Chain Back Buffer View: " + std::to_wstring(i)).c_str()
+		);
 		mRTVHeapHandle.Offset(1, mRtvDescriptorSize);
 	}
+
+	// clear the blur scratch texture and recreate the teture and the descriptors
+	// this is because our back buffer and scratch texture both have been
+	// recreated with the new screen dimensions
+	mBlurScratchTextureResource.Reset();
+	CreateBlurScratchTexture();
+	CreateBlurTextureViewDescriptors();
 
 	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -486,9 +503,8 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 	//   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
 	// we need to create the depth buffer resource with a typeless format.  
 	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-
-	depthStencilDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	depthStencilDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -508,6 +524,7 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 			IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())
 		)
 	);
+	mDepthStencilBuffer.Get()->SetName(L"Depth Stencil Buffer");
 
 	// Create descriptor to mip level 0 of entire resource using the format of the resource.
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
@@ -516,7 +533,7 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 	dsvDesc.Format = mDepthStencilFormat;
 	dsvDesc.Texture2D.MipSlice = 0;
 	mDX12Device->CreateDepthStencilView(
-		mDepthStencilBuffer.Get(),
+		mDepthStencilBuffer.Get(), 
 		&dsvDesc, 
 		mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 	);
@@ -527,17 +544,14 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 		D3D12_RESOURCE_STATE_COMMON, 
 		D3D12_RESOURCE_STATE_DEPTH_WRITE
 	);
-	mCommandList->ResourceBarrier(
-		1,
-		&depthBufferBarrier
-	);
+	mCommandList->ResourceBarrier(1, &depthBufferBarrier);
 
-	// Execute the resize commands.
+	// close the command list and execute all commands we're recorded here
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-	// Wait until resize is complete.
+	// flush the command queue before we begin drawing
 	FlushCommandQueue();
 
 	// Update the viewport transform to cover the client area.
@@ -691,40 +705,54 @@ void DX12Renderer::CreateCommandObjects() {
 }
 
 void DX12Renderer::CreateSwapChain() {
-	// Release the previous swapchain we will be recreating.
+	// Release the previous swapchain as we will be recreating.
 	mSwapChain.Reset();
 
-	DXGI_SWAP_CHAIN_DESC sd;
-	sd.BufferDesc.Width = mWindowDimensions.Width;
-	sd.BufferDesc.Height = mWindowDimensions.Height;
-	sd.BufferDesc.RefreshRate.Numerator = 60;
-	sd.BufferDesc.RefreshRate.Denominator = 1;
-	sd.BufferDesc.Format = mBackBufferFormat;
-	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	sd.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	sd.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	DXGI_SWAP_CHAIN_DESC1 sd = {};
+	sd.Width = mWindowDimensions.Width;
+	sd.Height = mWindowDimensions.Height;
+	sd.Format = mBackBufferFormat;
+	sd.Stereo = FALSE;
+	sd.SampleDesc.Count = 1;
+	sd.SampleDesc.Quality = 0;
+
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+
 	sd.BufferCount = SwapChainBufferCount;
-	sd.OutputWindow = mhMainWnd;
-	sd.Windowed = true;
+	sd.Scaling = DXGI_SCALING_STRETCH;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	sd.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-	// Note: Swap chain uses queue to perform flush.
+	ComPtr<IDXGIFactory2> factory2;
+	ThrowIfFailed(mdxgiFactory.As(&factory2));
+
+	ComPtr<IDXGISwapChain1> swapChain1;
 	ThrowIfFailed(
-		mdxgiFactory->CreateSwapChain(
+		factory2->CreateSwapChainForHwnd(
 			mCommandQueue.Get(),
+			mhMainWnd,
 			&sd,
-			mSwapChain.GetAddressOf()
+			nullptr,
+			nullptr,
+			&swapChain1
 		)
+	);
+
+	ThrowIfFailed(swapChain1.As(&mSwapChain));
+
+	mSwapChain->SetPrivateData(
+		WKPDID_D3DDebugObjectName,
+		sizeof("Swap Chain") - 1,
+		"Swap Chain"
 	);
 
 	// Prevent DXGI from monitoring the message queue and hijacking Alt+Enter 
 	// This ensures our custom F and ESC windowing states function correctly.
-	ThrowIfFailed(
-		mdxgiFactory->MakeWindowAssociation(mhMainWnd, DXGI_MWA_NO_ALT_ENTER)
-	);
+	ThrowIfFailed(mdxgiFactory->MakeWindowAssociation(
+		mhMainWnd,
+		DXGI_MWA_NO_ALT_ENTER
+	));
 }
 
 void DX12Renderer::CreateRtvDsvDescriptorHeaps() {
@@ -1005,8 +1033,7 @@ bool DX12Renderer::CreateShadersAndInputLayout() {
 
 bool DX12Renderer::CreatePipelineStateObject() {
 	// describe the pso
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
 	psoDesc.pRootSignature = mRootSignature.Get();
 	psoDesc.VS =
@@ -1231,8 +1258,7 @@ bool DX12Renderer::CreateDebugShadersAndInputLayout() {
 
 bool DX12Renderer::CreateDebugPipelineStateObject() {
 	// describe the debug pso
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
 	psoDesc.pRootSignature = mDebugRootSignature.Get();
 	psoDesc.VS =
@@ -1283,6 +1309,450 @@ bool DX12Renderer::CreateDebugPipelineStateObject() {
 	);
 
 	return true;
+}
+
+bool DX12Renderer::SetupBlurPipeline() {
+
+	if (!CreateBlurDescriptorHeap()) { return false; }
+	if (!CreateBlurRootSignature()) { return false; }
+	if (!CreateBlurShaders()) { return false; }
+	if (!CreateBlurPipelineStateObject()) { return false; }
+
+	return true;
+}
+
+bool DX12Renderer::CreateBlurScratchTexture() {
+	D3D12_RESOURCE_DESC scratchDesc = {};
+	scratchDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	scratchDesc.Alignment = 0;
+	scratchDesc.Width = mWindowDimensions.Width;
+	scratchDesc.Height = mWindowDimensions.Height;
+	// size of 2 because we want to write to slice 0 in Pass 1, and
+	// read from slice 0 and write to slice 1 in pass 2
+	scratchDesc.DepthOrArraySize = 2;   
+	// Post-processing targets do not use mips
+	scratchDesc.MipLevels = 1;          
+	scratchDesc.Format = mBackBufferFormat;
+	scratchDesc.SampleDesc.Count = 1;
+	scratchDesc.SampleDesc.Quality = 0;
+	scratchDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+	// We need UAV access to this one as we'll write to it in Pass 1 (Horizontal)
+	// Pass 2 will read it as a SRV
+	scratchDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+
+	HRESULT hr = mDX12Device->CreateCommittedResource(
+		&defaultHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&scratchDesc,
+		D3D12_RESOURCE_STATE_COMMON, // Standard starting resource state
+		nullptr,                     
+		IID_PPV_ARGS(&mBlurScratchTextureResource)
+	);
+	ThrowIfFailed(hr);
+
+	mBlurScratchTextureResource.Get()->SetName(L"Blur Scratch Texture Resource");
+
+	return true;
+}
+
+bool DX12Renderer::CreateBlurDescriptorHeap() {
+
+	// 3 for our scratch buffer we'll write to and read from
+	// 2 for reading the back buffer (2 since we are double buffered)
+	UINT numberOfDescriptors = 5;
+
+	// Describe the CBV descriptor heap
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+	cbvHeapDesc.NumDescriptors = numberOfDescriptors;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.NodeMask = 0;
+
+	// Create the CBV descriptor heap
+	ThrowIfFailed(
+		mDX12Device->CreateDescriptorHeap(
+			&cbvHeapDesc,
+			IID_PPV_ARGS(&mBlurSRVUAVDescriptorHeap)
+		)
+	);
+
+	return true;
+}
+
+bool DX12Renderer::CreateBlurTextureViewDescriptors() {
+	// we have 5 descriptors
+	
+	// 1. Bake the Backbuffer SRVs into Slots 0 and 1
+	D3D12_SHADER_RESOURCE_VIEW_DESC bbSrvDesc = {};
+	bbSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	bbSrvDesc.Format = mBackBufferFormat;
+	bbSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	bbSrvDesc.Texture2D.MostDetailedMip = 0;
+	bbSrvDesc.Texture2D.MipLevels = 1;
+
+	for (int i = 0; i < SwapChainBufferCount; ++i) {
+		CD3DX12_CPU_DESCRIPTOR_HANDLE hBbCpu(
+			mBlurSRVUAVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+			i,
+			mCbvSrvUavDescriptorSize
+		);
+		mDX12Device->CreateShaderResourceView(mSwapChainBuffers[i].Get(), &bbSrvDesc, hBbCpu);
+	}
+
+	// 2. Bake the Texture Array Views into Slots 2, 3, and 4
+	// Slot 2: SRV targeting Texture Array Slice 0 (Pass 2 Read source)
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc0 = {};
+	srvDesc0.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc0.Format = mBackBufferFormat;
+	srvDesc0.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc0.Texture2DArray.MostDetailedMip = 0;
+	srvDesc0.Texture2DArray.MipLevels = 1;
+	srvDesc0.Texture2DArray.FirstArraySlice = 0;
+	srvDesc0.Texture2DArray.ArraySize = 1;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSlot2(
+		mBlurSRVUAVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		2, 
+		mCbvSrvUavDescriptorSize
+	);
+	mDX12Device->CreateShaderResourceView(
+		mBlurScratchTextureResource.Get(), 
+		&srvDesc0, 
+		hCpuSlot2
+	);
+
+	// Slot 3: UAV targeting Texture Array Slice 0 (Pass 1 Write target)
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc0 = {};
+	uavDesc0.Format = mBackBufferFormat;
+	uavDesc0.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+	uavDesc0.Texture2DArray.MipSlice = 0;
+	uavDesc0.Texture2DArray.FirstArraySlice = 0;
+	uavDesc0.Texture2DArray.ArraySize = 1;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSlot3(
+		mBlurSRVUAVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		3, 
+		mCbvSrvUavDescriptorSize
+	);
+	mDX12Device->CreateUnorderedAccessView(
+		mBlurScratchTextureResource.Get(),
+		nullptr,
+		&uavDesc0, 
+		hCpuSlot3
+	);
+
+	// Slot 4: UAV targeting Texture Array Slice 1 (Pass 2 Write target)
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc1 = {};
+	uavDesc1.Format = mBackBufferFormat;
+	uavDesc1.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+	uavDesc1.Texture2DArray.MipSlice = 0;
+	uavDesc1.Texture2DArray.FirstArraySlice = 1;
+	uavDesc1.Texture2DArray.ArraySize = 1;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hCpuSlot4(
+		mBlurSRVUAVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 
+		4,
+		mCbvSrvUavDescriptorSize
+	);
+	mDX12Device->CreateUnorderedAccessView(
+		mBlurScratchTextureResource.Get(), 
+		nullptr,
+		&uavDesc1,
+		hCpuSlot4
+	);
+	
+	return true;
+}
+
+bool DX12Renderer::CreateBlurRootSignature() {
+	// 1. Define the parameters
+	// We need 3 parameters total: 1 for Root Constants, 2 for Descriptor Tables
+	CD3DX12_ROOT_PARAMETER rootParameters[3];
+
+	// Parameter 0: Root Constants (8 DWORDs = 8 32-bit variables)
+	// Maps directly to cbuffer BlurConstants : register(b0);
+	// See: DX12BlurComputeConstants
+	rootParameters[0].InitAsConstants(8, 0);
+
+	// Parameter 1: Input Texture Table (1 SRV)
+	// Maps to Texture2D gInputTexture : register(t0);
+	CD3DX12_DESCRIPTOR_RANGE srvRange;
+	srvRange.Init(
+		D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 
+		1, 
+		0, 
+		0
+	);
+	rootParameters[1].InitAsDescriptorTable(1, &srvRange);
+
+	// Parameter 2: Output Texture Table (1 UAV)
+	// Maps to RWTexture2D gOutputTexture : register(u0);
+	CD3DX12_DESCRIPTOR_RANGE uavRange;
+	uavRange.Init(
+		D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 
+		1, 
+		0, 
+		0
+	);
+	rootParameters[2].InitAsDescriptorTable(1, &uavRange);
+
+	// NOTE: we do not use any samplers here as we will be reading the (rgba) value directly
+	// from the 2D Texture using thread.xy
+	// Maybe we still need samplers? I am not sure.
+
+	// 3. Serialize and Create the Root Signature
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+		_countof(rootParameters),
+		rootParameters, 
+		0,
+		nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_NONE
+	);
+
+	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(),
+		errorBlob.GetAddressOf()
+	);
+
+	if (FAILED(hr))
+	{
+		if (errorBlob)
+		{
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+		}
+		return false;
+	}
+
+	hr = mDX12Device->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&mBlurRootSignature)
+	);
+	ThrowIfFailed(hr);
+
+	return true;
+}
+
+bool DX12Renderer::CreateBlurShaders() {
+	mBlurCsByteCode = DX12RendererHelper::CompileShader(
+		L"Source\\Resources\\Shaders\\Blur\\blur_cs.hlsl",
+		nullptr,
+		"CS_Main",
+		"cs_5_1"
+	);
+
+	return true;
+}
+
+bool DX12Renderer::CreateBlurPipelineStateObject() {
+
+	D3D12_COMPUTE_PIPELINE_STATE_DESC blurPsoDesc = {};
+
+	blurPsoDesc.pRootSignature = mBlurRootSignature.Get();
+	blurPsoDesc.CS =
+	{
+		reinterpret_cast<BYTE*>(mBlurCsByteCode->GetBufferPointer()),
+		mBlurCsByteCode->GetBufferSize()
+	};
+	blurPsoDesc.NodeMask = 0;
+	blurPsoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	blurPsoDesc.CachedPSO.pCachedBlob = nullptr;
+	blurPsoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
+
+	HRESULT hr = mDX12Device->CreateComputePipelineState(
+		&blurPsoDesc,
+		IID_PPV_ARGS(&mBlurPipelineStateObject)
+	);
+	ThrowIfFailed(hr);
+
+	return true;
+}
+
+void DX12Renderer::DrawBlurPass() {
+
+	auto cmdList = mCommandList.Get();
+
+	// get our swapchain as swapchain3 so we can call GetCurrentBackBufferIndex
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> swapChain3;
+	ThrowIfFailed(mSwapChain.As(&swapChain3));
+
+	// Fetch the current back buffer
+	UINT currentBackBufferIdx = swapChain3->GetCurrentBackBufferIndex();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentFrameResourceIndex].Get();
+
+	// Bind the Blur Descriptor Heap
+	ID3D12DescriptorHeap* heaps[] = { mBlurSRVUAVDescriptorHeap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	// Set our Blur Root Signature and active PSO
+	cmdList->SetComputeRootSignature(mBlurRootSignature.Get());
+	cmdList->SetPipelineState(mBlurPipelineStateObject.Get());
+
+	// Calculate the exact Dispatch thread grid counts (16x16 pixel blocks)
+	UINT groupCountX = static_cast<UINT>(ceil(mWindowDimensions.Width / 16.0f));
+	UINT groupCountY = static_cast<UINT>(ceil(mWindowDimensions.Height / 16.0f));
+
+	// blur constants
+	DX12BlurComputeConstants constants = {};
+
+	// set radius intensity
+	// todo: move this out to somewhere else
+	float blurRadius = 10.f;
+	constants.BlurRadius = (int) blurRadius;
+	// Standard deviation controls the spread
+	float sigma = blurRadius / 1.5f;
+	float twoSigmaSq = 2.0f * sigma * sigma;
+	float oneOverTwoSigmaSq = 1.0f / twoSigmaSq;
+	constants.OneOverTwoSigmaSq = oneOverTwoSigmaSq;
+	// set screen size
+	constants.ScreenSize = DirectX::XMFLOAT2(
+		(float)mWindowDimensions.Width,
+		(float)mWindowDimensions.Height
+	);;
+
+	// ========================================================================
+	// PASS 1: HORIZONTAL BLUR
+	// ========================================================================
+
+	D3D12_RESOURCE_BARRIER pass1Barriers[2] = {
+		// transition back buffer to non pixel resource so we can read it
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			currentBackBuffer, 
+			D3D12_RESOURCE_STATE_RENDER_TARGET, 
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+		),
+		// transition our scratch texture resource to unordered access so we can write to it
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			mBlurScratchTextureResource.Get(),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS // both slices
+		)
+	};
+	cmdList->ResourceBarrier(_countof(pass1Barriers), pass1Barriers);
+
+	// Setup Pass 1 Constant Data
+	constants.BlurDirection = DirectX::XMFLOAT2(1.0f, 0.0f); // Horizontal vector step
+	cmdList->SetComputeRoot32BitConstants(0, 8, &constants, 0);
+
+	// Bind Descriptor Tables using our heap handles
+	CD3DX12_GPU_DESCRIPTOR_HANDLE heapStart(
+		mBlurSRVUAVDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+	);
+
+	// Table 1 (t0): Points to Slot 0 or 1 for back buffer as UAV
+	CD3DX12_GPU_DESCRIPTOR_HANDLE backBufferAsUAV(
+		heapStart, 
+		currentBackBufferIdx,
+		mCbvSrvUavDescriptorSize
+	);
+	cmdList->SetComputeRootDescriptorTable(1, backBufferAsUAV);
+
+	// Table 2 (u0): Points to Slot 3 (Scratch Slice 0 as UAV)
+	CD3DX12_GPU_DESCRIPTOR_HANDLE scratchUAV(
+		heapStart, 
+		3, 
+		mCbvSrvUavDescriptorSize
+	);
+	cmdList->SetComputeRootDescriptorTable(2, scratchUAV);
+
+	// Unleash Pass 1 hardware threads
+	cmdList->Dispatch(groupCountX, groupCountY, 1);
+
+	// ========================================================================
+	// PASS 2: VERTICAL BLUR 
+	// ========================================================================
+
+	// Setup Pass 2 Constant Data
+	constants.BlurDirection = DirectX::XMFLOAT2(0.0f, 1.0f); // Vertical vector step
+	cmdList->SetComputeRoot32BitConstants(0, 8, &constants, 0);
+
+	// Table 1 (t0): Points to slice 0 of blur scratch descriptor (slot 2) to read it as SRV
+	CD3DX12_GPU_DESCRIPTOR_HANDLE scratchAsSRV(
+		heapStart, 
+		2,
+		mCbvSrvUavDescriptorSize
+	);
+	cmdList->SetComputeRootDescriptorTable(1, scratchAsSRV);
+
+	// Table 2 (u0): Points to Slot 4 (scratch slice 1 as UAV)
+	CD3DX12_GPU_DESCRIPTOR_HANDLE scratchAsUAV(
+		heapStart, 
+		4,
+		mCbvSrvUavDescriptorSize
+	);
+	cmdList->SetComputeRootDescriptorTable(2, scratchAsUAV);
+
+	// Pass 2 hardware threads
+	cmdList->Dispatch(groupCountX, groupCountY, 1);
+
+	// ========================================================================
+	// After PASS 2: Copy result of VERTICAL BLUR to back buffer
+	// ========================================================================
+
+	D3D12_RESOURCE_BARRIER midBarriers[3] = {
+		// transition slice 0 of our blur scratch resource to common
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			mBlurScratchTextureResource.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_COMMON,
+			0 // slice 0
+		),
+		// transition blur scratch resource slice 1 to copy source
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			mBlurScratchTextureResource.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+			D3D12_RESOURCE_STATE_COPY_SOURCE,
+			1
+		),
+		// transition the back buffer to copy dest
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			currentBackBuffer,
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 
+			D3D12_RESOURCE_STATE_COPY_DEST
+		)
+	};
+	mCommandList->ResourceBarrier(_countof(midBarriers), midBarriers);
+
+	// perform the copy from slice 1 of blur scratch to back buffer
+	CD3DX12_TEXTURE_COPY_LOCATION destLocation(currentBackBuffer, 0);
+	CD3DX12_TEXTURE_COPY_LOCATION sourceLocation(
+		mBlurScratchTextureResource.Get(),
+		1
+	); // Index 1 = Slice 1
+
+	// actual copy command
+	mCommandList->CopyTextureRegion(&destLocation, 0, 0, 0, &sourceLocation, nullptr);
+
+	// ========================================================================
+	// CLEANUP BARRIER: Return Backbuffer to Render Target state
+	// ========================================================================
+	// Bring the backbuffer back to its standard state so engine can keep drawing as usual
+	D3D12_RESOURCE_BARRIER cleanupBarriers[2] = {
+		// transition back buffer to render target
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			currentBackBuffer,
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		),
+		// transition slice 1 of blur scratch to common
+		// slice 0 has already been set to common (see line 1637)
+		CD3DX12_RESOURCE_BARRIER::Transition(
+			mBlurScratchTextureResource.Get(), 
+			D3D12_RESOURCE_STATE_COPY_SOURCE,
+			D3D12_RESOURCE_STATE_COMMON,
+			1
+		)
+	};
+	cmdList->ResourceBarrier(_countof(cleanupBarriers), cleanupBarriers);
 }
 
 void DX12Renderer::LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) {

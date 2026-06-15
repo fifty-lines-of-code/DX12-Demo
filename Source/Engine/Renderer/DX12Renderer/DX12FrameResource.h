@@ -58,6 +58,16 @@ struct DX12DebugSystemPerCharacterData {
     uint32_t Padding0;
 };
 
+struct DX12BlurComputeConstants {
+    DirectX::XMFLOAT2 ScreenSize = { 1.f, 1.f };
+    DirectX::XMFLOAT2 BlurDirection = { 1.f, 0.f };
+    int32_t BlurRadius = 5;
+    float OneOverTwoSigmaSq = 0.f;
+    DirectX::XMFLOAT2 Padding0 = { 0.f, 0.f };
+
+    // when you update this, make sure to update the Blur Compute shader
+};
+
 // Stores the resources needed for the CPU to build the command lists
 // for a frame.  
 struct DX12FrameResource

@@ -226,6 +226,9 @@
     <Filter Include="Source Files\Engine\Debug System">
       <UniqueIdentifier>{01c1bd44-2aa0-4c71-96b2-8f517577f749}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Shaders\Blur">
+      <UniqueIdentifier>{4bad4f0f-bb62-4d4a-9151-e1e34952259e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -418,7 +421,7 @@
       <Filter>Header Files\Engine\Debug System</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12StructuredUploadBuffer.h">
-      <Filter>Header Files\Engine\Renderer</Filter>
+      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -554,6 +557,9 @@
     </None>
     <None Include="Source\Resources\Shaders\Debug\debug_vs.hlsl">
       <Filter>Resource Files\Shaders\Debug System</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\Blur\blur_cs.hlsl">
+      <Filter>Resource Files\Shaders\Blur</Filter>
     </None>
   </ItemGroup>
 </Project>

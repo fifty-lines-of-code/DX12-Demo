@@ -83,10 +83,14 @@ namespace Engine {
 
 		if (!result) { return false; }
 
-		return mRenderer.SetupDebugPipeline(
+		result = mRenderer.SetupDebugPipeline(
 			DebugSystem::DebugLimits::MAX_CHARACTERS,
 			(uint32_t)EngineResources::TextureID::FONT
 		);
+
+		if (!result) { return false; }
+
+		return mRenderer.SetupBlurPipeline();
 	}
 
 	void EngineCore::UpdateInputSystemAndCamera(float deltaTime) {
