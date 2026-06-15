@@ -47,8 +47,8 @@ void CS_Main(uint3 dispatchThreadID : SV_DispatchThreadID) {
         float4 neighborColor = gReadTexture[neighborCoord];
 
         // calculate the weight
-
         float floatI = (float)i;
+
         // True Gaussian distribution formula: e^(-x^2 / (2*sigma^2))
         float weight = exp(-(floatI * floatI) * gOneOverTwoSigmaSq);
         

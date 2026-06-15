@@ -216,7 +216,6 @@ void DX12Renderer::PrepareForUpdate() {
 	}
 }
 
-
 void DX12Renderer::UpdatePerPassCb(void* data, size_t dataSize) const {
 	mCurrentFrameResource->mPerPassCB.CopyData(0, data);
 }
@@ -427,23 +426,30 @@ void DX12Renderer::EndFrame() {
 }
 
 void DX12Renderer::OnResize(UINT width, UINT height) {
+	// make sure we have a valid device
 	if (mDX12Device == nullptr) { return; }
 
 	mWindowDimensions.Width = width;
 	mWindowDimensions.Height = height;
 
+	// make sure we have a valid swap chain and command allocator
 	assert(mSwapChain);
 	assert(mInitAndResizeCommandAllocator);
 
+	// flush all preivous commands
 	FlushCommandQueue();
 
+	// reset the command allocator
 	ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
+	// reset the back buffers
 	for (int i = 0; i < SwapChainBufferCount; ++i) {
 		mSwapChainBuffers[i].Reset();
 	}
+	// reset the depth stencil buffer
 	mDepthStencilBuffer.Reset();
 
+	// resize the actual back buffers
 	ThrowIfFailed(
 		mSwapChain->ResizeBuffers(
 			SwapChainBufferCount,
@@ -460,6 +466,7 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 		mRTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 	);
 
+	// recreate the back buffer views
 	for (int i = 0; i < SwapChainBufferCount; ++i) {
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffers[i])));
 		mDX12Device->CreateRenderTargetView(
@@ -467,15 +474,21 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 			nullptr,
 			mRTVHeapHandle
 		);
-		mSwapChainBuffers[i].Get()->SetName(L"Swap Chain Back Buffer");
+
+		mSwapChainBuffers[i].Get()->SetName(
+			(L"Swap Chain Back Buffer View: " + std::to_wstring(i)).c_str()
+		);
 		mRTVHeapHandle.Offset(1, mRtvDescriptorSize);
 	}
 
-	// clear the blur scratch texture
+	// clear the blur scratch texture and recreate the teture and the descriptors
+	// this is because our back buffer and scratch texture both have been
+	// recreated with the new screen dimensions
 	mBlurScratchTextureResource.Reset();
 	CreateBlurScratchTexture();
 	CreateBlurTextureViewDescriptors();
 
+	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;
@@ -483,6 +496,12 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 	depthStencilDesc.Height = height;
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
+
+	// Correction 11/12/2016: SSAO chapter requires an SRV to the depth buffer to read from 
+	// the depth buffer.  Therefore, because we need to create two views to the same resource:
+	//   1. SRV format: DXGI_FORMAT_R24_UNORM_X8_TYPELESS
+	//   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
+	// we need to create the depth buffer resource with a typeless format.  
 	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	depthStencilDesc.SampleDesc.Count = 1;
 	depthStencilDesc.SampleDesc.Quality = 0;
@@ -507,6 +526,7 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 	);
 	mDepthStencilBuffer.Get()->SetName(L"Depth Stencil Buffer");
 
+	// Create descriptor to mip level 0 of entire resource using the format of the resource.
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -518,15 +538,23 @@ void DX12Renderer::OnResize(UINT width, UINT height) {
 		mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 	);
 
-	auto depthBufferBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	// Transition the resource from its initial state to be used as a depth buffer.
+	auto depthBufferBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		mDepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON, 
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	);
 	mCommandList->ResourceBarrier(1, &depthBufferBarrier);
 
+	// close the command list and execute all commands we're recorded here
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
+	// flush the command queue before we begin drawing
 	FlushCommandQueue();
 
+	// Update the viewport transform to cover the client area.
 	mScreenViewport.TopLeftX = 0;
 	mScreenViewport.TopLeftY = 0;
 	mScreenViewport.Width = static_cast<float>(width);
@@ -677,6 +705,7 @@ void DX12Renderer::CreateCommandObjects() {
 }
 
 void DX12Renderer::CreateSwapChain() {
+	// Release the previous swapchain as we will be recreating.
 	mSwapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC1 sd = {};
@@ -711,12 +740,19 @@ void DX12Renderer::CreateSwapChain() {
 	);
 
 	ThrowIfFailed(swapChain1.As(&mSwapChain));
+
 	mSwapChain->SetPrivateData(
 		WKPDID_D3DDebugObjectName,
 		sizeof("Swap Chain") - 1,
 		"Swap Chain"
 	);
-	ThrowIfFailed(mdxgiFactory->MakeWindowAssociation(mhMainWnd, DXGI_MWA_NO_ALT_ENTER));
+
+	// Prevent DXGI from monitoring the message queue and hijacking Alt+Enter 
+	// This ensures our custom F and ESC windowing states function correctly.
+	ThrowIfFailed(mdxgiFactory->MakeWindowAssociation(
+		mhMainWnd,
+		DXGI_MWA_NO_ALT_ENTER
+	));
 }
 
 void DX12Renderer::CreateRtvDsvDescriptorHeaps() {
@@ -1291,8 +1327,11 @@ bool DX12Renderer::CreateBlurScratchTexture() {
 	scratchDesc.Alignment = 0;
 	scratchDesc.Width = mWindowDimensions.Width;
 	scratchDesc.Height = mWindowDimensions.Height;
-	scratchDesc.DepthOrArraySize = 2;
-	scratchDesc.MipLevels = 1;          // Post-processing targets do not use mips
+	// size of 2 because we want to write to slice 0 in Pass 1, and
+	// read from slice 0 and write to slice 1 in pass 2
+	scratchDesc.DepthOrArraySize = 2;   
+	// Post-processing targets do not use mips
+	scratchDesc.MipLevels = 1;          
 	scratchDesc.Format = mBackBufferFormat;
 	scratchDesc.SampleDesc.Count = 1;
 	scratchDesc.SampleDesc.Quality = 0;
@@ -1364,7 +1403,7 @@ bool DX12Renderer::CreateBlurTextureViewDescriptors() {
 	}
 
 	// 2. Bake the Texture Array Views into Slots 2, 3, and 4
-	// Slot 2: SRV targeting Texture Array Element 0 (Pass 2 Horizontal Read source)
+	// Slot 2: SRV targeting Texture Array Slice 0 (Pass 2 Read source)
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc0 = {};
 	srvDesc0.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc0.Format = mBackBufferFormat;
@@ -1385,7 +1424,7 @@ bool DX12Renderer::CreateBlurTextureViewDescriptors() {
 		hCpuSlot2
 	);
 
-	// Slot 3: UAV targeting Texture Array Element 0 (Pass 1 Horizontal Write target)
+	// Slot 3: UAV targeting Texture Array Slice 0 (Pass 1 Write target)
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc0 = {};
 	uavDesc0.Format = mBackBufferFormat;
 	uavDesc0.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -1405,7 +1444,7 @@ bool DX12Renderer::CreateBlurTextureViewDescriptors() {
 		hCpuSlot3
 	);
 
-	// Slot 4: UAV targeting Texture Array Element 1 (Pass 2 Vertical Write target)
+	// Slot 4: UAV targeting Texture Array Slice 1 (Pass 2 Write target)
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc1 = {};
 	uavDesc1.Format = mBackBufferFormat;
 	uavDesc1.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -1459,6 +1498,10 @@ bool DX12Renderer::CreateBlurRootSignature() {
 		0
 	);
 	rootParameters[2].InitAsDescriptorTable(1, &uavRange);
+
+	// NOTE: we do not use any samplers here as we will be reading the (rgba) value directly
+	// from the 2D Texture using thread.xy
+	// Maybe we still need samplers? I am not sure.
 
 	// 3. Serialize and Create the Root Signature
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
@@ -1561,8 +1604,6 @@ void DX12Renderer::DrawBlurPass() {
 	// blur constants
 	DX12BlurComputeConstants constants = {};
 
-
-	// Blur constants 
 	// set radius intensity
 	// todo: move this out to somewhere else
 	float blurRadius = 10.f;
@@ -1573,11 +1614,10 @@ void DX12Renderer::DrawBlurPass() {
 	float oneOverTwoSigmaSq = 1.0f / twoSigmaSq;
 	constants.OneOverTwoSigmaSq = oneOverTwoSigmaSq;
 	// set screen size
-	DirectX::XMFLOAT2 screenSize = DirectX::XMFLOAT2(
+	constants.ScreenSize = DirectX::XMFLOAT2(
 		(float)mWindowDimensions.Width,
 		(float)mWindowDimensions.Height
-	);
-	constants.ScreenSize = screenSize;
+	);;
 
 	// ========================================================================
 	// PASS 1: HORIZONTAL BLUR
