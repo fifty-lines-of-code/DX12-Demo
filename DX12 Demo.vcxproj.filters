@@ -229,6 +229,21 @@
     <Filter Include="Resource Files\Shaders\Blur">
       <UniqueIdentifier>{4bad4f0f-bb62-4d4a-9151-e1e34952259e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers">
+      <UniqueIdentifier>{7ff0e114-179d-4aa5-b706-d3ab0416c9ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource">
+      <UniqueIdentifier>{7f0276f2-13fc-4e02-9934-01b7ee633ba6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass">
+      <UniqueIdentifier>{9f20687c-ba7b-405f-8325-f50c86fdda02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Frame Resource">
+      <UniqueIdentifier>{a97c7d0e-7e62-46d0-9ee0-31fb2b017192}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass">
+      <UniqueIdentifier>{79a91fca-8590-45ef-9d48-11baf5f9eb03}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -246,14 +261,8 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Source\DX12Demo.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
@@ -420,8 +429,17 @@
     <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h">
       <Filter>Header Files\Engine\Debug System</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12StructuredUploadBuffer.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12ResourceDataStructures.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -441,9 +459,6 @@
       <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp">
-      <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\EngineCore.cpp">
@@ -523,6 +538,9 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp">
       <Filter>Source Files\Engine\Debug System</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Frame Resource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

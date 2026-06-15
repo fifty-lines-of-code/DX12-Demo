@@ -1,9 +1,7 @@
 #pragma once
 
-#include <d3d12.h>
-#include "d3dx12.h"
-#include "../../../Helper/Helper.h"
-#include "DX12RendererHelper.h"
+#include "../d3dx12.h"
+#include "../DX12RendererHelper.h"
 
 // Copyright: Frank Luna
 

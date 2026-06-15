@@ -2,8 +2,8 @@
 
 #include "DDS Loader/DDSTextureLoader.h"
 #include <DirectXColors.h>
-#include "DX12DefaultUploadBuffer.h"
-#include "DX12FrameResource.h"
+#include "DX12 Upload BUffers/DX12DefaultUploadBuffer.h"
+#include "DX12 Frame Resource/DX12FrameResource.h"
 #include "DX12RendererHelper.h"
 #include <dxgidebug.h>
 #include <filesystem>
