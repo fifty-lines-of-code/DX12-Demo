@@ -7,25 +7,99 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
+	DX12DebugSystemPipelinePass::~DX12DebugSystemPipelinePass() {
+	}
+
 	bool DX12DebugSystemPipelinePass::OnInitialize(
-		const DebugSystemPipelinePassInitArgs& args
+		const PipelinePassInitArgs& args
 	) {
-		if (!CreateConstantBufferDescriptors(args)) { return false; }
-		if (!CreateDebugRootSignature(args)) { return false; }
+		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
+
+		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
+		if (!CreateDebugRootSignature(debugArgs)) { return false; }
 		if (!CreateShadersAndInputLayout()) { return false; }
-		if (!CreateDebugPipelineStateObject(args)) { return false; }
+		if (!CreatePipelineStateObject(debugArgs)) { return false; }
 
 		return true;
 	}
 
+	void DX12DebugSystemPipelinePass::ShutDown() {
+		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
+		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
+		if (mRootSignature != nullptr) { mRootSignature.Reset(); }
+		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
+
+		IDX12PipelinePass::ShutDown();
+	}
+
+	void DX12DebugSystemPipelinePass::Execute(
+		const DX12DebugSystemPipelinePassExecuteArgs& args
+	) {
+		// Grab the command allocator for the current frame
+		ID3D12CommandAllocator* allocator = mCommandAllocators[args.CurrentFrameIndex].Get();
+
+		mCommandList->Reset(allocator, mPipelineStateObject.Get());
+		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+		// set view port and scissor rect
+		mCommandList->RSSetViewports(1, &args.Viewport);
+		mCommandList->RSSetScissorRects(1, &args.ScissorRect);
+
+		// set the render target
+		mCommandList->OMSetRenderTargets(
+			1,
+			&args.BackBufferView,
+			true,
+			&args.DepthStencilView
+		);
+
+		// 1. Bind ONLY the debug heap—holding both the structured buffer and the font copy!
+		ID3D12DescriptorHeap* activeHeaps[] = { mDescriptorHeap.Get() };
+		mCommandList->SetDescriptorHeaps(1, activeHeaps);
+
+		// 2. Parameter 0: Direct Virtual Address for Constant Buffer
+		auto perPassResource = args.Resource;
+		mCommandList->SetGraphicsRootConstantBufferView(
+			0, 
+			perPassResource->GetGPUVirtualAddress()
+		);
+
+		// 3. Parameter 1: Structured Buffer table
+		CD3DX12_GPU_DESCRIPTOR_HANDLE sbHandle(
+			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+		);
+		sbHandle.Offset(args.CurrentFrameIndex, args.CbvSrvUavDescriptorSize);
+		mCommandList->SetGraphicsRootDescriptorTable(1, sbHandle);
+
+		// 4. Parameter 2: Font Texture table
+		CD3DX12_GPU_DESCRIPTOR_HANDLE fontHandle(
+			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+		);
+		fontHandle.Offset(
+			DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES,
+			args.CbvSrvUavDescriptorSize
+		);
+		mCommandList->SetGraphicsRootDescriptorTable(2, fontHandle);
+
+		mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+		// 5. Fire off the procedural magic
+		mCommandList->DrawInstanced(4, args.NumberOfCharacters, 0, 0);
+
+		// 6. Close the command list
+		//mCommandList->Close();
+	}
+
+#pragma region Private
+
 	bool DX12DebugSystemPipelinePass::CreateConstantBufferDescriptors(
-		const DebugSystemPipelinePassInitArgs& args
+		const DX12DebugSystemPipelinePassInitArgs& args
 	) {
 		uint32_t alignedSizeOfPerPassCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeof(DX12DebugSystemPerPassConstants));
 
 		// Compute the global total of descriptors across all frames
 		// (1 for SRV) * NoFrames + 1 for Font Atlaas
-		UINT numberOfDescriptors = (1 * args.NoFrameResources) + 1;
+		UINT numberOfDescriptors = (1 * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES) + 1;
 
 		// Describe the CBV descriptor heap
 		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
@@ -46,7 +120,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	bool DX12DebugSystemPipelinePass::CreateConstantBufferViews(
-		const DebugSystemPipelinePassInitArgs& args
+		const DX12DebugSystemPipelinePassInitArgs& args
 	) {
 		// create our srv per frame
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -63,12 +137,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
 		// Loop through each frame resource and bake the view into its assigned slot
-		for (UINT frameIndex = 0; frameIndex < args.NoFrameResources; ++frameIndex)
+		for (UINT frameIndex = 0; frameIndex < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frameIndex)
 		{
 			CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(
 				mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 			);
-			cpuHandle.Offset(frameIndex, args.CbvSrvUavDescriptorSize);
+			cpuHandle.Offset(
+				frameIndex, 
+				args.CbvSrvUavDescriptorSize
+			);
 
 			// Grab the raw GPU resource pointer from the active frame tracking element
 			auto perCharacterCbResource = args.CBResources[frameIndex];
@@ -84,11 +161,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// create Font Atlas View
 
 		// 1. Point to the new 4th slot at the very end of the debug heap
-		CD3DX12_CPU_DESCRIPTOR_HANDLE debugHeapFontCpuHandle(
+		CD3DX12_CPU_DESCRIPTOR_HANDLE heapFontCpuHandle(
 			mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
 		);
-		debugHeapFontCpuHandle.Offset(
-			args.NoFrameResources, 
+		heapFontCpuHandle.Offset(
+			DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES, 
 			args.CbvSrvUavDescriptorSize
 		);
 
@@ -119,14 +196,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		args.Device->CreateShaderResourceView(
 			resource, 
 			&fontSrvDesc, 
-			debugHeapFontCpuHandle
+			heapFontCpuHandle
 		);
 
 		return true;
 	}
 
 	bool DX12DebugSystemPipelinePass::CreateDebugRootSignature(
-		const DebugSystemPipelinePassInitArgs& args
+		const DX12DebugSystemPipelinePassInitArgs& args
 	) {
 		CD3DX12_DESCRIPTOR_RANGE slotRootRanges[2];
 
@@ -212,8 +289,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12DebugSystemPipelinePass::CreateDebugPipelineStateObject(
-		const DebugSystemPipelinePassInitArgs& args
+	bool DX12DebugSystemPipelinePass::CreatePipelineStateObject(
+		const DX12DebugSystemPipelinePassInitArgs& args
 	) {
 		// describe the debug pso
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -265,8 +342,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				IID_PPV_ARGS(&mPipelineStateObject)
 			)
 		);
+		mPipelineStateObject->SetName(L"Debug System Pipeline State Object");
 
 		return true;
 	}
 
+#pragma endregion
 }

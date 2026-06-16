@@ -1,28 +1,37 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include "../../DX12 Texture/DX12Texture.h"
+#include "../../DX12RendererConfig.h"
 #include "../IDX12PipelinePass.h"
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	struct DebugSystemPipelinePassInitArgs : public PipelinePassInitArgs {
-		uint32_t NoFrameResources;
+	struct DX12DebugSystemPipelinePassInitArgs : public PipelinePassInitArgs {
 		uint32_t DebugSystemMaxCharacters;
 		uint32_t FontAtlasIndex;
 		UINT CbvSrvUavDescriptorSize;
 		DX12Texture& FontAtlasTexture;
-		ID3D12Resource* CBResources[3];
+		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> CBResources;
+	};
+
+	struct DX12DebugSystemPipelinePassExecuteArgs : public IPipelinePassExecuteArgs {
+		ID3D12Resource* Resource;
+		uint32_t NumberOfCharacters;
 	};
 
 	class DX12DebugSystemPipelinePass : public IDX12PipelinePass {
 	public:
-		DX12DebugSystemPipelinePass() = default;
-		~DX12DebugSystemPipelinePass() = default;
+		~DX12DebugSystemPipelinePass();
 
 		bool OnInitialize(
-			const DebugSystemPipelinePassInitArgs& args
-		);
+			const PipelinePassInitArgs& args
+		) override;
+
+		void ShutDown() override;
+
+		void Execute(const DX12DebugSystemPipelinePassExecuteArgs& args);
 
 	private:
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
@@ -32,20 +41,20 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	private:
 		bool CreateConstantBufferDescriptors(
-			const DebugSystemPipelinePassInitArgs& args
+			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 
 		bool CreateConstantBufferViews(
-			const DebugSystemPipelinePassInitArgs& args
+			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 
 		bool CreateDebugRootSignature(
-			const DebugSystemPipelinePassInitArgs& args
+			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 
 		bool CreateShadersAndInputLayout();
-		bool CreateDebugPipelineStateObject(
-			const DebugSystemPipelinePassInitArgs& args
+		bool CreatePipelineStateObject(
+			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 	};
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 #include "Materials Manager/MaterialsManager.h"
 #include <memory>
 #include "../Entity/Mesh/Mesh.h"

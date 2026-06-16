@@ -153,20 +153,24 @@ bool DX12Renderer::InitializeDevice() {
 }
 
 void DX12Renderer::Shutdown() {
-	for (auto& resource : mFrameResources) {
-		resource.reset();
-	}
 	mCurrentFrameResource = nullptr;
+	for (auto& texture : mTextures) {
+		if (texture.Resource != nullptr) {
+			texture.Resource.Reset();
+		}
+	}
 	for (auto& pair : mMeshResourceMap) {
 		pair.second->VertexBufferGPU.Reset();
 		pair.second->IndexBufferGPU.Reset();
 	}
+	mDebugSystemPipelinePass.ShutDown();
+	mActiveFrameQueue.clear();
+	for (auto& resource : mFrameResources) {
+		resource.reset();
+	}
 	mBlurPipelineStateObject.Reset();
-	mDebugPipelineStateObject.Reset();
 	mPipelineStateObject.Reset();
 	mBlurCsByteCode.Reset();
-	mDebugPsByteCode.Reset();
-	mDebugVsByteCode.Reset();
 	mpsByteCode.Reset();
 	mvsByteCode.Reset();
 	mBlurRootSignature.Reset();
@@ -177,13 +181,7 @@ void DX12Renderer::Shutdown() {
 	for (UINT i = 0; i < SwapChainBufferCount; ++i) {
 		mSwapChainBuffers[i].Reset();
 	}
-	for (auto& texture : mTextures) {
-		if (texture.Resource != nullptr) {
-			texture.Resource.Reset();
-		}
-	}
 	mBlurSRVUAVDescriptorHeap.Reset();
-	mDebugCBVSRVDescriptorHeap.Reset();
 	mCBVSRVDescriptorHeap.Reset();
 	mDSVDescriptorHeap.Reset();
 	mRTVDescriptorHeap.Reset();
@@ -360,57 +358,79 @@ bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
 	// todo: remove this from here in the future
 	DrawBlurPass();
 
-	// Grab the active command list for the current frame
-	auto cmdList = mCommandList.Get();
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBuffer].Get();
+	auto backBufferView = CurrentBackBufferView();
+	auto depthStencilView = DepthStencilView();
 
-	cmdList->SetPipelineState(mDebugPipelineStateObject.Get());
-	cmdList->SetGraphicsRootSignature(mDebugRootSignature.Get());
+	Engine::EngineRenderer::DX12Renderer::DX12DebugSystemPipelinePassExecuteArgs args {
+		{
+			mCurrentFrameResourceIndex,
+			mCbvSrvUavDescriptorSize,
+			currentBackBuffer,
+			backBufferView,
+			depthStencilView,
+			mScreenViewport,
+			mScissorRect
+		},
+		mFrameResources[mCurrentFrameResourceIndex]->mDebugSystemPerPassCB.Resource(),
+		numberOfCharacters
+	};
 
-	// 1. Bind ONLY the debug heap—holding both the structured buffer and the font copy!
-	ID3D12DescriptorHeap* activeHeaps[] = { mDebugCBVSRVDescriptorHeap.Get() };
-	cmdList->SetDescriptorHeaps(1, activeHeaps);
+	mDebugSystemPipelinePass.Execute(args);
 
-	// 2. Parameter 0: Direct Virtual Address for Constant Buffer
-	auto perPassResource = mFrameResources[mCurrentFrameResourceIndex]->mDebugSystemPerPassCB.Resource();
-	cmdList->SetGraphicsRootConstantBufferView(0, perPassResource->GetGPUVirtualAddress());
-
-	// 3. Parameter 1: Structured Buffer table
-	CD3DX12_GPU_DESCRIPTOR_HANDLE sbHandle(mDebugCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	sbHandle.Offset(mCurrentFrameResourceIndex, mCbvSrvUavDescriptorSize);
-	cmdList->SetGraphicsRootDescriptorTable(1, sbHandle);
-
-	// 4. Parameter 2: Font Texture table
-	CD3DX12_GPU_DESCRIPTOR_HANDLE fontHandle(mDebugCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	fontHandle.Offset(mNumberOfFrameResources, mCbvSrvUavDescriptorSize);
-	cmdList->SetGraphicsRootDescriptorTable(2, fontHandle);
-
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
-	// 5. Fire off the procedural magic
-	cmdList->DrawInstanced(4, numberOfCharacters, 0, 0);
+	mActiveFrameQueue.push_back(&mDebugSystemPipelinePass);
 
 	return true;
 }
 
 void DX12Renderer::EndFrame() {
-	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBuffer].Get();
 
-	// transition the current back buffer to present
+	std::vector<ID3D12CommandList*> activeLists;
+	ID3D12GraphicsCommandList* commandList = mCommandList.Get();
+
+	// add the main command list to the active list
+	activeLists.push_back(commandList);
+
+	// use the last command list in the active frames queue to perform the 
+	// resource transition from render_target to present
+	for (int i = 0; i < mActiveFrameQueue.size(); ++i) {
+		// close the main command list once
+		if (i == 0) {
+			mCommandList->Close();
+		}
+
+		// if this is the final one, get a handle on it so we can 
+		// transition, but don't close it yet
+		if (i == (mActiveFrameQueue.size() - 1)) {
+			commandList = (ID3D12GraphicsCommandList*)mActiveFrameQueue.back()->GetCommandList();
+			activeLists.push_back(commandList);
+		}
+		// close all but the last, so (0...n-2) command lists
+		else {
+			((ID3D12GraphicsCommandList*)mActiveFrameQueue[i]->GetCommandList())->Close();
+			activeLists.push_back(mActiveFrameQueue[i]->GetCommandList());
+		}
+	}
+
+	// Record the transition to present directly onto the last command list
+	// be it the main one (for now) or one of the different ones
+	ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBuffer].Get();
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		currentBackBuffer,
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	);
+	commandList->ResourceBarrier(1, &barrier);
+	commandList->Close();
 
-	// Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &barrier);
+	// clear the queue for next pass
+	mActiveFrameQueue.clear();
 
-	// Done recording commands.
-	ThrowIfFailed(mCommandList->Close());
-
-	// Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	// Add the command list to the queue for execution
+	mCommandQueue->ExecuteCommandLists(
+		(UINT)activeLists.size(),
+		activeLists.data()
+	);
 
 	// swap the back and front buffers
 	ThrowIfFailed(mSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
@@ -837,6 +857,7 @@ bool DX12Renderer::SetupPipeline(
 
 	return true;
 }
+
 void DX12Renderer::CreateFrameResources(uint32_t numberOfEntities, uint32_t numberOfMaterials, uint32_t debugSystemPerPassCBCount, uint32_t debugSystemMaxCharacters) {
 	for (UINT i = 0; i < mNumberOfFrameResources; ++i) {
 		mFrameResources.push_back(
@@ -1081,240 +1102,34 @@ bool DX12Renderer::SetupDebugPipeline(
 	uint32_t debugSystemMaxCharacters,
 	uint32_t fontAtlasIndex
 ) {
-	if (!CreateDebugConstantBufferDescriptors(debugSystemMaxCharacters, fontAtlasIndex)) { return false; }
-	if (!CreateDebugRootSignature()) { return false; }
-	if (!CreateDebugShadersAndInputLayout()) { return false; }
-	if (!CreateDebugPipelineStateObject()) { return false; }
+	if (mDebugSystemPipelinePass.GetIsInitialized()) { return true; }
 
-	return true;
-}
-
-bool DX12Renderer::CreateDebugConstantBufferDescriptors(uint32_t debugSystemMaxCharacters, uint32_t fontAtlasIndex) {
-	uint32_t alignedSizeOfPerPassCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeof(DX12DebugSystemPerPassConstants));
-
-	// Compute the global total of descriptors across all frames
-	// (1 for SRV) * NoFrames + 1 for Font Atlaas
-	UINT numberOfDescriptors = (1 * mNumberOfFrameResources) + 1;
-
-	// Describe the CBV descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-	cbvHeapDesc.NumDescriptors = numberOfDescriptors;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.NodeMask = 0;
-
-	// Create the CBV descriptor heap
-	ThrowIfFailed(
-		mDX12Device->CreateDescriptorHeap(
-			&cbvHeapDesc,
-			IID_PPV_ARGS(&mDebugCBVSRVDescriptorHeap)
-		)
-	);
-
-	return CreateDebugConstantBufferViews(debugSystemMaxCharacters, fontAtlasIndex);
-}
-
-bool DX12Renderer::CreateDebugConstantBufferViews(uint32_t debugSystemMaxCharacters, uint32_t fontAtlasIndex) {
-	if (fontAtlasIndex >= mTextures.size()) { return false; }
-	// create our srv per frame
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-
-	srvDesc.Buffer.FirstElement = 0;
-	// The structural upper boundary limit of your glyph storage pool
-	srvDesc.Buffer.NumElements = debugSystemMaxCharacters;
-	// Tell the hardware the exact stride width of a single character vertex element
-	srvDesc.Buffer.StructureByteStride = sizeof(DX12DebugSystemPerCharacterData);
-	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
-	// Loop through each frame resource and bake the view into its assigned slot
-	for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(mDebugCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-		cpuHandle.Offset(frameIndex, mCbvSrvUavDescriptorSize);
-
-		// Grab the raw GPU resource pointer from the active frame tracking element
-		auto perCharacterCbResource = mFrameResources[frameIndex]->mDebugSystemPerCharacterCB.Resource();
-
-		// Instantiate the SRV hardware descriptor directly into the heap slot
-		mDX12Device->CreateShaderResourceView(perCharacterCbResource, &srvDesc, cpuHandle);
+	if (fontAtlasIndex >= mTextures.size() || !mTextures[fontAtlasIndex].IsLoaded) {
+		return false; 
 	}
 
-	// create Font Atlas View
+	const uint32_t noOfFrameResources = Engine::EngineRenderer::DX12Renderer::DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
+	std::array<ID3D12Resource*, noOfFrameResources> CBResources;
 
-	// 1. Point to the new 4th slot at the very end of the debug heap
-	CD3DX12_CPU_DESCRIPTOR_HANDLE debugHeapFontCpuHandle(mDebugCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	debugHeapFontCpuHandle.Offset(mNumberOfFrameResources, mCbvSrvUavDescriptorSize);
-
-	// 2. Set up Font texture view description
-	// todo: pass in the Font Atlas index
-	DX12Texture& tex = mTextures[fontAtlasIndex];
-	ID3D12Resource* resource;
-	D3D12_SHADER_RESOURCE_VIEW_DESC fontSrvDesc = {};
-
-	// if unloaded 
-	if (!tex.IsLoaded || tex.Resource == nullptr) {
-		fontSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
-		fontSrvDesc.Texture2D.MipLevels = 1;
-		resource = nullptr;
-	}
-	else {
-		fontSrvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
-		fontSrvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
-		resource = tex.Resource.Get();
+	for (uint32_t i = 0; i < noOfFrameResources; ++i) {
+		CBResources[i] = mFrameResources[i]->mDebugSystemPerCharacterCB.Resource();
 	}
 
-	// Create the Shader Resource View
-	fontSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	fontSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	fontSrvDesc.Texture2D.MostDetailedMip = 0;
-	fontSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-	mDX12Device->CreateShaderResourceView(resource, &fontSrvDesc, debugHeapFontCpuHandle);
-
-	return true;
-}
-
-bool DX12Renderer::CreateDebugRootSignature() {
-	CD3DX12_DESCRIPTOR_RANGE slotRootRanges[2];
-
-	// Range 0: The Structured Buffer SRV -> register(t0)
-	slotRootRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-
-	// Range 1: The Font Atlas Texture SRV -> register(t1)
-	slotRootRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-
-	CD3DX12_ROOT_PARAMETER rootParameters[3];
-
-	// Parameter 0: Direct Root CBV -> register(b0)
-	rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-
-	// Parameter 1: Descriptor Table pointing to your Structured Buffer range
-	rootParameters[1].InitAsDescriptorTable(1, &slotRootRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-
-	// Parameter 2: Descriptor Table pointing to your Font Texture range
-	rootParameters[2].InitAsDescriptorTable(1, &slotRootRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-
-	// Static Sampler for smooth texel mapping interpolation
-	std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers;
-	DX12RendererHelper::GetStaticSamplers(samplers);
-
-	// index 3 is the linear clamp we want
-	CD3DX12_STATIC_SAMPLER_DESC fontSampler = samplers[3];
-	// map to register(s0) since by default it's mapped to register 3
-	fontSampler.ShaderRegister = 0; 
-
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-		_countof(rootParameters),
-		rootParameters,
-		1,
-		&fontSampler,
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
-	);
-
-	ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(
-		&rootSigDesc,
-		D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(),
-		errorBlob.GetAddressOf()
-	);
-
-	if (errorBlob != nullptr)
-	{
-		// todo: Move to Logger
-		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-	}
-	ThrowIfFailed(hr);
-
-	ThrowIfFailed(
-		mDX12Device->CreateRootSignature(
-			0,
-			serializedRootSig->GetBufferPointer(),
-			serializedRootSig->GetBufferSize(),
-			IID_PPV_ARGS(&mDebugRootSignature)
-		)
-	);
-
-	return true;
-}
-
-bool DX12Renderer::CreateDebugShadersAndInputLayout() {
-	HRESULT hr = S_OK;
-
-	mDebugVsByteCode = DX12RendererHelper::CompileShader(
-		L"Source\\Resources\\Shaders\\Debug\\debug_vs.hlsl",
-		nullptr,
-		"VS_Main",
-		"vs_5_1"
-	);
-
-	mDebugPsByteCode = DX12RendererHelper::CompileShader(
-		L"Source\\Resources\\Shaders\\Debug\\debug_ps.hlsl", 
-		nullptr,
-		"PS_Main",
-		"ps_5_1"
-	);
-
-	return true;
-}
-
-bool DX12Renderer::CreateDebugPipelineStateObject() {
-	// describe the debug pso
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-
-	psoDesc.pRootSignature = mDebugRootSignature.Get();
-	psoDesc.VS =
-	{
-		reinterpret_cast<BYTE*>(mDebugVsByteCode->GetBufferPointer()),
-		mDebugVsByteCode->GetBufferSize()
-	};
-	psoDesc.PS =
-	{
-		reinterpret_cast<BYTE*>(mDebugPsByteCode->GetBufferPointer()),
-		mDebugPsByteCode->GetBufferSize()
+	Engine::EngineRenderer::DX12Renderer::DX12DebugSystemPipelinePassInitArgs dArgs{
+		{
+			mDX12Device.Get(),
+			mInitAndResizeCommandAllocator.Get(),
+			mBackBufferFormat,
+			mDepthStencilFormat
+		},
+		debugSystemMaxCharacters,
+		fontAtlasIndex,
+		mCbvSrvUavDescriptorSize,
+		mTextures[fontAtlasIndex],
+		CBResources
 	};
 
-	// disable culling
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-
-	// enable blending
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
-	psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-	// don't write depth values
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	psoDesc.DepthStencilState.DepthEnable = FALSE;
-
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = mBackBufferFormat;
-	psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	psoDesc.DSVFormat = mDepthStencilFormat;
-
-	// build the pso
-	ThrowIfFailed(
-		mDX12Device->CreateGraphicsPipelineState(
-			&psoDesc,
-			IID_PPV_ARGS(&mDebugPipelineStateObject)
-		)
-	);
+	mDebugSystemPipelinePass.Initialize(dArgs);
 
 	return true;
 }

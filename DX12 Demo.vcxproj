@@ -157,6 +157,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererConfig.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12ResourceDataStructures.h" />

@@ -12,6 +12,7 @@
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
+#include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
 #include "DX12 Texture/DX12Texture.h"
 #include <dxgi1_4.h>
 #include <fstream>
@@ -122,11 +123,10 @@ private:
 
 	std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
 	std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
-	D3D12_VIEWPORT mScreenViewport;
-	D3D12_RECT mScissorRect;
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
-	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
+	D3D12_VIEWPORT mScreenViewport;
+	D3D12_RECT mScissorRect;
 	UINT64 mCurrentFence = 0;
 
 	// DX12
@@ -140,7 +140,6 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mDebugCBVSRVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mBlurSRVUAVDescriptorHeap;
 	ComPtr<ID3D12Resource> mSwapChainBuffers[SwapChainBufferCount];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
@@ -150,12 +149,13 @@ private:
 	ComPtr<ID3D12RootSignature> mBlurRootSignature = nullptr;
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	ComPtr<ID3DBlob> mDebugVsByteCode = nullptr;
-	ComPtr<ID3DBlob> mDebugPsByteCode = nullptr;
 	ComPtr<ID3DBlob> mBlurCsByteCode = nullptr;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
-	ComPtr<ID3D12PipelineState> mDebugPipelineStateObject = nullptr;
 	ComPtr<ID3D12PipelineState> mBlurPipelineStateObject = nullptr;
+
+	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
+	std::vector<Engine::EngineRenderer::DX12Renderer::IDX12PipelinePass*> mActiveFrameQueue;
+	Engine::EngineRenderer::DX12Renderer::DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
 
 	WindowDimensions mWindowDimensions;
 	HWND mhMainWnd = nullptr;
@@ -212,19 +212,6 @@ private:
 
 	bool CreateShadersAndInputLayout();
 	bool CreatePipelineStateObject();
-
-	// debug UI pipeline setup
-	bool CreateDebugConstantBufferDescriptors(
-		uint32_t debugSystemMaxCharacters,
-		uint32_t fontAtlasIndex
-	);
-	bool CreateDebugConstantBufferViews(
-		uint32_t alignedSizeOfPerPassCb,
-		uint32_t debugSystemMaxCharacters
-	);
-	bool CreateDebugRootSignature();
-	bool CreateDebugShadersAndInputLayout();
-	bool CreateDebugPipelineStateObject();
 
 	// blur effect pipeline setup
 	bool CreateBlurDescriptorHeap();

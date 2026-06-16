@@ -5,7 +5,15 @@
 #include <string>
 #include <windows.h>
 
+enum class PipelinePasses: uint32_t  {
+	MAIN_3D_SCENE,
+	DEBUG_SYSTEM,
+	BLUR_UI,
+	COUNT
+};
+
 class IRenderer {
+
 public:
 	virtual ~IRenderer() {}
 
