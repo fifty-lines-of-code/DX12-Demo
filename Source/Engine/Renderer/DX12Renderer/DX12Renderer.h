@@ -43,173 +43,176 @@ struct WindowDimensions {
 	~WindowDimensions() {}
 };
 
-class DX12Renderer : public IRenderer {
+namespace Engine::EngineRenderer::DX12Renderer {
 
-public: 		
-	DX12Renderer();
-	~DX12Renderer();
+	class DX12Renderer : public IRenderer {
 
-	bool Initialize(
-		HWND mainHwnd,
-		int numberOfFrameResources, 
-		UINT screenWidth,
-		UINT screenHeight
-	) override;
+	public:
+		DX12Renderer();
+		~DX12Renderer();
 
-	void FinishInitialize() override;
-	bool LoadTexture(std::wstring& filename, uint32_t id) override;
+		bool Initialize(
+			HWND mainHwnd,
+			int numberOfFrameResources,
+			UINT screenWidth,
+			UINT screenHeight
+		) override;
 
-	bool SetupPipeline(
-		uint32_t numberOfEntities,
-		uint32_t numberOfMaterials,
-		uint32_t numberOfTextures, 
-		uint32_t sizeOfPerMaterialCBV,
-		uint32_t debugSystemPerPassCBCount,
-		uint32_t debugSystemMaxCharacters
-	);
+		void FinishInitialize() override;
+		bool LoadTexture(std::wstring& filename, uint32_t id) override;
 
-	bool SetupDebugPipeline(
-		uint32_t debugSystemMaxCharacters,
-		uint32_t fontAtlasIndex
-	);
+		bool SetupPipeline(
+			uint32_t numberOfEntities,
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t sizeOfPerMaterialCBV,
+			uint32_t debugSystemPerPassCBCount,
+			uint32_t debugSystemMaxCharacters
+		);
 
-	bool SetupBlurPipeline();
+		bool SetupDebugPipeline(
+			uint32_t debugSystemMaxCharacters,
+			uint32_t fontAtlasIndex
+		);
 
-	void LoadGeometry(
-		uint32_t meshID,
-		uint16_t sizeOfVertex, 
-		uint32_t vertexBufferByteSize,
-		void* vertices,
-		uint32_t indexBufferByteSize,
-		void* indices
-	) override;
+		bool SetupBlurPipeline();
 
-	void PrepareForUpdate() override;
-	void UpdatePerPassCb(void* data, size_t dataSize) const override;
+		void LoadGeometry(
+			uint32_t meshID,
+			uint16_t sizeOfVertex,
+			uint32_t vertexBufferByteSize,
+			void* vertices,
+			uint32_t indexBufferByteSize,
+			void* indices
+		) override;
 
-	void UpdatePerRenderItemCb(
-		uint32_t renderItemIndex,
-		void* data, 
-		uint32_t perRenderItemCbSize
-	) override;
+		void PrepareForUpdate() override;
+		void UpdatePerPassCb(void* data, size_t dataSize) const override;
 
-	void UpdatePerMaterialCb(
-		uint32_t materialIndex, 
-		void* data, 
-		uint32_t perMaterialCbSize
-	) override;
+		void UpdatePerRenderItemCb(
+			uint32_t renderItemIndex,
+			void* data,
+			uint32_t perRenderItemCbSize
+		) override;
 
-	void UpdateDebugSystemPerPassCb(void* data) override;
-	void UpdateDebugSystemStructuredBuffer(
-		uint32_t count,
-		const void* data
-	);
+		void UpdatePerMaterialCb(
+			uint32_t materialIndex,
+			void* data,
+			uint32_t perMaterialCbSize
+		) override;
 
-	void BeginFrame(uint32_t numberOfMaterials) override;
-	bool Draw(
-		uint32_t meshID, 
-		uint32_t indexCount,
-		uint32_t entityIndex, 
-		uint32_t entityCount
-	) override;
+		void UpdateDebugSystemPerPassCb(void* data) override;
+		void UpdateDebugSystemStructuredBuffer(
+			uint32_t count,
+			const void* data
+		);
 
-	bool DrawDebugSystem(uint32_t numberOfCharacters) override;
-	void EndFrame() override;
-	void Shutdown() override;
-	void OnResize(UINT width, UINT height) override;
+		void BeginFrame(uint32_t numberOfMaterials) override;
+		bool Draw(
+			uint32_t meshID,
+			uint32_t indexCount,
+			uint32_t entityIndex,
+			uint32_t entityCount
+		) override;
 
-private:
-	DX12FrameResource* mCurrentFrameResource = nullptr;
+		bool DrawDebugSystem(uint32_t numberOfCharacters) override;
+		void EndFrame() override;
+		void Shutdown() override;
+		void OnResize(UINT width, UINT height) override;
 
-	std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
-	std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
+	private:
+		DX12FrameResource* mCurrentFrameResource = nullptr;
 
-	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
-	D3D12_VIEWPORT mScreenViewport;
-	D3D12_RECT mScissorRect;
-	UINT64 mCurrentFence = 0;
+		std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
+		std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
 
-	// DX12
-	ComPtr<IDXGIFactory4> mdxgiFactory;
-	ComPtr<ID3D12Device> mDX12Device;
-	ComPtr<ID3D12Fence> mFence;
-	ComPtr<ID3D12CommandQueue> mCommandQueue;
-	ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> mCommandList;
-	ComPtr<IDXGISwapChain> mSwapChain;
-	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
-	ComPtr<ID3D12Resource> mSwapChainBuffers[Engine::EngineRenderer::DX12Renderer::DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
-	ComPtr<ID3D12Resource> mDepthStencilBuffer;
-	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-	ComPtr<ID3DBlob> mvsByteCode = nullptr;
-	ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
+		std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
+		D3D12_VIEWPORT mScreenViewport;
+		D3D12_RECT mScissorRect;
+		UINT64 mCurrentFence = 0;
 
-	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
-	Engine::EngineRenderer::DX12Renderer::DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
-	Engine::EngineRenderer::DX12Renderer::DX12BlurPipelinePass mBlurPipelinePass;
-	Engine::EngineRenderer::DX12Renderer::DX12PipelinePassAggregator mPiplinePassAggregator;
+		// DX12
+		ComPtr<IDXGIFactory4> mdxgiFactory;
+		ComPtr<ID3D12Device> mDX12Device;
+		ComPtr<ID3D12Fence> mFence;
+		ComPtr<ID3D12CommandQueue> mCommandQueue;
+		ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
+		ComPtr<ID3D12GraphicsCommandList> mCommandList;
+		ComPtr<IDXGISwapChain> mSwapChain;
+		ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
+		ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
+		ComPtr<ID3D12Resource> mDepthStencilBuffer;
+		ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+		ComPtr<ID3DBlob> mvsByteCode = nullptr;
+		ComPtr<ID3DBlob> mpsByteCode = nullptr;
+		ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 
-	WindowDimensions mWindowDimensions;
-	HWND mhMainWnd = nullptr;
-	UINT mNumberOfFrameResources = 0;
+		std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
+		DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
+		DX12BlurPipelinePass mBlurPipelinePass;
+		DX12PipelinePassAggregator mPiplinePassAggregator;
 
-	// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.
-	UINT				mRtvDescriptorSize = 0;
-	UINT				mDsvDescriptorSize = 0;
-	UINT				mCbvSrvUavDescriptorSize = 0;
-	D3D_DRIVER_TYPE		mD3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
-	DXGI_FORMAT			mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT			mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	UINT				m4xMsaaQuality = 0;      // quality level of 4X MSAA
-	UINT				mCurrentBackBufferIndex = 0;
-	UINT				mTexturesCbHeapOffset = 0;
-	UINT				mCurrentFrameResourceIndex = 0;
-	// Set true to use 4X MSAA (§4.1.8).  The default is false.
-	bool				m4xMsaaState = false;
+		WindowDimensions mWindowDimensions;
+		HWND mhMainWnd = nullptr;
+		UINT mNumberOfFrameResources = 0;
 
-private:
-	bool InitializeDevice();
-	void FlushCommandQueue();
-	void LogAdapters();
-	void LogAdapterOutputs(IDXGIAdapter* adapter);
-	void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
-	void CreateCommandObjects();
-	void CreateSwapChain();
-	void CreateRtvDsvDescriptorHeaps();
-	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
+		// DX12 hardware requirement: Constant buffers must be multiples of 256 bytes.
+		UINT				mRtvDescriptorSize = 0;
+		UINT				mDsvDescriptorSize = 0;
+		UINT				mCbvSrvUavDescriptorSize = 0;
+		D3D_DRIVER_TYPE		mD3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
+		DXGI_FORMAT			mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+		DXGI_FORMAT			mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		UINT				m4xMsaaQuality = 0;      // quality level of 4X MSAA
+		UINT				mCurrentBackBufferIndex = 0;
+		UINT				mTexturesCbHeapOffset = 0;
+		UINT				mCurrentFrameResourceIndex = 0;
+		// Set true to use 4X MSAA (§4.1.8).  The default is false.
+		bool				m4xMsaaState = false;
 
-	void CreateFrameResources(
-		uint32_t numberOfEntities, 
-		uint32_t numberOfMaterials, 
-		uint32_t debugSystemPerPassCBCount,
-		uint32_t debugSystemMaxCharacters
-	);
+	private:
+		bool InitializeDevice();
+		void FlushCommandQueue();
+		void LogAdapters();
+		void LogAdapterOutputs(IDXGIAdapter* adapter);
+		void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
+		void CreateCommandObjects();
+		void CreateSwapChain();
+		void CreateRtvDsvDescriptorHeaps();
+		D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
+		D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 
-	bool CreateConstantBufferDescriptor(
-		uint32_t numberOfMaterials,
-		uint32_t numberOfTextures, 
-		uint32_t sizeOfPerMaterialCb
-	);
+		void CreateFrameResources(
+			uint32_t numberOfEntities,
+			uint32_t numberOfMaterials,
+			uint32_t debugSystemPerPassCBCount,
+			uint32_t debugSystemMaxCharacters
+		);
 
-	bool CreateConstantBufferViews(
-		uint32_t numberOfMaterials, 
-		uint32_t numberOfTextures,
-		uint32_t alignedSizeOfPerMaterialCb
-	);
-	bool CreateRootSignature(
-		uint32_t numberOfMaterials, 
-		uint32_t numberOfTextures
-	);
+		bool CreateConstantBufferDescriptor(
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t sizeOfPerMaterialCb
+		);
 
-	bool CreateShadersAndInputLayout();
-	bool CreatePipelineStateObject();
+		bool CreateConstantBufferViews(
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t alignedSizeOfPerMaterialCb
+		);
+		bool CreateRootSignature(
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures
+		);
 
-	// blur effect pipeline setup
-	void DrawBlurPass();
+		bool CreateShadersAndInputLayout();
+		bool CreatePipelineStateObject();
 
-	void DisposeUploaders();
-};
+		// blur effect pipeline setup
+		void DrawBlurPass();
+
+		void DisposeUploaders();
+	};
+}

@@ -16,7 +16,7 @@ namespace Engine {
 		mMainWndCaption(caption),
 		mIsInitialized(false),
 		mAnimationSpeed(.375f), // todo: move this out to somewhere else
-		mRenderer(DX12Renderer()),
+		mRenderer(EngineRenderer::DX12Renderer::DX12Renderer()),
 		mWorldManager(WorldManager()),
 		mCamera(Camera()),
 		mInputSystem(XboxInputSystem()),
