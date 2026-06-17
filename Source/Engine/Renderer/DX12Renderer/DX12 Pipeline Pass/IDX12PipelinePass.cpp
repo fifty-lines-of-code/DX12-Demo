@@ -23,13 +23,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void IDX12PipelinePass::ShutDown() {
+		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
+		if (mRootSignature != nullptr) { mRootSignature.Reset(); }
 		if (mPipelineStateObject != nullptr) { mPipelineStateObject.Reset(); }
-		if (mCommandList != nullptr) { mCommandList.Reset(); }
 		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
 			if (mCommandAllocators[i] != nullptr) {
 				mCommandAllocators[i].Reset();
 			}
 		}
+		if (mCommandList != nullptr) { mCommandList.Reset(); }
 	}
 
 	ID3D12CommandList* IDX12PipelinePass::GetCommandList() noexcept {

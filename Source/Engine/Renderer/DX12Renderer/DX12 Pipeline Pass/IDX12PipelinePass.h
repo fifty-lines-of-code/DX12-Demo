@@ -13,10 +13,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ID3D12CommandAllocator* Allocator;
 		DXGI_FORMAT BackBufferFormat;
 		DXGI_FORMAT DepthStencilFormat;
+		UINT CbvSrvUavDescriptorSize;
 	};
 
 	struct IPipelinePassExecuteArgs {
 		uint32_t CurrentFrameIndex;
+		uint32_t CurrentBackBufferIndex;
 		UINT CbvSrvUavDescriptorSize;
 		ID3D12Resource* CurrentBackBufferResource;
 		D3D12_CPU_DESCRIPTOR_HANDLE& BackBufferView;
@@ -28,7 +30,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	class IDX12PipelinePass {
 	public:
 		IDX12PipelinePass();
-		virtual ~IDX12PipelinePass() = default;
 
 		bool Initialize(const PipelinePassInitArgs& args);
 		virtual void ShutDown();
@@ -37,9 +38,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		bool GetIsInitialized() const noexcept;
 
 	protected:
-		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES];
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mCommandList = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES];
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		bool mIsInitialized;
 
 	private:

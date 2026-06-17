@@ -12,7 +12,9 @@
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
+#include "DX12 Pipeline Pass/Blur Pass/DX12BlurPipelinePass.h"
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
+#include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
 #include "DX12 Texture/DX12Texture.h"
 #include <dxgi1_4.h>
 #include <fstream>
@@ -117,8 +119,6 @@ public:
 	void OnResize(UINT width, UINT height) override;
 
 private:
-	static const int SwapChainBufferCount = 2;
-
 	DX12FrameResource* mCurrentFrameResource = nullptr;
 
 	std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
@@ -140,22 +140,17 @@ private:
 	ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
 	ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap> mBlurSRVUAVDescriptorHeap;
-	ComPtr<ID3D12Resource> mSwapChainBuffers[SwapChainBufferCount];
+	ComPtr<ID3D12Resource> mSwapChainBuffers[Engine::EngineRenderer::DX12Renderer::DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
-	ComPtr<ID3D12Resource> mBlurScratchTextureResource;
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-	ComPtr<ID3D12RootSignature> mDebugRootSignature = nullptr;
-	ComPtr<ID3D12RootSignature> mBlurRootSignature = nullptr;
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
-	ComPtr<ID3DBlob> mBlurCsByteCode = nullptr;
 	ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
-	ComPtr<ID3D12PipelineState> mBlurPipelineStateObject = nullptr;
 
 	std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
-	std::vector<Engine::EngineRenderer::DX12Renderer::IDX12PipelinePass*> mActiveFrameQueue;
 	Engine::EngineRenderer::DX12Renderer::DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
+	Engine::EngineRenderer::DX12Renderer::DX12BlurPipelinePass mBlurPipelinePass;
+	Engine::EngineRenderer::DX12Renderer::DX12PipelinePassAggregator mPiplinePassAggregator;
 
 	WindowDimensions mWindowDimensions;
 	HWND mhMainWnd = nullptr;
@@ -169,7 +164,7 @@ private:
 	DXGI_FORMAT			mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT			mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	UINT				m4xMsaaQuality = 0;      // quality level of 4X MSAA
-	UINT				mCurrentBackBuffer = 0;
+	UINT				mCurrentBackBufferIndex = 0;
 	UINT				mTexturesCbHeapOffset = 0;
 	UINT				mCurrentFrameResourceIndex = 0;
 	// Set true to use 4X MSAA (§4.1.8).  The default is false.
@@ -214,12 +209,6 @@ private:
 	bool CreatePipelineStateObject();
 
 	// blur effect pipeline setup
-	bool CreateBlurDescriptorHeap();
-	bool CreateBlurTextureViewDescriptors();
-	bool CreateBlurScratchTexture();
-	bool CreateBlurRootSignature();
-	bool CreateBlurShaders();
-	bool CreateBlurPipelineStateObject();
 	void DrawBlurPass();
 
 	void DisposeUploaders();

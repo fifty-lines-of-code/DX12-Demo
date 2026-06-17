@@ -11,7 +11,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	struct DX12DebugSystemPipelinePassInitArgs : public PipelinePassInitArgs {
 		uint32_t DebugSystemMaxCharacters;
 		uint32_t FontAtlasIndex;
-		UINT CbvSrvUavDescriptorSize;
 		DX12Texture& FontAtlasTexture;
 		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> CBResources;
 	};
@@ -34,8 +33,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void Execute(const DX12DebugSystemPipelinePassExecuteArgs& args);
 
 	private:
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 
@@ -48,11 +45,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 
-		bool CreateDebugRootSignature(
+		bool CreateRootSignature(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);
 
-		bool CreateShadersAndInputLayout();
+		bool CreateShaders();
 		bool CreatePipelineStateObject(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);

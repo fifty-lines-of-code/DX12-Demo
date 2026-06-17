@@ -16,8 +16,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
 
 		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
-		if (!CreateDebugRootSignature(debugArgs)) { return false; }
-		if (!CreateShadersAndInputLayout()) { return false; }
+		if (!CreateRootSignature(debugArgs)) { return false; }
+		if (!CreateShaders()) { return false; }
 		if (!CreatePipelineStateObject(debugArgs)) { return false; }
 
 		return true;
@@ -26,9 +26,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12DebugSystemPipelinePass::ShutDown() {
 		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
 		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
-		if (mRootSignature != nullptr) { mRootSignature.Reset(); }
-		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
-
 		IDX12PipelinePass::ShutDown();
 	}
 
@@ -37,8 +34,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	) {
 		// Grab the command allocator for the current frame
 		ID3D12CommandAllocator* allocator = mCommandAllocators[args.CurrentFrameIndex].Get();
+		ThrowIfFailed(allocator->Reset());
 
-		mCommandList->Reset(allocator, mPipelineStateObject.Get());
+		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
 		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 		// set view port and scissor rect
@@ -202,7 +200,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12DebugSystemPipelinePass::CreateDebugRootSignature(
+	bool DX12DebugSystemPipelinePass::CreateRootSignature(
 		const DX12DebugSystemPipelinePassInitArgs& args
 	) {
 		CD3DX12_DESCRIPTOR_RANGE slotRootRanges[2];
@@ -269,9 +267,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12DebugSystemPipelinePass::CreateShadersAndInputLayout() {
-		HRESULT hr = S_OK;
-
+	bool DX12DebugSystemPipelinePass::CreateShaders() {
 		mVsByteCode = DX12RendererHelper::CompileShader(
 			L"Source\\Resources\\Shaders\\Debug\\debug_vs.hlsl",
 			nullptr,

@@ -5,13 +5,21 @@
 #include <windows.h>
 #include <string>
 
+#ifndef ThrowDWException
+#define ThrowDWException(hr__)                                        \
+{                                                                     \
+    std::wstring wfn = Helper::StringToWideString(__FILE__);          \
+    throw DxException(hr__, L#hr__, wfn, __LINE__);                   \
+}
+#endif
+
 #ifndef ThrowIfFailed
 #define ThrowIfFailed(x)                                              \
 {                                                                     \
     HRESULT hr__ = (x);                                               \
-    std::wstring wfn = Helper::StringToWideString(__FILE__);                       \
-    if(FAILED(hr__)) { throw DxException(hr__, L#x, wfn, __LINE__); } \
-}
+    std::wstring wfn = Helper::StringToWideString(__FILE__);          \
+    if(FAILED(hr__)) { throw DxException(x, L#x, wfn, __LINE__); } \
+}                                                                     
 #endif
 
 class Helper {
