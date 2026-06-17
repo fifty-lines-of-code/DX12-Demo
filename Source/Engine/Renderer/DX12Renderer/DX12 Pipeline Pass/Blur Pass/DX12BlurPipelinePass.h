@@ -27,14 +27,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		DX12BlurPipelinePass();
 		~DX12BlurPipelinePass();
 
-		bool OnInitialize(
-			const PipelinePassInitArgs& args
-		) override;
-
-		void ShutDown() override;
-
 		void Execute(const DX12BlurPipelinePassExecuteArgs& args);
-
 		void OnResize(
 			uint32_t width, 
 			uint32_t height,
@@ -47,18 +40,19 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3DBlob> mCsByteCode = nullptr;
 
 	private:
+		bool OnInitialize(
+			const PipelinePassInitArgs& args
+		) override;
+		void OnShutdown() override;
 		bool CreateDescriptorHeap(
 			const DX12BlurPipelinePassInitArgs& args
 		);
-
 		bool CreateDescriptorViews(
 			const DX12BlurPipelinePassInitArgs& args
 		);
-
 		bool CreateRootSignature(
 			const DX12BlurPipelinePassInitArgs& args
 		);
-
 		bool CreateShaders();
 		bool CreatePipelineStateObject(
 			const DX12BlurPipelinePassInitArgs& args

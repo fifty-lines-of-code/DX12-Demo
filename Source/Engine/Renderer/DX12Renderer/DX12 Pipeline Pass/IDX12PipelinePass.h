@@ -32,7 +32,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		IDX12PipelinePass();
 
 		bool Initialize(const PipelinePassInitArgs& args);
-		virtual void ShutDown();
+		void ShutDown();
 
 		ID3D12CommandList* GetCommandList() noexcept;
 		bool GetIsInitialized() const noexcept;
@@ -45,8 +45,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		bool mIsInitialized;
 
-	private:
+	protected:
 		virtual bool OnInitialize(const PipelinePassInitArgs& args) = 0;
+		virtual void OnShutdown() = 0;
+
+	private:
 		bool InitializeCommandAllocators(const PipelinePassInitArgs& args);
 		bool InitializeCommandList(
 			ID3D12Device* device,

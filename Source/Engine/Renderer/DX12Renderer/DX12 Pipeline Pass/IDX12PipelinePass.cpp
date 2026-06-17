@@ -23,6 +23,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void IDX12PipelinePass::ShutDown() {
+		OnShutdown();
+
 		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
 		if (mRootSignature != nullptr) { mRootSignature.Reset(); }
 		if (mPipelineStateObject != nullptr) { mPipelineStateObject.Reset(); }

@@ -23,26 +23,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	DX12BlurPipelinePass::~DX12BlurPipelinePass() {}
 
-	bool DX12BlurPipelinePass::OnInitialize(
-		const PipelinePassInitArgs& args
-	) {
-		const DX12BlurPipelinePassInitArgs& debugArgs = static_cast<const DX12BlurPipelinePassInitArgs&>(args);
-
-		if (!CreateDescriptorHeap(debugArgs)) { return false; }
-		if (!CreateRootSignature(debugArgs)) { return false; }
-		if (!CreateShaders()) { return false; }
-		if (!CreatePipelineStateObject(debugArgs)) { return false; }
-
-		return true;
-	}
-
-	void DX12BlurPipelinePass::ShutDown() {
-		if (mScratchTextureResource != nullptr) { mScratchTextureResource.Reset(); }
-		if (mCsByteCode != nullptr) { mCsByteCode.Reset(); }
-
-		IDX12PipelinePass::ShutDown();
-	}
-
 	void DX12BlurPipelinePass::Execute(
 		const DX12BlurPipelinePassExecuteArgs& args
 	) {
@@ -216,6 +196,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 #pragma region Private
+
+	bool DX12BlurPipelinePass::OnInitialize(
+		const PipelinePassInitArgs& args
+	) {
+		const DX12BlurPipelinePassInitArgs& debugArgs = static_cast<const DX12BlurPipelinePassInitArgs&>(args);
+
+		if (!CreateDescriptorHeap(debugArgs)) { return false; }
+		if (!CreateRootSignature(debugArgs)) { return false; }
+		if (!CreateShaders()) { return false; }
+		if (!CreatePipelineStateObject(debugArgs)) { return false; }
+
+		return true;
+	}
+
+	void DX12BlurPipelinePass::OnShutdown() {
+		if (mScratchTextureResource != nullptr) { mScratchTextureResource.Reset(); }
+		if (mCsByteCode != nullptr) { mCsByteCode.Reset(); }
+	}
 
 	bool DX12BlurPipelinePass::CreateDescriptorHeap(
 		const DX12BlurPipelinePassInitArgs& args

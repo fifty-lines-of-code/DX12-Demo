@@ -7,27 +7,7 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	DX12DebugSystemPipelinePass::~DX12DebugSystemPipelinePass() {
-	}
-
-	bool DX12DebugSystemPipelinePass::OnInitialize(
-		const PipelinePassInitArgs& args
-	) {
-		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
-
-		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
-		if (!CreateRootSignature(debugArgs)) { return false; }
-		if (!CreateShaders()) { return false; }
-		if (!CreatePipelineStateObject(debugArgs)) { return false; }
-
-		return true;
-	}
-
-	void DX12DebugSystemPipelinePass::ShutDown() {
-		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
-		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
-		IDX12PipelinePass::ShutDown();
-	}
+	DX12DebugSystemPipelinePass::~DX12DebugSystemPipelinePass() {}
 
 	void DX12DebugSystemPipelinePass::Execute(
 		const DX12DebugSystemPipelinePassExecuteArgs& args
@@ -84,11 +64,28 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// 5. Fire off the procedural magic
 		mCommandList->DrawInstanced(4, args.NumberOfCharacters, 0, 0);
 
-		// 6. Close the command list
-		//mCommandList->Close();
+		// don't close the command list, the aggregator will close it.
 	}
 
 #pragma region Private
+
+	bool DX12DebugSystemPipelinePass::OnInitialize(
+		const PipelinePassInitArgs& args
+	) {
+		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
+
+		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
+		if (!CreateRootSignature(debugArgs)) { return false; }
+		if (!CreateShaders()) { return false; }
+		if (!CreatePipelineStateObject(debugArgs)) { return false; }
+
+		return true;
+	}
+
+	void DX12DebugSystemPipelinePass::OnShutdown() {
+		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
+		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
+	}
 
 	bool DX12DebugSystemPipelinePass::CreateConstantBufferDescriptors(
 		const DX12DebugSystemPipelinePassInitArgs& args

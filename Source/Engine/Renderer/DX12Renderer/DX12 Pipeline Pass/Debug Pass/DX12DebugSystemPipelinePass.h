@@ -24,12 +24,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	public:
 		~DX12DebugSystemPipelinePass();
 
-		bool OnInitialize(
-			const PipelinePassInitArgs& args
-		) override;
-
-		void ShutDown() override;
-
 		void Execute(const DX12DebugSystemPipelinePassExecuteArgs& args);
 
 	private:
@@ -37,18 +31,19 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 
 	private:
+		bool OnInitialize(
+			const PipelinePassInitArgs& args
+		) override;
+		void OnShutdown() override;
 		bool CreateConstantBufferDescriptors(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);
-
 		bool CreateConstantBufferViews(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);
-
 		bool CreateRootSignature(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);
-
 		bool CreateShaders();
 		bool CreatePipelineStateObject(
 			const DX12DebugSystemPipelinePassInitArgs& args
