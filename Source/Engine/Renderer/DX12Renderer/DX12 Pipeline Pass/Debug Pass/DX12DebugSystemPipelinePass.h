@@ -8,33 +8,37 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	struct DX12DebugSystemPipelinePassInitArgs : public PipelinePassInitArgs {
+	struct DX12DebugSystemPipelinePassInitArgs : public DX12PipelinePassInitArgs {
 		uint32_t DebugSystemMaxCharacters;
 		uint32_t FontAtlasIndex;
 		DX12Texture& FontAtlasTexture;
 		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> CBResources;
 	};
 
-	struct DX12DebugSystemPipelinePassExecuteArgs : public IPipelinePassExecuteArgs {
+	struct DX12DebugSystemPipelinePassExecuteArgs : public DX12PipelinePassExecuteArgs {
 		ID3D12Resource* Resource;
 		uint32_t NumberOfCharacters;
 	};
 
 	class DX12DebugSystemPipelinePass : public IDX12PipelinePass {
 	public:
-		~DX12DebugSystemPipelinePass();
+		~DX12DebugSystemPipelinePass() = default;
 
-		void Execute(const DX12DebugSystemPipelinePassExecuteArgs& args);
+	protected:
+		bool OnInitialize(
+			const DX12PipelinePassInitArgs& args
+		) override;
+		void OnShutdown() override;
+		void OnExecute(const DX12PipelinePassExecuteArgs& args) override;
 
 	private:
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 
 	private:
-		bool OnInitialize(
-			const PipelinePassInitArgs& args
-		) override;
-		void OnShutdown() override;
+		void Execute(
+			const DX12DebugSystemPipelinePassExecuteArgs& args
+		);
 		bool CreateConstantBufferDescriptors(
 			const DX12DebugSystemPipelinePassInitArgs& args
 		);

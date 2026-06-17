@@ -7,7 +7,30 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	DX12DebugSystemPipelinePass::~DX12DebugSystemPipelinePass() {}
+#pragma region Private
+
+	bool DX12DebugSystemPipelinePass::OnInitialize(
+		const DX12PipelinePassInitArgs& args
+	) {
+		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
+
+		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
+		if (!CreateRootSignature(debugArgs)) { return false; }
+		if (!CreateShaders()) { return false; }
+		if (!CreatePipelineStateObject(debugArgs)) { return false; }
+
+		return true;
+	}
+
+	void DX12DebugSystemPipelinePass::OnShutdown() {
+		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
+		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
+	}
+
+	void DX12DebugSystemPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {
+		const DX12DebugSystemPipelinePassExecuteArgs& dArgs = static_cast<const DX12DebugSystemPipelinePassExecuteArgs&>(args);
+		Execute(dArgs);
+	}
 
 	void DX12DebugSystemPipelinePass::Execute(
 		const DX12DebugSystemPipelinePassExecuteArgs& args
@@ -38,7 +61,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// 2. Parameter 0: Direct Virtual Address for Constant Buffer
 		auto perPassResource = args.Resource;
 		mCommandList->SetGraphicsRootConstantBufferView(
-			0, 
+			0,
 			perPassResource->GetGPUVirtualAddress()
 		);
 
@@ -65,26 +88,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mCommandList->DrawInstanced(4, args.NumberOfCharacters, 0, 0);
 
 		// don't close the command list, the aggregator will close it.
-	}
-
-#pragma region Private
-
-	bool DX12DebugSystemPipelinePass::OnInitialize(
-		const PipelinePassInitArgs& args
-	) {
-		const DX12DebugSystemPipelinePassInitArgs& debugArgs = static_cast<const DX12DebugSystemPipelinePassInitArgs&>(args);
-
-		if (!CreateConstantBufferDescriptors(debugArgs)) { return false; }
-		if (!CreateRootSignature(debugArgs)) { return false; }
-		if (!CreateShaders()) { return false; }
-		if (!CreatePipelineStateObject(debugArgs)) { return false; }
-
-		return true;
-	}
-
-	void DX12DebugSystemPipelinePass::OnShutdown() {
-		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
-		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
 	}
 
 	bool DX12DebugSystemPipelinePass::CreateConstantBufferDescriptors(

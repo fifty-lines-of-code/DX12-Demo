@@ -8,7 +8,7 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	struct PipelinePassInitArgs {
+	struct DX12PipelinePassInitArgs {
 		ID3D12Device* Device;
 		ID3D12CommandAllocator* Allocator;
 		DXGI_FORMAT BackBufferFormat;
@@ -16,7 +16,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT CbvSrvUavDescriptorSize;
 	};
 
-	struct IPipelinePassExecuteArgs {
+	struct DX12PipelinePassExecuteArgs {
 		uint32_t CurrentFrameIndex;
 		uint32_t CurrentBackBufferIndex;
 		UINT CbvSrvUavDescriptorSize;
@@ -31,9 +31,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	public:
 		IDX12PipelinePass();
 
-		bool Initialize(const PipelinePassInitArgs& args);
+		bool Initialize(const DX12PipelinePassInitArgs& args);
 		void ShutDown();
 
+		void ExecutePass(const DX12PipelinePassExecuteArgs& args);
 		ID3D12CommandList* GetCommandList() noexcept;
 		bool GetIsInitialized() const noexcept;
 
@@ -46,11 +47,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		bool mIsInitialized;
 
 	protected:
-		virtual bool OnInitialize(const PipelinePassInitArgs& args) = 0;
+		virtual bool OnInitialize(const DX12PipelinePassInitArgs& args) = 0;
 		virtual void OnShutdown() = 0;
+		virtual void OnExecute(const DX12PipelinePassExecuteArgs& args) = 0;
 
 	private:
-		bool InitializeCommandAllocators(const PipelinePassInitArgs& args);
+		bool InitializeCommandAllocators(const DX12PipelinePassInitArgs& args);
 		bool InitializeCommandList(
 			ID3D12Device* device,
 			ID3D12CommandAllocator* commandAllocator

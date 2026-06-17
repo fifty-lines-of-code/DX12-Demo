@@ -21,7 +21,40 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mComputeConstants.OneOverTwoSigmaSq = oneOverTwoSigmaSq;
 	}
 
-	DX12BlurPipelinePass::~DX12BlurPipelinePass() {}
+	void DX12BlurPipelinePass::OnResize(
+		uint32_t width,
+		uint32_t height, 
+		const DX12BlurPipelinePassInitArgs& args
+	) {
+		mScratchTextureResource.Reset();
+		CreateScratchTexture(args);
+		CreateDescriptorViews(args);
+	}
+
+#pragma region Private
+
+	bool DX12BlurPipelinePass::OnInitialize(
+		const DX12PipelinePassInitArgs& args
+	) {
+		const DX12BlurPipelinePassInitArgs& debugArgs = static_cast<const DX12BlurPipelinePassInitArgs&>(args);
+
+		if (!CreateDescriptorHeap(debugArgs)) { return false; }
+		if (!CreateRootSignature(debugArgs)) { return false; }
+		if (!CreateShaders()) { return false; }
+		if (!CreatePipelineStateObject(debugArgs)) { return false; }
+
+		return true;
+	}
+
+	void DX12BlurPipelinePass::OnShutdown() {
+		if (mScratchTextureResource != nullptr) { mScratchTextureResource.Reset(); }
+		if (mCsByteCode != nullptr) { mCsByteCode.Reset(); }
+	}
+
+	void DX12BlurPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {
+		const DX12BlurPipelinePassExecuteArgs& bArgs = static_cast<const DX12BlurPipelinePassExecuteArgs&>(args);
+		Execute(bArgs);
+	}
 
 	void DX12BlurPipelinePass::Execute(
 		const DX12BlurPipelinePassExecuteArgs& args
@@ -59,12 +92,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				D3D12_RESOURCE_STATE_RENDER_TARGET,
 				D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
 			),
-			// transition our scratch texture resource to unordered access so we can write to it
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				mScratchTextureResource.Get(),
-				D3D12_RESOURCE_STATE_COMMON,
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-			) // both the slices
+				// transition our scratch texture resource to unordered access so we can write to it
+				CD3DX12_RESOURCE_BARRIER::Transition(
+					mScratchTextureResource.Get(),
+					D3D12_RESOURCE_STATE_COMMON,
+					D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+				) // both the slices
 		};
 		mCommandList->ResourceBarrier(_countof(pass1Barriers), pass1Barriers);
 
@@ -135,12 +168,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				D3D12_RESOURCE_STATE_COPY_SOURCE,
 				1 // slice 1
 			),
-			// transition the back buffer to copy dest
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				args.CurrentBackBufferResource,
-				D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-				D3D12_RESOURCE_STATE_COPY_DEST
-			)
+				// transition the back buffer to copy dest
+				CD3DX12_RESOURCE_BARRIER::Transition(
+					args.CurrentBackBufferResource,
+					D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+					D3D12_RESOURCE_STATE_COPY_DEST
+				)
 		};
 		mCommandList->ResourceBarrier(_countof(midBarriers), midBarriers);
 
@@ -157,7 +190,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// CLEANUP BARRIER: Return Backbuffer to Render Target state
 		// ========================================================================
 		// Bring the backbuffer back to its standard state so engine can keep drawing as usual
-		
+
 		D3D12_RESOURCE_BARRIER cleanupBarriers[3] = {
 			// transition back buffer to render target
 			CD3DX12_RESOURCE_BARRIER::Transition(
@@ -165,54 +198,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				D3D12_RESOURCE_STATE_COPY_DEST,
 				D3D12_RESOURCE_STATE_RENDER_TARGET
 			),
-			// transition slice 0 of blur scratch to common
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				mScratchTextureResource.Get(),
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-				D3D12_RESOURCE_STATE_COMMON,
-				0
-			),
-			// transition slice 1 of blur scratch to common
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				mScratchTextureResource.Get(),
-				D3D12_RESOURCE_STATE_COPY_SOURCE,
-				D3D12_RESOURCE_STATE_COMMON,
-				1
-			)
+				// transition slice 0 of blur scratch to common
+				CD3DX12_RESOURCE_BARRIER::Transition(
+					mScratchTextureResource.Get(),
+					D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+					D3D12_RESOURCE_STATE_COMMON,
+					0
+				),
+				// transition slice 1 of blur scratch to common
+				CD3DX12_RESOURCE_BARRIER::Transition(
+					mScratchTextureResource.Get(),
+					D3D12_RESOURCE_STATE_COPY_SOURCE,
+					D3D12_RESOURCE_STATE_COMMON,
+					1
+				)
 		};
 		mCommandList->ResourceBarrier(_countof(cleanupBarriers), cleanupBarriers);
 
 		// do not close the command list here, the aggregator will close it
-	}
-
-	void DX12BlurPipelinePass::OnResize(
-		uint32_t width,
-		uint32_t height, 
-		const DX12BlurPipelinePassInitArgs& args
-	) {
-		mScratchTextureResource.Reset();
-		CreateScratchTexture(args);
-		CreateDescriptorViews(args);
-	}
-
-#pragma region Private
-
-	bool DX12BlurPipelinePass::OnInitialize(
-		const PipelinePassInitArgs& args
-	) {
-		const DX12BlurPipelinePassInitArgs& debugArgs = static_cast<const DX12BlurPipelinePassInitArgs&>(args);
-
-		if (!CreateDescriptorHeap(debugArgs)) { return false; }
-		if (!CreateRootSignature(debugArgs)) { return false; }
-		if (!CreateShaders()) { return false; }
-		if (!CreatePipelineStateObject(debugArgs)) { return false; }
-
-		return true;
-	}
-
-	void DX12BlurPipelinePass::OnShutdown() {
-		if (mScratchTextureResource != nullptr) { mScratchTextureResource.Reset(); }
-		if (mCsByteCode != nullptr) { mCsByteCode.Reset(); }
 	}
 
 	bool DX12BlurPipelinePass::CreateDescriptorHeap(

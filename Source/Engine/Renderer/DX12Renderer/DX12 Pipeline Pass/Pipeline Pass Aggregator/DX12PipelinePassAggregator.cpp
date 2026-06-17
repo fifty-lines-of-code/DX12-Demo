@@ -32,7 +32,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 					HRESULT hr = cList->Close();
 					if (FAILED(hr)) {
 						Logger::ERR(L"Closing the command list has failed. This should NOT happeen");
-						ThrowDWException(hr);
+						ThrowException(hr);
 					}
 					result.ActiveLists.push_back(cList);
 				}

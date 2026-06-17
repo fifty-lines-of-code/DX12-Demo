@@ -5,8 +5,8 @@
 #include <windows.h>
 #include <string>
 
-#ifndef ThrowDWException
-#define ThrowDWException(hr__)                                        \
+#ifndef ThrowException
+#define ThrowException(hr__)                                        \
 {                                                                     \
     std::wstring wfn = Helper::StringToWideString(__FILE__);          \
     throw DxException(hr__, L#hr__, wfn, __LINE__);                   \

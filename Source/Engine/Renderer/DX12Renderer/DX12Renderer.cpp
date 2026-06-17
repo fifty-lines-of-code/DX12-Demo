@@ -372,7 +372,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			numberOfCharacters
 		};
 
-		mDebugSystemPipelinePass.Execute(args);
+		mDebugSystemPipelinePass.ExecutePass(args);
 
 		mPiplinePassAggregator.InsertPass(&mDebugSystemPipelinePass);
 
@@ -398,7 +398,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		HRESULT hr = lastCommandList->Close();
 		if (FAILED(hr)) {
 			Logger::ERR(L"Closing the command list has failed. This should NOT happeen");
-			ThrowDWException(hr);
+			ThrowException(hr);
 		}
 
 		// reset for the next frame
@@ -1182,7 +1182,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mWindowDimensions.Height
 		};
 
-		mBlurPipelinePass.Execute(args);
+		mBlurPipelinePass.ExecutePass(args);
 
 		mPiplinePassAggregator.InsertPass(&mBlurPipelinePass);
 	}

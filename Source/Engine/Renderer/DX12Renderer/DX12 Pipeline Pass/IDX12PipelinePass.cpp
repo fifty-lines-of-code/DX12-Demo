@@ -6,7 +6,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mIsInitialized(false)
 	{}
 
-	bool IDX12PipelinePass::Initialize(const PipelinePassInitArgs& args) {
+	bool IDX12PipelinePass::Initialize(const DX12PipelinePassInitArgs& args) {
 		if (!OnInitialize(args)) { return false; }
 
 		if (mPipelineStateObject == nullptr) {
@@ -36,6 +36,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		if (mCommandList != nullptr) { mCommandList.Reset(); }
 	}
 
+	void IDX12PipelinePass::ExecutePass(const DX12PipelinePassExecuteArgs& args) {
+		OnExecute(args);
+	}
+
 	ID3D12CommandList* IDX12PipelinePass::GetCommandList() noexcept {
 		return mCommandList.Get();
 	}
@@ -44,7 +48,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 #pragma region Private
 
-	bool IDX12PipelinePass::InitializeCommandAllocators(const PipelinePassInitArgs& args) {
+	bool IDX12PipelinePass::InitializeCommandAllocators(const DX12PipelinePassInitArgs& args) {
 		for (int i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
 			args.Device->CreateCommandAllocator(
 				D3D12_COMMAND_LIST_TYPE_DIRECT, 
