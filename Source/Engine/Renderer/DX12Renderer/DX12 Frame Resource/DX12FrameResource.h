@@ -10,8 +10,8 @@
 // for a frame.  
 
 namespace Engine::EngineRenderer::DX12Renderer {
-    struct DX12FrameResource
-    {
+
+    struct DX12FrameResource {
     public:
 
         DX12FrameResource(

@@ -156,8 +156,8 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.h" />
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Render Pass\DX12OpaqueRenderPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h" />
@@ -212,8 +212,8 @@
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp" />
-    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.cpp" />

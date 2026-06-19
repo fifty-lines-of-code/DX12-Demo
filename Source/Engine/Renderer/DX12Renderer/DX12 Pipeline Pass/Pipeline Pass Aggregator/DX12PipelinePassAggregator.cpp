@@ -3,6 +3,7 @@
 #include <cassert>
 
 namespace Engine::EngineRenderer::DX12Renderer {
+	
 	void DX12PipelinePassAggregator::InsertPass(IDX12PipelinePass* pass) {
 		mActiveFrameQueue.push_back(pass);
 	}
@@ -37,7 +38,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 					result.ActiveLists.push_back(cList);
 				}
 			}
-
 		}
 	}
 

@@ -6,7 +6,7 @@
 #include <string>
 
 #ifndef ThrowException
-#define ThrowException(hr__)                                        \
+#define ThrowException(hr__)                                          \
 {                                                                     \
     std::wstring wfn = Helper::StringToWideString(__FILE__);          \
     throw DxException(hr__, L#hr__, wfn, __LINE__);                   \
@@ -18,8 +18,8 @@
 {                                                                     \
     HRESULT hr__ = (x);                                               \
     std::wstring wfn = Helper::StringToWideString(__FILE__);          \
-    if(FAILED(hr__)) { throw DxException(x, L#x, wfn, __LINE__); } \
-}                                                                     
+    if(FAILED(hr__)) { throw DxException(hr__, L#x, wfn, __LINE__); } \
+} 
 #endif
 
 class Helper {

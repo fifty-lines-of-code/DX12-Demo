@@ -4,7 +4,14 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-    DX12FrameResource::DX12FrameResource(ID3D12Device* device, UINT perPassCbCount, UINT numberOfEntities, UINT numberOfMaterials, UINT debugSystemPerPassCBCount, UINT debugSystemMaxCharacters) :
+    DX12FrameResource::DX12FrameResource(
+        ID3D12Device* device, 
+        UINT perPassCbCount, 
+        UINT numberOfEntities,
+        UINT numberOfMaterials, 
+        UINT debugSystemPerPassCBCount, 
+        UINT debugSystemMaxCharacters
+    ) :
         mOpaquePerPassCB(device, perPassCbCount, true),
         mOpaqueRenderItemCB(device, numberOfEntities, true),
         mPerMaterialCB(device, numberOfMaterials, true),
@@ -19,8 +26,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         );
     }
 
-    DX12FrameResource::~DX12FrameResource()
-    {
+    DX12FrameResource::~DX12FrameResource() {
         mCommandAllocator->Reset();
     }
 }

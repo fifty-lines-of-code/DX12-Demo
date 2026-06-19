@@ -11,7 +11,7 @@
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
 #include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
 #include "DX12 Data Structures/DX12PipelineDataStructures.h"
-#include "DX12 Pipeline Pass/Render Pass/DX12OpaqueRenderPipelinePass.h"
+#include "DX12 Pipeline Pass/Opaque Render Pass/DX12OpaqueRenderPipelinePass.h"
 #include <fstream>
 #include <unordered_map>
 
