@@ -8,268 +8,272 @@
 #include "../../../Helper/Helper.h"
 #include <wrl.h>
 
-class DX12RendererHelper {
-public:
 
-	// Copyright for below method: Frank Luna
-	static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
-		const std::wstring& filename,
-		const D3D_SHADER_MACRO* defines,
-		const std::string& entrypoint,
-		const std::string& target)
-	{
-		UINT compileFlags = 0;
+namespace Engine::EngineRenderer::DX12Renderer {
+
+	class DX12RendererHelper {
+	public:
+
+		// Copyright for below method: Frank Luna
+		static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+			const std::wstring& filename,
+			const D3D_SHADER_MACRO* defines,
+			const std::string& entrypoint,
+			const std::string& target)
+		{
+			UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)  
-		compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+			compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-		HRESULT hr = S_OK;
+			HRESULT hr = S_OK;
 
-		Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
-		Microsoft::WRL::ComPtr<ID3DBlob> errors;
-		hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-			entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
+			Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
+			Microsoft::WRL::ComPtr<ID3DBlob> errors;
+			hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+				entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
 
-		if (errors != nullptr) {
-			OutputDebugStringA((char*)errors->GetBufferPointer());
+			if (errors != nullptr) {
+				OutputDebugStringA((char*)errors->GetBufferPointer());
+			}
+
+			ThrowIfFailed(hr);
+
+			return byteCode;
 		}
 
-		ThrowIfFailed(hr);
+		// copyright for below method: Frank Luna
+		static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+			ID3D12Device* device,
+			ID3D12GraphicsCommandList* cmdList,
+			const void* initData,
+			UINT64 byteSize,
+			Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer) {
+			Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 
-		return byteCode;
-	}
+			auto heapPropsDefault = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+			auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
+			// Create the actual default buffer resource.
+			ThrowIfFailed(
+				device->CreateCommittedResource(
+					&heapPropsDefault,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_COMMON,
+					nullptr,
+					IID_PPV_ARGS(defaultBuffer.GetAddressOf())
+				)
+			);
 
-	// copyright for below method: Frank Luna
-	static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
-		ID3D12Device* device,
-		ID3D12GraphicsCommandList* cmdList,
-		const void* initData,
-		UINT64 byteSize,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer) {
-		Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
+			auto heapPropsUpload = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			// In order to copy CPU memory data into our default buffer, we need to create
+			// an intermediate upload heap. 
+			ThrowIfFailed(
+				device->CreateCommittedResource(
+					&heapPropsUpload,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_GENERIC_READ,
+					nullptr,
+					IID_PPV_ARGS(uploadBuffer.GetAddressOf())
+				)
+			);
 
-		auto heapPropsDefault = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
-		// Create the actual default buffer resource.
-		ThrowIfFailed(
-			device->CreateCommittedResource(
-				&heapPropsDefault,
-				D3D12_HEAP_FLAG_NONE,
-				&resourceDesc,
+			// Describe the data we want to copy into the default buffer.
+			D3D12_SUBRESOURCE_DATA subResourceData = {};
+			subResourceData.pData = initData;
+			subResourceData.RowPitch = byteSize;
+			subResourceData.SlicePitch = subResourceData.RowPitch;
+
+			// Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
+			// will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
+			// the intermediate upload heap data will be copied to mBuffer.
+
+			auto transitionCommonToCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(
+				defaultBuffer.Get(),
 				D3D12_RESOURCE_STATE_COMMON,
-				nullptr,
-				IID_PPV_ARGS(defaultBuffer.GetAddressOf())
-			)
-		);
+				D3D12_RESOURCE_STATE_COPY_DEST
+			);
+			cmdList->ResourceBarrier(
+				1,
+				&transitionCommonToCopyDest
+			);
 
-		auto heapPropsUpload = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		// In order to copy CPU memory data into our default buffer, we need to create
-		// an intermediate upload heap. 
-		ThrowIfFailed(
-			device->CreateCommittedResource(
-				&heapPropsUpload,
-				D3D12_HEAP_FLAG_NONE,
-				&resourceDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr,
-				IID_PPV_ARGS(uploadBuffer.GetAddressOf())
-			)
-		);
+			UpdateSubresources<1>(
+				cmdList,
+				defaultBuffer.Get(),
+				uploadBuffer.Get(),
+				0,
+				0,
+				1,
+				&subResourceData
+			);
 
-		// Describe the data we want to copy into the default buffer.
-		D3D12_SUBRESOURCE_DATA subResourceData = {};
-		subResourceData.pData = initData;
-		subResourceData.RowPitch = byteSize;
-		subResourceData.SlicePitch = subResourceData.RowPitch;
+			auto transitionCopyDestToGenericRead = CD3DX12_RESOURCE_BARRIER::Transition(
+				defaultBuffer.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+			);
 
-		// Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
-		// will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
-		// the intermediate upload heap data will be copied to mBuffer.
+			cmdList->ResourceBarrier(
+				1,
+				&transitionCopyDestToGenericRead
+			);
 
-		auto transitionCommonToCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(
-			defaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_COMMON,
-			D3D12_RESOURCE_STATE_COPY_DEST
-		);
-		cmdList->ResourceBarrier(
-			1,
-			&transitionCommonToCopyDest
-		);
-
-		UpdateSubresources<1>(
-			cmdList, 
-			defaultBuffer.Get(),
-			uploadBuffer.Get(),
-			0, 
-			0, 
-			1,
-			&subResourceData
-		);
-
-		auto transitionCopyDestToGenericRead = CD3DX12_RESOURCE_BARRIER::Transition(
-			defaultBuffer.Get(),
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_GENERIC_READ
-		);
-
-		cmdList->ResourceBarrier(
-			1,
-			&transitionCopyDestToGenericRead
-		);
-
-		// Note: uploadBuffer has to be kept alive after the above function calls because
-		// the command list has not been executed yet that performs the actual copy.
-		// The caller can Release the uploadBuffer after it knows the copy has been executed.
+			// Note: uploadBuffer has to be kept alive after the above function calls because
+			// the command list has not been executed yet that performs the actual copy.
+			// The caller can Release the uploadBuffer after it knows the copy has been executed.
 
 
-		return defaultBuffer;
-	}
+			return defaultBuffer;
+		}
 
-	// copyright for below method: Frank Luna
-	static UINT CalculateAlignedConstantBufferByteSize(UINT byteSize)
-	{
-		// Constant buffers must be a multiple of the minimum hardware
-		// allocation size (usually 256 bytes).  So round up to nearest
-		// multiple of 256. We do this by adding 255 (DX12_CBV_ALIGNMENT_MINUS_ONE) and then masking off
-		// the lower 2 bytes which store all bits < 256.
-		// Example: Suppose byteSize = 300.
-		// (300 + 255) & ~255
-		// 555 & ~255
-		// 0x022B & ~0x00ff
-		// 0x022B & 0xff00
-		// 0x0200
-		// 512
-		return (byteSize + DX12_CBV_ALIGNMENT_MINUS_ONE) & ~DX12_CBV_ALIGNMENT_MINUS_ONE;
-	}
+		// copyright for below method: Frank Luna
+		static UINT CalculateAlignedConstantBufferByteSize(UINT byteSize)
+		{
+			// Constant buffers must be a multiple of the minimum hardware
+			// allocation size (usually 256 bytes).  So round up to nearest
+			// multiple of 256. We do this by adding 255 (DX12_CBV_ALIGNMENT_MINUS_ONE) and then masking off
+			// the lower 2 bytes which store all bits < 256.
+			// Example: Suppose byteSize = 300.
+			// (300 + 255) & ~255
+			// 555 & ~255
+			// 0x022B & ~0x00ff
+			// 0x022B & 0xff00
+			// 0x0200
+			// 512
+			return (byteSize + DX12_CBV_ALIGNMENT_MINUS_ONE) & ~DX12_CBV_ALIGNMENT_MINUS_ONE;
+		}
 
-	static DirectX::XMFLOAT4X4 Identity4X4() {
-		return DirectX::XMFLOAT4X4{
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-		};
-	}
+		static DirectX::XMFLOAT4X4 Identity4X4() {
+			return DirectX::XMFLOAT4X4{
+				1.f, 0.f, 0.f, 0.f,
+				0.f, 1.f, 0.f, 0.f,
+				0.f, 0.f, 1.f, 0.f,
+				0.f, 0.f, 0.f, 1.f
+			};
+		}
 
-	static const size_t DX12_MAX_SAMPLERS = 6;
+		static const size_t DX12_MAX_SAMPLERS = 6;
 
-	// Credit for below method: Frank Luna
-	static void GetStaticSamplers(std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12_MAX_SAMPLERS>& array)
-	{
-		// Applications usually only need a handful of samplers.  So just define them all up front
-		// and keep them available as part of the root signature.  
+		// Credit for below method: Frank Luna
+		static void GetStaticSamplers(std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12_MAX_SAMPLERS>& array)
+		{
+			// Applications usually only need a handful of samplers.  So just define them all up front
+			// and keep them available as part of the root signature.  
 
-		const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
-			0, // shaderRegister
-			D3D12_FILTER_MIN_MAG_MIP_POINT,   // filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP 
-		);
+			const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
+				0, // shaderRegister
+				D3D12_FILTER_MIN_MAG_MIP_POINT,   // filter
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP
+			);
 
-		const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
-			1, // shaderRegister
-			D3D12_FILTER_MIN_MAG_MIP_POINT,    // filter
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
-		); 
+			const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
+				1, // shaderRegister
+				D3D12_FILTER_MIN_MAG_MIP_POINT,    // filter
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
+			);
 
-		const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-			2, // shaderRegister
-			D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP   // addressW
-		); 
+			const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+				2, // shaderRegister
+				D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP   // addressW
+			);
 
-		const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
-			3, // shaderRegister
-			D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
-		); 
+			const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
+				3, // shaderRegister
+				D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP   // addressW
+			);
 
-		const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
-			4, // shaderRegister
-			D3D12_FILTER_ANISOTROPIC, // filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
-			0.0f,                             // mipLODBias
-			8                                 // maxAnisotropy
-		);                              
+			const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
+				4, // shaderRegister
+				D3D12_FILTER_ANISOTROPIC, // filter
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
+				0.0f,                             // mipLODBias
+				8                                 // maxAnisotropy
+			);
 
-		const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
-			5, // shaderRegister
-			D3D12_FILTER_ANISOTROPIC, // filter
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
-			0.0f,                              // mipLODBias
-			8                                  // maxAnisotropy
-		);                                
+			const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
+				5, // shaderRegister
+				D3D12_FILTER_ANISOTROPIC, // filter
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+				D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
+				0.0f,                              // mipLODBias
+				8                                  // maxAnisotropy
+			);
 
-		array[0] = pointWrap;
-		array[1] = pointClamp;
-		array[2] = linearWrap;
-		array[3] = linearClamp;
-		array[4] = anisotropicWrap;
-		array[5] = anisotropicClamp;
-	}
+			array[0] = pointWrap;
+			array[1] = pointClamp;
+			array[2] = linearWrap;
+			array[3] = linearClamp;
+			array[4] = anisotropicWrap;
+			array[5] = anisotropicClamp;
+		}
 
 	private:
 		static const size_t DX12_CBV_ALIGNMENT_MINUS_ONE = 255;
-};
+	};
 
-// copyright for below struct: Frank Luna
-struct DX12MeshResource
-{
-	// Give it a name so we can look it up by name.
-	uint32_t id;
-
-	// System memory copies.  Use Blobs because the vertex/index format can be generic.
-	// It is up to the client to cast appropriately.  
-	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
-
-	// Data about the buffers.
-	UINT VertexByteStride = 0;
-	UINT VertexBufferByteSize = 0;
-	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
-	UINT IndexBufferByteSize = 0;
-
-	const D3D12_VERTEX_BUFFER_VIEW VertexBufferView()const
+	// copyright for below struct: Frank Luna
+	struct DX12MeshResource
 	{
-		D3D12_VERTEX_BUFFER_VIEW vbv;
-		vbv.BufferLocation = VertexBufferGPU->GetGPUVirtualAddress();
-		vbv.StrideInBytes = VertexByteStride;
-		vbv.SizeInBytes = VertexBufferByteSize;
+		// Give it a name so we can look it up by name.
+		uint32_t id;
 
-		return vbv;
-	}
+		// System memory copies.  Use Blobs because the vertex/index format can be generic.
+		// It is up to the client to cast appropriately.  
+		Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
+		Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU = nullptr;
 
-	const D3D12_INDEX_BUFFER_VIEW IndexBufferView()const
-	{
-		D3D12_INDEX_BUFFER_VIEW ibv;
-		ibv.BufferLocation = IndexBufferGPU->GetGPUVirtualAddress();
-		ibv.Format = IndexFormat;
-		ibv.SizeInBytes = IndexBufferByteSize;
+		Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
 
-		return ibv;
-	}
+		Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
 
-	// We can free this memory after we finish upload to the GPU.
-	void DisposeUploaders()
-	{
-		VertexBufferUploader = nullptr;
-		IndexBufferUploader = nullptr;
-	}
-};
+		// Data about the buffers.
+		UINT VertexByteStride = 0;
+		UINT VertexBufferByteSize = 0;
+		DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
+		UINT IndexBufferByteSize = 0;
+
+		const D3D12_VERTEX_BUFFER_VIEW VertexBufferView()const
+		{
+			D3D12_VERTEX_BUFFER_VIEW vbv;
+			vbv.BufferLocation = VertexBufferGPU->GetGPUVirtualAddress();
+			vbv.StrideInBytes = VertexByteStride;
+			vbv.SizeInBytes = VertexBufferByteSize;
+
+			return vbv;
+		}
+
+		const D3D12_INDEX_BUFFER_VIEW IndexBufferView()const
+		{
+			D3D12_INDEX_BUFFER_VIEW ibv;
+			ibv.BufferLocation = IndexBufferGPU->GetGPUVirtualAddress();
+			ibv.Format = IndexFormat;
+			ibv.SizeInBytes = IndexBufferByteSize;
+
+			return ibv;
+		}
+
+		// We can free this memory after we finish upload to the GPU.
+		void DisposeUploaders()
+		{
+			VertexBufferUploader = nullptr;
+			IndexBufferUploader = nullptr;
+		}
+	};
+}

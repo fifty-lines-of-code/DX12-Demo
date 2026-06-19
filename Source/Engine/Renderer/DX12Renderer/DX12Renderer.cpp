@@ -27,7 +27,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			// report live objects to the debugger
 	#if defined(_DEBUG) && !defined(__MINGW32__)
 			{
-				ComPtr<IDXGIDebug1> dxgiDebug;
+				Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
 				if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
 				{
 					dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
@@ -65,13 +65,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	#if defined(DEBUG) || defined(_DEBUG) 
 		// Enable the D3D12 debug layer.
 		{
-			ComPtr<ID3D12Debug> debugController;
+			Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
 			ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
 			debugController->EnableDebugLayer();
 		}
 
 	#ifndef __MINGW32__
-		ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		Microsoft::WRL::ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiInfoQueue.GetAddressOf()))))
 		{
 			dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
@@ -105,7 +105,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// Fallback to WARP device.
 		if (FAILED(hardwareResult))
 		{
-			ComPtr<IDXGIAdapter> pWarpAdapter;
+			Microsoft::WRL::ComPtr<IDXGIAdapter> pWarpAdapter;
 			ThrowIfFailed(mdxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter))
 			);
 
@@ -764,10 +764,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		sd.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 		sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		ComPtr<IDXGIFactory2> factory2;
+		Microsoft::WRL::ComPtr<IDXGIFactory2> factory2;
 		ThrowIfFailed(mdxgiFactory.As(&factory2));
 
-		ComPtr<IDXGISwapChain1> swapChain1;
+		Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
 		ThrowIfFailed(
 			factory2->CreateSwapChainForHwnd(
 				mCommandQueue.Get(),

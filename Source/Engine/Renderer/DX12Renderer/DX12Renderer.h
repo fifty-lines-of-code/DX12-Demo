@@ -21,21 +21,19 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
 
-using Microsoft::WRL::ComPtr;
-
-struct DX12MeshResource;
-struct DX12FrameResource;
-
-struct WindowDimensions {
-	UINT Width;
-	UINT Height;
-
-	WindowDimensions() : WindowDimensions(0, 0) {}
-	WindowDimensions(UINT _width, UINT _height) : Width(_width), Height(_height) {}
-	~WindowDimensions() {}
-};
-
 namespace Engine::EngineRenderer::DX12Renderer {
+
+	struct DX12MeshResource;
+	struct DX12FrameResource;
+
+	struct WindowDimensions {
+		UINT Width;
+		UINT Height;
+
+		WindowDimensions() : WindowDimensions(0, 0) {}
+		WindowDimensions(UINT _width, UINT _height) : Width(_width), Height(_height) {}
+		~WindowDimensions() {}
+	};
 
 	class DX12Renderer : public IRenderer {
 
@@ -117,17 +115,17 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT64 mCurrentFence = 0;
 
 		// DX12
-		ComPtr<IDXGIFactory4> mdxgiFactory;
-		ComPtr<ID3D12Device> mDX12Device;
-		ComPtr<ID3D12Fence> mFence;
-		ComPtr<ID3D12CommandQueue> mCommandQueue;
-		ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
-		ComPtr<ID3D12GraphicsCommandList> mSetupCommandList;
-		ComPtr<IDXGISwapChain> mSwapChain;
-		ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
-		ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
-		ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
-		ComPtr<ID3D12Resource> mDepthStencilBuffer;
+		Microsoft::WRL::ComPtr<IDXGIFactory4> mdxgiFactory;
+		Microsoft::WRL::ComPtr<ID3D12Device> mDX12Device;
+		Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue> mCommandQueue;
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mSetupCommandList;
+		Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
+		Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
+		Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
 		std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
 		DX12OpaqueRenderPipelinePass mRenderPipelinePass;
