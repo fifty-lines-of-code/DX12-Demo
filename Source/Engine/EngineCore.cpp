@@ -16,7 +16,7 @@ namespace Engine {
 		mMainWndCaption(caption),
 		mIsInitialized(false),
 		mAnimationSpeed(.375f), // todo: move this out to somewhere else
-		mRenderer(DX12Renderer()),
+		mRenderer(EngineRenderer::DX12Renderer::DX12Renderer()),
 		mWorldManager(WorldManager()),
 		mCamera(Camera()),
 		mInputSystem(XboxInputSystem()),
@@ -71,7 +71,7 @@ namespace Engine {
 	}
 
 	bool EngineCore::SetupPipeline() {
-		bool result = mRenderer.SetupPipeline(
+		bool result = mRenderer.SetupRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
@@ -131,25 +131,46 @@ namespace Engine {
 	}
 
 	void EngineCore::Draw(bool drawDebugLayer) {
+		// tell renderer to prepare for this frame
 		mRenderer.BeginFrame(mWorldManager.GetMaterialCount());
 
+		// TODO: Implement a DAG where nodes are the Pipeline Passes and edges are their 
+		// resource dependencies so that we can automate the overall Pipeline 
+		// instead of manually having to execute passes like so below
+
 		// draw our 3D objects
-		for (auto& entity : mWorldManager.GetEntities()) {
-			mRenderer.Draw(
-				(uint32_t)entity.GetMesh()->GetMeshID(),
-				(uint32_t)entity.GetMesh()->GetIndices().size(),
-				entity.GetID(),
-				mWorldManager.GetEntityCount()
-			);
+		auto& entities = mWorldManager.GetEntities();
+
+		EngineRenderer::DX12Renderer::DX12PipelinePassExecuteContext context;
+		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS> itemsExecuteContext = {};
+		context.NumberOfItems = (uint32_t)entities.size();
+
+		for (uint32_t i = 0; i < entities.size(); ++i) {
+			if (i >= EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
+
+			auto& entity = entities[i];
+
+			itemsExecuteContext[i].ID = entity.GetID();
+			auto* mesh = entity.GetMesh();
+
+			itemsExecuteContext[i].IndexCount = (uint32_t)mesh->GetIndices().size();
+			itemsExecuteContext[i].MeshID = (uint32_t)mesh->GetMeshID();
 		}
+		context.RenderItems = itemsExecuteContext.data();
+		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
+		context.PipelinePass = EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
+		mRenderer.Execute(context);
 
 		// draw our debug system
 		uint32_t noCharsToDraw = DebugSystem::DebugSystem::GetInstance().GetTotalNumberOfCharacersToDraw();
 
 		if (mIsDebugBuild && drawDebugLayer && noCharsToDraw > 0) {
-			mRenderer.DrawDebugSystem(noCharsToDraw);
+			context.NumberOfItems = noCharsToDraw;
+			context.PipelinePass = EngineRenderer::RendererPipelinePass::DEBUG_SYSTEM_PASS;
+			mRenderer.Execute(context);
 		}
 
+		// tell renderer to wrap up this frame
 		mRenderer.EndFrame();
 
 		// clear the cache for next frame
@@ -241,7 +262,7 @@ namespace Engine {
 		// set light data
 		mWorldManager.GetLightsData(perPassCB.Lights);
 
-		mRenderer.UpdatePerPassCb(
+		mRenderer.UpdateOpaqueRenderItemsPerPassCb(
 			&perPassCB,
 			sizeof(PerPassConstantBufferData)
 		);
@@ -261,7 +282,7 @@ namespace Engine {
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
 				entity.CopyToDestinationConstantBufferDataTransposed(bufferData);
 
-				mRenderer.UpdatePerRenderItemCb(
+				mRenderer.UpdateOpaqueRenderItemCb(
 					id,
 					&bufferData,
 					mWorldManager.GetConstantBufferDataByteSizeOfEachEntity()

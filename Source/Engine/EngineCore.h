@@ -34,7 +34,7 @@ namespace Engine {
 
 	private:
 		WorldManager mWorldManager;
-		DX12Renderer mRenderer;
+		EngineRenderer::DX12Renderer::DX12Renderer mRenderer;
 		Camera mCamera;
 		XboxInputSystem mInputSystem;
 		std::wstring mMainWndCaption;

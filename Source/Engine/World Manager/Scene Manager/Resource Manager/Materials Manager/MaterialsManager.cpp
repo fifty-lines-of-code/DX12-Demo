@@ -69,7 +69,7 @@ namespace Engine::EngineResources {
 		// 3. High Roughness (0.7f to 0.9f)
 		// This scatters incoming light in all directions, completely blurring out 
 		// any sharp specular highlights. It gives the cube a flat, matte, textured feel.
-		wallMaterialData.Roughness = 0.8f;
+		wallMaterialData.Roughness = 0.7f;
 
 		wallMaterial.SetType(type);
 		wallMaterial.SetData(wallMaterialData);

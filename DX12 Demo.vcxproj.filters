@@ -229,6 +229,48 @@
     <Filter Include="Resource Files\Shaders\Blur">
       <UniqueIdentifier>{4bad4f0f-bb62-4d4a-9151-e1e34952259e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers">
+      <UniqueIdentifier>{7ff0e114-179d-4aa5-b706-d3ab0416c9ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource">
+      <UniqueIdentifier>{7f0276f2-13fc-4e02-9934-01b7ee633ba6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass">
+      <UniqueIdentifier>{9f20687c-ba7b-405f-8325-f50c86fdda02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Frame Resource">
+      <UniqueIdentifier>{a97c7d0e-7e62-46d0-9ee0-31fb2b017192}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass">
+      <UniqueIdentifier>{79a91fca-8590-45ef-9d48-11baf5f9eb03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug System Pass">
+      <UniqueIdentifier>{242693ba-6ae9-4aeb-b609-0dc7008c8da1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass">
+      <UniqueIdentifier>{16a36288-fa64-4f36-b6ea-b3ce53d57550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Blur Pass">
+      <UniqueIdentifier>{0f0e05e9-6afb-4041-a980-cfecbe45c3ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Debug System Pass">
+      <UniqueIdentifier>{d233ff54-66e5-4958-8060-ec9f135542bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator">
+      <UniqueIdentifier>{600f879a-f371-4387-89da-25d116867ea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator">
+      <UniqueIdentifier>{36ffb6e0-8cc6-4a83-a966-1bcb8c06b2b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Data Structures">
+      <UniqueIdentifier>{c7a4f690-3bb7-4076-bbef-2eb052a8ec64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass">
+      <UniqueIdentifier>{e4970f54-fbef-4161-a01e-2b7da456e370}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Opaque Render Pass">
+      <UniqueIdentifier>{457e21f0-2fe6-4d4a-8a6c-3d14dc91008a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -246,14 +288,8 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12DefaultUploadBuffer.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Source\DX12Demo.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.h">
-      <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
@@ -396,9 +432,6 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\Texture Asset\TextureAsset.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager\Texture Asset</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureID.h">
-      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
     </ClInclude>
@@ -420,8 +453,41 @@
     <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h">
       <Filter>Header Files\Engine\Debug System</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12StructuredUploadBuffer.h">
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Upload Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Frame Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug System Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererConfig.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureID.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Texture Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12PipelineDataStructures.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12ResourceDataStructures.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -441,9 +507,6 @@
       <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp">
-      <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12FrameResource.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\EngineCore.cpp">
@@ -523,6 +586,24 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp">
       <Filter>Source Files\Engine\Debug System</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Frame Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Debug System Pass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Blur Pass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Opaque Render Pass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
