@@ -2,9 +2,8 @@
 
 #include <array>
 #include <cstdint>
-#include "../../DX12 Texture/DX12Texture.h"
 #include "../../DX12RendererConfig.h"
-#include "../../DX12ResourceDataStructures.h"
+#include "../../DX12 Data Structures/DX12ResourceDataStructures.h"
 #include <dxgi1_4.h>
 #include "../IDX12PipelinePass.h"
 

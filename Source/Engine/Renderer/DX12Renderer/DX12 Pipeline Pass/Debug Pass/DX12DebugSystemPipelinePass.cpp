@@ -2,7 +2,7 @@
 
 #include "../../d3dx12.h"
 #include "../../DX12RendererHelper.h"
-#include "../../DX12ResourceDataStructures.h"
+#include "../../DX12 Data Structures/DX12ResourceDataStructures.h"
 #include "../../../../../Helper/Helper.h"
 
 namespace Engine::EngineRenderer::DX12Renderer {

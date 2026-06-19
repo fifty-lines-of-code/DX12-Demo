@@ -54,7 +54,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		CreateRtvDsvDescriptorHeaps();
 
 		// Reset the command list to prep for initialization commands.
-		ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
+		ThrowIfFailed(mSetupCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
 		return true;
 	}
@@ -167,22 +167,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 		mBlurPipelinePass.ShutDown();
 		mDebugSystemPipelinePass.ShutDown();
+		mRenderPipelinePass.ShutDown();
 		for (auto& resource : mFrameResources) {
 			resource.reset();
 		}
-		mPipelineStateObject.Reset();
-		mpsByteCode.Reset();
-		mvsByteCode.Reset();
-		mRootSignature.Reset();
 		mDepthStencilBuffer.Reset();
 		for (UINT i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
 			mSwapChainBuffers[i].Reset();
 		}
-		mCBVSRVDescriptorHeap.Reset();
 		mDSVDescriptorHeap.Reset();
 		mRTVDescriptorHeap.Reset();
 		mSwapChain.Reset();
-		mCommandList.Reset();
+		mSetupCommandList.Reset();
 		mInitAndResizeCommandAllocator.Reset();
 		mCommandQueue.Reset();
 		mFence.Reset();
@@ -210,19 +206,30 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-	void DX12Renderer::UpdatePerPassCb(void* data, size_t dataSize) const {
-		mCurrentFrameResource->mPerPassCB.CopyData(0, data);
+	void DX12Renderer::UpdateOpaqueRenderItemsPerPassCb(
+		const void* data, 
+		size_t dataSize
+	) const {
+		mCurrentFrameResource->mOpaquePerPassCB.CopyData(0, data);
 	}
 
-	void DX12Renderer::UpdatePerRenderItemCb(uint32_t renderItemIndex, void* data, uint32_t perRenderItemCbSize) {
-		mCurrentFrameResource->mPerRenderItemCB.CopyData(renderItemIndex, data);
+	void DX12Renderer::UpdateOpaqueRenderItemCb(
+		uint32_t renderItemIndex,
+		const void* data, 
+		uint32_t perRenderItemCbSize
+	) {
+		mCurrentFrameResource->mOpaqueRenderItemCB.CopyData(renderItemIndex, data);
 	}
 
-	void DX12Renderer::UpdatePerMaterialCb(uint32_t materialIndex, void* data, uint32_t perMaterialCbSize) {
+	void DX12Renderer::UpdatePerMaterialCb(
+		uint32_t materialIndex,
+		const void* data, 
+		uint32_t perMaterialCbSize
+	) {
 		mCurrentFrameResource->mPerMaterialCB.CopyData(materialIndex, data);
 	}
 
-	void DX12Renderer::UpdateDebugSystemPerPassCb(void* data) {
+	void DX12Renderer::UpdateDebugSystemPerPassCb(const void* data) {
 		mCurrentFrameResource->mDebugSystemPerPassCB.CopyData(0, data);
 	}
 
@@ -231,21 +238,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
-		auto commandAllocator = mCurrentFrameResource->mCommandListAllocator;
+		auto commandAllocator = mCurrentFrameResource->mCommandAllocator;
 		// Reuse the memory associated with command recording.
 		// We can only reset when the associated command lists have finished execution on the GPU.
 		ThrowIfFailed(commandAllocator->Reset());
 
-		// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-		// Reusing the command list reuses memory.
-		ThrowIfFailed(mCommandList->Reset(
-			commandAllocator.Get(),
-			mPipelineStateObject.Get())
+		// We can reset our setup command list with a nullptr PSO 
+		// because we're not using this command list for drawing
+		// just transitioning our back buffer to render_target and
+		// to the render target and depth stencil views
+		ThrowIfFailed(
+			mSetupCommandList->Reset(
+				commandAllocator.Get(),
+				nullptr
+			)
 		);
-
-		// set viewports and scissor rect
-		mCommandList->RSSetViewports(1, &mScreenViewport);
-		mCommandList->RSSetScissorRects(1, &mScissorRect);
 	
 		// transition this frame's back buffer to render target
 		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
@@ -256,23 +263,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
 
-		// Indicate a state transition on the resource usage.
-		mCommandList->ResourceBarrier(
+		// Indicate the transition via a command.
+		mSetupCommandList->ResourceBarrier(
 			1,
 			&barrier
 		);
 
 		auto currentBackBufferView = CurrentBackBufferView();
 		auto depthStencilView = DepthStencilView();
+
 		// Clear the back buffer and depth/stencil buffer
-		mCommandList->ClearRenderTargetView(
+		mSetupCommandList->ClearRenderTargetView(
 			currentBackBufferView,
 			Colors::LightSteelBlue,
 			0, 
 			nullptr
 		);
 
-		mCommandList->ClearDepthStencilView(
+		mSetupCommandList->ClearDepthStencilView(
 			DepthStencilView(), 
 			D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
 			1.0f, 
@@ -282,69 +290,76 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// Specify the buffers we are going to render to.
-		mCommandList->OMSetRenderTargets(
+		mSetupCommandList->OMSetRenderTargets(
 			1,
 			&currentBackBufferView, 
 			true,
 			&depthStencilView
 		);
-
-		// set the per pass cb, materials cb
-		ID3D12DescriptorHeap* descriptorHeaps[] = { mCBVSRVDescriptorHeap.Get() };
-		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-		// set the root signature
-		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-
-		// per pass cb
-		auto passCB = mCurrentFrameResource->mPerPassCB.Resource();
-		D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = passCB->GetGPUVirtualAddress();
-		mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);
-
-		// materials cb
-		auto materialsCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-		int globalMaterialHeapOffset = (numberOfMaterials * mCurrentFrameResourceIndex);
-		materialsCbvHandle.Offset(globalMaterialHeapOffset, mCbvSrvUavDescriptorSize);
-		mCommandList->SetGraphicsRootDescriptorTable(2, materialsCbvHandle);
-
-		// textures
-		auto texturesCbHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCBVSRVDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-		texturesCbHandle.Offset(mTexturesCbHeapOffset, mCbvSrvUavDescriptorSize);
-		mCommandList->SetGraphicsRootDescriptorTable(3, texturesCbHandle);
 	}
 
-	bool DX12Renderer::Draw(uint32_t meshID, uint32_t indexCount, uint32_t entityIndex, uint32_t entityCount) {
-		const DX12MeshResource* const resource = mMeshResourceMap[meshID].get();
+	void DX12Renderer::Execute(const IPipelinePassExecuteContext& context) {
+		const DX12PipelinePassExecuteContext& ppContext = static_cast<const DX12PipelinePassExecuteContext&>(context);
 
-		if (resource == nullptr) { return false; }
+		switch (context.GetPipelinePassType()) {
+		case RendererPipelinePass::OPAQUE_RENDER_PASS:
+			DrawOpaqueRenderItems(ppContext);
+			break;
+		case RendererPipelinePass::BLUR_UI_PASS:
+			// todo:
+			break;
+		case RendererPipelinePass::DEBUG_SYSTEM_PASS:
+			DrawDebugSystem(ppContext.NumberOfItems);
+			break;
+		default:
+			Logger::PRINT(L"Warning NOT handling one of the cases of RendererPipelinePass in DX12Renderer");
+		}
+	}
 
-		auto vertexBufferView = resource->VertexBufferView();
-		mCommandList->IASetVertexBuffers(
-			0, 
-			1, 
-			&vertexBufferView
-		);
+	bool DX12Renderer::DrawOpaqueRenderItems(const DX12PipelinePassExecuteContext& context) {
+		// todo: add this to some sort of a ring buffer so memory can be reused
+		std::array<DX12OpaqueRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
 
-		auto indexBufferView = resource->IndexBufferView();
-		mCommandList->IASetIndexBuffer(
-			&indexBufferView
-		);
+		for (uint32_t i = 0; i < context.NumberOfItems; ++i) {
+			if (i >= DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
 
-		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			auto& renderItem = context.RenderItems[i];
+			const DX12MeshResource* const resource = mMeshResourceMap[renderItem.MeshID].get();
 
-		// Offset to the CBV in the CBV heap for this object and for this frame resource.
-		auto& renderItemCB = mCurrentFrameResource->mPerRenderItemCB;
-		UINT elementByteSize = renderItemCB.ElementByteSize();
-		auto renderItemCBResource = renderItemCB.Resource();
-		D3D12_GPU_VIRTUAL_ADDRESS renderItemCBAddress = renderItemCBResource->GetGPUVirtualAddress();
-		D3D12_GPU_VIRTUAL_ADDRESS currentEntityAddress = renderItemCBAddress + (entityIndex * elementByteSize);
+			if (resource == nullptr) { continue; }
 
-		mCommandList->SetGraphicsRootConstantBufferView(0, currentEntityAddress);
+			PerItemExecuteArgs[i].ID = renderItem.ID;
+			PerItemExecuteArgs[i].IndexCount = renderItem.IndexCount;
+			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
+			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
+		}
 
-		mCommandList->DrawIndexedInstanced(
-			indexCount,
-			1, 0, 0, 0
-		);
+		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
+		auto backBufferView = CurrentBackBufferView();
+		auto depthStencilView = DepthStencilView();
+		
+		DX12OpaqueRenderPipelineExecuteArgs rArgs{
+			{
+				mCurrentFrameResourceIndex,
+				mCurrentBackBufferIndex,
+				mCbvSrvUavDescriptorSize,
+				currentBackBuffer,
+				backBufferView,
+				depthStencilView,
+				mScreenViewport,
+				mScissorRect
+			},
+			PerItemExecuteArgs.data(),
+			context.NumberOfItems,
+			mFrameResources[mCurrentFrameResourceIndex]->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
+			mFrameResources[mCurrentFrameResourceIndex]->mOpaqueRenderItemCB.ElementByteSize(),
+			mFrameResources[mCurrentFrameResourceIndex]->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
+			context.NumberOfMaterials
+		};
+
+		mRenderPipelinePass.ExecutePass(rArgs);
+
+		mPiplinePassAggregator.InsertPass(&mRenderPipelinePass);
 
 		return true;
 	}
@@ -380,9 +395,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::EndFrame() {
-
 		DX12PipelinePassAggregatorResult result;
-		mPiplinePassAggregator.Aggregate(mCommandList.Get(), result);
+		mPiplinePassAggregator.Aggregate(mSetupCommandList.Get(), result);
 
 		// Record the transition to present directly onto the last command list
 		// be it the main one (for now) or one of the different ones
@@ -404,14 +418,16 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// reset for the next frame
 		mPiplinePassAggregator.Reset();
 
-		// Add the command list to the queue for execution
+		// Add the command lists to the queue for execution
 		mCommandQueue->ExecuteCommandLists(
 			(UINT)result.ActiveLists.size(),
 			result.ActiveLists.data()
 		);
+		
+		// mark the back buffer ready for presentation
+		ThrowIfFailed(mSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
 
 		// swap the back and front buffers
-		ThrowIfFailed(mSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
 		mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS;
 
 		// Advance the fence value to mark commands up to this fence point.
@@ -438,7 +454,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		FlushCommandQueue();
 
 		// reset the command allocator
-		ThrowIfFailed(mCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
+		ThrowIfFailed(mSetupCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
 		// reset the back buffers
 		for (int i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
@@ -559,11 +575,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			D3D12_RESOURCE_STATE_COMMON, 
 			D3D12_RESOURCE_STATE_DEPTH_WRITE
 		);
-		mCommandList->ResourceBarrier(1, &depthBufferBarrier);
+		mSetupCommandList->ResourceBarrier(1, &depthBufferBarrier);
 
 		// close the command list and execute all commands we're recorded here
-		ThrowIfFailed(mCommandList->Close());
-		ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+		ThrowIfFailed(mSetupCommandList->Close());
+		ID3D12CommandList* cmdsLists[] = { mSetupCommandList.Get() };
 		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 		// flush the command queue before we begin drawing
@@ -714,18 +730,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				0,
 				D3D12_COMMAND_LIST_TYPE_DIRECT,
 				mInitAndResizeCommandAllocator.Get(), // Associated command allocator
-				nullptr,                   // Initial PipelineStateObject
-				IID_PPV_ARGS(mCommandList.GetAddressOf())
+				nullptr,                              // Initial PipelineStateObject
+				IID_PPV_ARGS(mSetupCommandList.GetAddressOf())
 			)
 		);
 
 		// set the name of the command list
-		mCommandList->SetName(L"Command List");
+		mSetupCommandList->SetName(L"Command List");
 
 		// Start off in a closed state.  This is because the first time we refer 
 		// to the command list we will Reset it, and it needs to be closed before
 		// calling Reset.
-		mCommandList->Close();
+		mSetupCommandList->Close();
 	}
 
 	void DX12Renderer::CreateSwapChain() {
@@ -836,7 +852,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	}
 
-	bool DX12Renderer::SetupPipeline(
+	bool DX12Renderer::SetupRenderPipeline(
 		uint32_t numberOfEntities, 
 		uint32_t numberOfMaterials,
 		uint32_t numberOfTextures,
@@ -844,11 +860,38 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t debugSystemPerPassCBCount,
 		uint32_t debugSystemMaxCharacters
 	) {
-		CreateFrameResources(numberOfEntities, numberOfMaterials, debugSystemPerPassCBCount, debugSystemMaxCharacters);
-		if (!CreateConstantBufferDescriptor(numberOfMaterials, numberOfTextures, sizeOfPerMaterialCb)) { return false; }
-		if (!CreateRootSignature(numberOfMaterials, numberOfTextures)) { return false; }
-		if (!CreateShadersAndInputLayout()) { return false; }
-		if (!CreatePipelineStateObject()) { return false; }
+		CreateFrameResources(
+			numberOfEntities,
+			numberOfMaterials,
+			debugSystemPerPassCBCount,
+			debugSystemMaxCharacters
+		);
+
+		if (mRenderPipelinePass.GetIsInitialized()) { return true; }
+
+		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress;
+
+		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
+			PerMaterialCBAddress[i] = mFrameResources[i]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
+		}
+		uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
+
+		DX12OpaqueRenderPipelineInitArgs rArgs{
+			{
+				mDX12Device.Get(),
+				mInitAndResizeCommandAllocator.Get(),
+				mBackBufferFormat,
+				mDepthStencilFormat,
+				mCbvSrvUavDescriptorSize
+			},
+			numberOfMaterials,
+			numberOfTextures,
+			alignedSizeOfPerMaterialCb,
+			PerMaterialCBAddress,
+			mTextures.data()
+		};
+
+		if (!mRenderPipelinePass.Initialize(rArgs)) { return false; }
 
 		return true;
 	}
@@ -856,7 +899,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12Renderer::CreateFrameResources(
 		uint32_t numberOfEntities,
 		uint32_t numberOfMaterials,
-		uint32_t debugSystemPerPassCBCount, 
+		uint32_t debugSystemPerPassCBCount,
 		uint32_t debugSystemMaxCharacters
 	) {
 		for (UINT i = 0; i < mNumberOfFrameResources; ++i) {
@@ -871,231 +914,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				)
 			);
 		}
-	}
-
-	bool DX12Renderer::CreateConstantBufferDescriptor(
-		uint32_t numberOfMaterials,
-		uint32_t numberOfTextures,
-		uint32_t sizeOfPerMaterialCb
-	) {
-		uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
-
-		// Textures sit at the very end after the 3 frames of per material cb
-		mTexturesCbHeapOffset = numberOfMaterials * mNumberOfFrameResources;
-
-		// Compute the global total of descriptors across all frames
-		// (1 pass + N entities + M materials) * Total Frames + No Textures
-		UINT numberOfDescriptors = numberOfMaterials * mNumberOfFrameResources + numberOfTextures;
-
-		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
-		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		cbvHeapDesc.NodeMask = 0;
-
-		// Create the CBV descriptor heap
-		ThrowIfFailed(
-			mDX12Device->CreateDescriptorHeap(
-				&cbvHeapDesc,
-				IID_PPV_ARGS(&mCBVSRVDescriptorHeap)
-			)
-		);
-
-		// Pass the offsets and sizes forward to generate the views
-		return CreateConstantBufferViews(
-			numberOfMaterials,
-			numberOfTextures,
-			alignedSizeOfPerMaterialCb
-		);
-	}
-
-	bool DX12Renderer::CreateConstantBufferViews(
-		uint32_t numberOfMaterials,
-		uint32_t numberOfTextures,
-		uint32_t alignedSizeOfPerMaterialCb
-	) {
-		// per material cbs are laid out first per frame
-		// so 
-		// PerMatCB0(F0), PerMatCB1(F0), PerMatCB0(F1)..., PerMatCBN-1(FN-1)
-		// then the textures are laid out
-		// T0, T1..., TN-1
-
-		// our per material cb
-		// ((alignedPerMaterialCB) * numberOfMaterials * numberOfFrames
-		for (UINT frameIndex = 0; frameIndex < mNumberOfFrameResources; ++frameIndex)
-		{
-			auto materialCB = mFrameResources[frameIndex]->mPerMaterialCB.Resource();
-			D3D12_GPU_VIRTUAL_ADDRESS cbAddress = materialCB->GetGPUVirtualAddress();
-
-			for (uint32_t i = 0; i < numberOfMaterials; ++i) {
-				// Offset to this material cbv in the descriptor heap.
-				int heapIndex = (numberOfMaterials * frameIndex) + i;
-				auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-				handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
-
-				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-				cbvDesc.BufferLocation = cbAddress + (i * alignedSizeOfPerMaterialCb);
-				cbvDesc.SizeInBytes = alignedSizeOfPerMaterialCb;
-
-				mDX12Device->CreateConstantBufferView(&cbvDesc, handle);
-			}
-		}
-
-		// then our textures
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mCBVSRVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-		// offset to the start of textures
-		hDescriptor.Offset(mTexturesCbHeapOffset, mCbvSrvUavDescriptorSize);
-
-		for (uint32_t i = 0; i < numberOfTextures; ++i) {
-			// walk to this descriptor in the heap
-			CD3DX12_CPU_DESCRIPTOR_HANDLE currentHandle(hDescriptor, (INT)i, mCbvSrvUavDescriptorSize);
-
-			DX12Texture& tex = mTextures[i];
-			ID3D12Resource* resource;
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-			// if unloaded 
-			if (!tex.IsLoaded || tex.Resource == nullptr) {
-				srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
-				srvDesc.Texture2D.MipLevels = 1;
-				resource = nullptr;
-			}
-			else {
-				srvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
-				srvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
-				resource = tex.Resource.Get();
-			}
-
-			// IF THE SLOT IS USED: Create the real Shader Resource View
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-			// Bake the view configuration straight into the descriptor heap slot
-			mDX12Device->CreateShaderResourceView(resource, &srvDesc, currentHandle);
-		}
-
-		return true;
-	}
-
-	bool DX12Renderer::CreateRootSignature(uint32_t numberOfMaterials, uint32_t numberOfTextures) {
-		// per material cb
-		CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numberOfMaterials, 2);
-
-		// textures buffer
-		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
-		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numberOfTextures, 0);
-
-		CD3DX12_ROOT_PARAMETER slotRootParameter[4];
-
-		// Create a two descriptor tables of CBVs.
-		// per entity cb
-		slotRootParameter[0].InitAsConstantBufferView(0);
-		// per pass cb
-		slotRootParameter[1].InitAsConstantBufferView(1);
-		slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable1);
-		slotRootParameter[3].InitAsDescriptorTable(1, &cbvTable2, D3D12_SHADER_VISIBILITY_PIXEL);
-
-		std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
-		DX12RendererHelper::GetStaticSamplers(samplers);
-
-		// A root signature is an array of root parameters.
-		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
-		rootSigDesc.Init(
-			_countof(slotRootParameter),
-			slotRootParameter,
-			(UINT)samplers.size(),
-			samplers.data(),
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
-		);
-
-		// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-		ComPtr<ID3DBlob> serializedRootSig = nullptr;
-		ComPtr<ID3DBlob> errorBlob = nullptr;
-		HRESULT hr = D3D12SerializeRootSignature(
-			&rootSigDesc,
-			D3D_ROOT_SIGNATURE_VERSION_1,
-			serializedRootSig.GetAddressOf(),
-			errorBlob.GetAddressOf()
-		);
-
-		if (errorBlob != nullptr)
-		{
-			// todo: Move to Logger
-			::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-		}
-		ThrowIfFailed(hr);
-
-		ThrowIfFailed(
-			mDX12Device->CreateRootSignature(
-				0,
-				serializedRootSig->GetBufferPointer(),
-				serializedRootSig->GetBufferSize(),
-				IID_PPV_ARGS(&mRootSignature)
-			)
-		);
-
-		return true;
-	}
-
-	bool DX12Renderer::CreateShadersAndInputLayout() {
-		HRESULT hr = S_OK;
-
-		mvsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
-		mpsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
-
-		mInputLayout =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24,
-			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		return true;
-	}
-
-	bool DX12Renderer::CreatePipelineStateObject() {
-		// describe the pso
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-		psoDesc.pRootSignature = mRootSignature.Get();
-		psoDesc.VS =
-		{
-			reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()),
-			mvsByteCode->GetBufferSize()
-		};
-		psoDesc.PS =
-		{
-			reinterpret_cast<BYTE*>(mpsByteCode->GetBufferPointer()),
-			mpsByteCode->GetBufferSize()
-		};
-		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		psoDesc.NumRenderTargets = 1;
-		psoDesc.RTVFormats[0] = mBackBufferFormat;
-		psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-		psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-		psoDesc.DSVFormat = mDepthStencilFormat;
-
-		// build the pso
-		ThrowIfFailed(
-			mDX12Device->CreateGraphicsPipelineState(
-				&psoDesc, 
-				IID_PPV_ARGS(&mPipelineStateObject)
-			)
-		);
-
-		return true;
 	}
 
 	bool DX12Renderer::SetupDebugPipeline(
@@ -1161,7 +979,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	void DX12Renderer::DrawBlurPass() {
+	bool DX12Renderer::DrawBlurPass() {
 
 		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
 		auto backBufferView = CurrentBackBufferView();
@@ -1185,9 +1003,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mBlurPipelinePass.ExecutePass(args);
 
 		mPiplinePassAggregator.InsertPass(&mBlurPipelinePass);
+
+		return true;
 	}
 
-	void DX12Renderer::LoadGeometry(uint32_t meshID, uint16_t sizeOfVertex, uint32_t vertexBufferByteSize, void* vertices, uint32_t indexBufferByteSize, void* indices) {
+	void DX12Renderer::LoadGeometry(
+		uint32_t meshID, 
+		uint16_t sizeOfVertex,
+		uint32_t vertexBufferByteSize, 
+		const void* vertices, 
+		uint32_t indexBufferByteSize,
+		const void* indices
+	) {
 		// create mesh resource
 		std::unique_ptr<DX12MeshResource> meshResource = std::make_unique<DX12MeshResource>();
 		meshResource->id = meshID;
@@ -1225,7 +1052,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// from cpu to gpu usign the default buffer
 		meshResource->VertexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
 			mDX12Device.Get(),
-			mCommandList.Get(),
+			mSetupCommandList.Get(),
 			vertices,
 			vertexBufferByteSize,
 			meshResource->VertexBufferUploader
@@ -1233,7 +1060,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		meshResource->IndexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
 			mDX12Device.Get(),
-			mCommandList.Get(), 
+			mSetupCommandList.Get(), 
 			indices,
 			indexBufferByteSize,
 			meshResource->IndexBufferUploader
@@ -1261,7 +1088,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ThrowIfFailed(
 			DirectX::CreateDDSTextureFromFile12(
 				mDX12Device.Get(),
-				mCommandList.Get(),
+				mSetupCommandList.Get(),
 				filename.c_str(),
 				texture.Resource,
 				texture.UploadHeap
@@ -1275,9 +1102,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	void DX12Renderer::FinishInitialize() {
 		// Execute the initialization commands.
-		ThrowIfFailed(mCommandList->Close());
+		ThrowIfFailed(mSetupCommandList->Close());
 
-		ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+		ID3D12CommandList* cmdsLists[] = { mSetupCommandList.Get() };
 		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 		// Wait until initialization is complete.

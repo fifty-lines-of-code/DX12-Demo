@@ -150,11 +150,14 @@
     <ClInclude Include="Source\Engine\Physics System\PhysicsSystem.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\d3dx12.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12PipelineDataStructures.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12ResourceDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Render Pass\DX12OpaqueRenderPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h" />
@@ -162,7 +165,6 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererConfig.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
-    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12ResourceDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\IRenderer.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
@@ -211,6 +213,7 @@
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.cpp" />

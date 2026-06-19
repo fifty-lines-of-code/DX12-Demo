@@ -21,8 +21,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t CurrentBackBufferIndex;
 		UINT CbvSrvUavDescriptorSize;
 		ID3D12Resource* CurrentBackBufferResource;
-		D3D12_CPU_DESCRIPTOR_HANDLE& BackBufferView;
-		D3D12_CPU_DESCRIPTOR_HANDLE& DepthStencilView;
+		D3D12_CPU_DESCRIPTOR_HANDLE BackBufferView;
+		D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView;
 		D3D12_VIEWPORT& Viewport;
 		D3D12_RECT& ScissorRect;
 	};
@@ -30,6 +30,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	class IDX12PipelinePass {
 	public:
 		IDX12PipelinePass();
+		~IDX12PipelinePass() = default;
+
+		// delete copy and assignment operators
+		// so that we don't have any unwanted copies
+		// that perform shallow copies and maybe go out of scope at
+		// unexpected times
+		IDX12PipelinePass(const IDX12PipelinePass&) = delete;
+		IDX12PipelinePass& operator=(const IDX12PipelinePass&) = delete;
 
 		bool Initialize(const DX12PipelinePassInitArgs& args);
 		void ShutDown();

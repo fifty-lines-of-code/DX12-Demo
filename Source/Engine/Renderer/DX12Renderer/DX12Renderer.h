@@ -5,23 +5,15 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include "d3dx12.h"
 #include <d3d12.h>
-#include <D3Dcompiler.h>
-#include <DirectXMath.h>
-#include <DirectXPackedVector.h>
-#include <DirectXColors.h>
-#include <DirectXCollision.h>
+#include "d3dx12.h"
 #include "DX12 Pipeline Pass/Blur Pass/DX12BlurPipelinePass.h"
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
 #include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
-#include "DX12 Texture/DX12Texture.h"
-#include <dxgi1_4.h>
+#include "DX12 Data Structures/DX12PipelineDataStructures.h"
+#include "DX12 Pipeline Pass/Render Pass/DX12OpaqueRenderPipelinePass.h"
 #include <fstream>
-#include <sstream>
 #include <unordered_map>
-#include <vector>
-#include <wrl.h>
 
 // Link necessary d3d12 libraries.
 #pragma comment(lib,"d3dcompiler.lib")
@@ -59,9 +51,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		) override;
 
 		void FinishInitialize() override;
+		void Shutdown() override;
 		bool LoadTexture(std::wstring& filename, uint32_t id) override;
 
-		bool SetupPipeline(
+		bool SetupRenderPipeline(
 			uint32_t numberOfEntities,
 			uint32_t numberOfMaterials,
 			uint32_t numberOfTextures,
@@ -81,52 +74,44 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t meshID,
 			uint16_t sizeOfVertex,
 			uint32_t vertexBufferByteSize,
-			void* vertices,
+			const void* vertices,
 			uint32_t indexBufferByteSize,
-			void* indices
+			const void* indices
 		) override;
 
 		void PrepareForUpdate() override;
-		void UpdatePerPassCb(void* data, size_t dataSize) const override;
+		void UpdateOpaqueRenderItemsPerPassCb(
+			const void* data, 
+			size_t dataSize
+		) const override;
 
-		void UpdatePerRenderItemCb(
+		void UpdateOpaqueRenderItemCb(
 			uint32_t renderItemIndex,
-			void* data,
+			const void* data,
 			uint32_t perRenderItemCbSize
 		) override;
 
 		void UpdatePerMaterialCb(
 			uint32_t materialIndex,
-			void* data,
+			const void* data,
 			uint32_t perMaterialCbSize
 		) override;
 
-		void UpdateDebugSystemPerPassCb(void* data) override;
+		void UpdateDebugSystemPerPassCb(const void* data) override;
 		void UpdateDebugSystemStructuredBuffer(
 			uint32_t count,
 			const void* data
 		);
 
 		void BeginFrame(uint32_t numberOfMaterials) override;
-		bool Draw(
-			uint32_t meshID,
-			uint32_t indexCount,
-			uint32_t entityIndex,
-			uint32_t entityCount
-		) override;
+		void Execute(const IPipelinePassExecuteContext& context) override;
 
-		bool DrawDebugSystem(uint32_t numberOfCharacters) override;
 		void EndFrame() override;
-		void Shutdown() override;
 		void OnResize(UINT width, UINT height) override;
 
 	private:
 		DX12FrameResource* mCurrentFrameResource = nullptr;
 
-		std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
-		std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
-
-		std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 		D3D12_VIEWPORT mScreenViewport;
 		D3D12_RECT mScissorRect;
 		UINT64 mCurrentFence = 0;
@@ -137,22 +122,23 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ComPtr<ID3D12Fence> mFence;
 		ComPtr<ID3D12CommandQueue> mCommandQueue;
 		ComPtr<ID3D12CommandAllocator> mInitAndResizeCommandAllocator;
-		ComPtr<ID3D12GraphicsCommandList> mCommandList;
+		ComPtr<ID3D12GraphicsCommandList> mSetupCommandList;
 		ComPtr<IDXGISwapChain> mSwapChain;
 		ComPtr<ID3D12DescriptorHeap> mRTVDescriptorHeap;
 		ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
-		ComPtr<ID3D12DescriptorHeap> mCBVSRVDescriptorHeap;
 		ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
 		ComPtr<ID3D12Resource> mDepthStencilBuffer;
-		ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-		ComPtr<ID3DBlob> mvsByteCode = nullptr;
-		ComPtr<ID3DBlob> mpsByteCode = nullptr;
-		ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 
 		std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
+		DX12OpaqueRenderPipelinePass mRenderPipelinePass;
 		DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
 		DX12BlurPipelinePass mBlurPipelinePass;
 		DX12PipelinePassAggregator mPiplinePassAggregator;
+
+		// Per Entity Mesh Resource
+		std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
+		// All the Textures
+		std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
 
 		WindowDimensions mWindowDimensions;
 		HWND mhMainWnd = nullptr;
@@ -191,27 +177,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t debugSystemMaxCharacters
 		);
 
-		bool CreateConstantBufferDescriptor(
-			uint32_t numberOfMaterials,
-			uint32_t numberOfTextures,
-			uint32_t sizeOfPerMaterialCb
+		bool DrawOpaqueRenderItems(
+			const DX12PipelinePassExecuteContext& context
 		);
-
-		bool CreateConstantBufferViews(
-			uint32_t numberOfMaterials,
-			uint32_t numberOfTextures,
-			uint32_t alignedSizeOfPerMaterialCb
-		);
-		bool CreateRootSignature(
-			uint32_t numberOfMaterials,
-			uint32_t numberOfTextures
-		);
-
-		bool CreateShadersAndInputLayout();
-		bool CreatePipelineStateObject();
-
-		// blur effect pipeline setup
-		void DrawBlurPass();
+		bool DrawDebugSystem(uint32_t numberOfCharacters);
+		bool DrawBlurPass();
 
 		void DisposeUploaders();
 	};

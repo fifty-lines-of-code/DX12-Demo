@@ -107,6 +107,7 @@ float4 PS(VertexOut pin) : SV_Target
 
     // calculate diffuse albedo by texture sample * matData.gDiffuseAlbedo 
     // if we have a valid texture id
+    // todo: Find another way to find the texture ID without the if
 
     float4 diffuseAlbedo = matData.gDiffuseAlbedo;
     if (TextureIndex < 2) {
@@ -131,7 +132,7 @@ float4 PS(VertexOut pin) : SV_Target
     // Shadow factor placeholder (1.0f means completely unshadowed)
     float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);
     
-    // FIX: Pass the correct 'Lights' array variable to Luna's core function
+    // Pass the correct 'Lights' array variable to Luna's core function
     float4 directLight = ComputeLighting(Lights, mat, pin.PosW, pin.NormalW, toEyeW, shadowFactor);
 
     float4 litColor = ambient + directLight;

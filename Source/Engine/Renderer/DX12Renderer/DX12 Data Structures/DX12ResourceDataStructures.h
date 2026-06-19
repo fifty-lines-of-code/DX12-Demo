@@ -1,11 +1,10 @@
 #pragma once
 
-#include "DX12RendererHelper.h"
+#include "../DX12RendererHelper.h"
 
 // Copyright: Frank Luna
 
-struct DX12PerRenderItemConstants
-{
+struct DX12OpaqueRenderItemConstants {
     DirectX::XMFLOAT4X4 World = DX12RendererHelper::Identity4X4();
     uint32_t MaterialID = 0;
     uint32_t TextureID = 0;
@@ -20,8 +19,7 @@ struct DX12LightData {
     float SpotPower;
 };
 
-struct DX12PerPassConstants
-{
+struct DX12OpaquePerPassConstants {
     DirectX::XMFLOAT4X4 ViewProjectionTranspose = DX12RendererHelper::Identity4X4();
     DirectX::XMFLOAT4 AmbientLight; 
     DirectX::XMFLOAT3 EyePosW; 
@@ -29,8 +27,7 @@ struct DX12PerPassConstants
     DX12LightData Lights[16];
 };
 
-struct DX12PerMaterialConstants
-{
+struct DX12PerMaterialConstants {
     DirectX::XMFLOAT4 DiffuseAlbedo;
     DirectX::XMFLOAT3 FresnelR0;
     float Roughness = 0.25f;

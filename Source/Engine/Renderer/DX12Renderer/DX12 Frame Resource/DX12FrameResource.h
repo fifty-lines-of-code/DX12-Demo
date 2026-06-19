@@ -2,7 +2,7 @@
 
 #include "../DX12 Upload Buffers/DX12DefaultUploadBuffer.h"
 #include "../DX12 Upload Buffers/DX12StructuredUploadBuffer.h"
-#include "../DX12ResourceDataStructures.h"
+#include "../DX12 Data Structures/DX12ResourceDataStructures.h"
 
 // Copyright: Frank Luna
 
@@ -20,19 +20,19 @@ public:
         UINT debugSystemPerPassCBCount, 
         UINT debugSystemMaxCharacters
     );
+    ~DX12FrameResource();
 
     DX12FrameResource(const DX12FrameResource& rhs) = delete;
     DX12FrameResource& operator=(const DX12FrameResource& rhs) = delete;
-    ~DX12FrameResource();
 
     // We cannot reset the allocator until the GPU is done processing the commands.
     // So each frame needs their own allocator.
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandListAllocator;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocator;
 
     // We cannot update a cbuffer until the GPU is done processing the commands that reference it. 
     // So each frame needs their own cbuffers.
-    DX12ConstantBuffersUploadBuffer<DX12PerPassConstants> mPerPassCB;
-    DX12ConstantBuffersUploadBuffer<DX12PerRenderItemConstants> mPerRenderItemCB;
+    DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mOpaquePerPassCB;
+    DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemConstants> mOpaqueRenderItemCB;
     DX12ConstantBuffersUploadBuffer<DX12PerMaterialConstants> mPerMaterialCB;
     DX12ConstantBuffersUploadBuffer<DX12DebugSystemPerPassConstants> mDebugSystemPerPassCB;
     DX12StructuredUploadBuffer<DX12DebugSystemPerCharacterData> mDebugSystemPerCharacterCB;
