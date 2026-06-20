@@ -2,7 +2,9 @@
 
 #include "Chunk/Chunk.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
+
+	struct SceneBlueprint;
 
 	struct ChunkSlot {
 	public:
@@ -17,14 +19,21 @@ namespace Engine {
 			return true;
 		}
 
-		bool LoadChunk(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager) {
+		bool LoadChunk(
+			uint8_t* entityStartAddressInBytes, 
+			EngineResources::ResourceManager& resourceManager,
+			SceneBlueprint& sceneBlueprint
+		) {
 			if (isLoaded) { return false; }
 
-			if (!mChunk.Load(entityStartAddressInBytes, resourceManager)) { return false; }
+			bool loadResult = mChunk.Load(
+				entityStartAddressInBytes,
+				resourceManager,
+				sceneBlueprint
+			);
+			isLoaded = loadResult;
 
-			isLoaded = true;
-
-			return true;
+			return isLoaded;
 		}
 
 		uint16_t GetChunkID() { return mChunk.GetID(); }

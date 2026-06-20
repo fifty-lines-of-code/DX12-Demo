@@ -2,18 +2,20 @@
 
 #include <array>
 #include "Chunks Manager/ChunksManager.h"
+#include "../../EngineConfig.h"
 #include "Entity/Entity.h"
 #include "Lights/Lights Manager/LightsManager.h"
 #include <memory>
 #include "../Scene Manager/Entity/Mesh/Mesh.h"
 #include "OctTree/OctTree.h"
 #include "Resource Manager/ResourceManager.h"
+#include "../Scene/SceneBlueprint.h"
 #include <unordered_map>
 
 class Camera;
 class IInputSystem;
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	class SceneManager {
 	public:
@@ -21,13 +23,17 @@ namespace Engine {
 		~SceneManager();
 
 		bool Initialize(const Vector3& center, float halfWidth);
-		bool LoadScene();
+		bool LoadScene(SceneBlueprint& sceneBlueprint);
 		void GetPotentialCollisionsWithAABB(
 			const AABB& playerPotentialAABB,
 			std::vector<const Entity*>& candidates
 		);
 
-		void Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed);
+		void Update(
+			const IInputSystem* const inputSystem, 
+			float deltaTime,
+			float animationSpeed
+		);
 
 		uint32_t GetEntityCount() const noexcept;
 		uint32_t GetMaterialCount() const noexcept;
@@ -39,25 +45,25 @@ namespace Engine {
 		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
 		Entity& GetPlayerEntity();
 
-		static constexpr uint32_t MAX_ENTITIES = 3;
-		std::array<Entity, MAX_ENTITIES>& GetEntities();	
+		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& GetEntities();	
 		EngineResources::MaterialArray& GetMaterials() noexcept;
 		EngineResources::TextureArray& GetTextures() noexcept;
 
 		void PrepareForUpdate();
 
 	private:
-		static constexpr uint8_t PLAYER_INDEX = 0;
-
+		static constexpr uint32_t PLAYER_INDEX = 0;
+		// todo: update once we integrate SceneBlueprint
+		uint32_t mEntityCount = 3;
 		OctTree mOctTree;
-		std::array<Entity, MAX_ENTITIES> mEntities;
+		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES> mEntities;
 		EngineResources::ResourceManager mResourceManager;
 		ChunksManager mChunksManager;
 		LightsManager mLightsManager;
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
 
 	private:
-		bool GeneratePlayerEntity();
+		bool GeneratePlayerEntity(SceneBlueprint& sceneblueprint);
 		void PrepareForCollisionPass();
 	};
 }

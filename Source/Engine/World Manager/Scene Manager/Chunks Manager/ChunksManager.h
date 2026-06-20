@@ -3,9 +3,10 @@
 #include <array>
 #include "ChunkSlot.h"
 #include "../Resource Manager/ResourceManager.h"
+#include "../../Scene/SceneBlueprint.h"
 #include "../../WorldDimensions.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	class ChunksManager {
 	public:
@@ -13,7 +14,10 @@ namespace Engine {
 		~ChunksManager();
 
 		bool Initialize();
-		bool LoadChunks(EngineResources::ResourceManager& resourceManager);
+		bool LoadChunks(
+			EngineResources::ResourceManager& resourceManager,
+			SceneBlueprint& sceneBlueprint
+		);
 
 		static constexpr uint16_t CHUNK_SIZE = 32;
 	private:
@@ -29,6 +33,9 @@ namespace Engine {
 
 	private:
 		bool InitializeInitialChunks();
-		bool LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager);
+		bool LoadChunkAtSlot0(
+			EngineResources::ResourceManager& resourceManager,
+			SceneBlueprint& sceneBlueprint
+		);
 	};
 }

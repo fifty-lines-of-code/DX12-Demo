@@ -7,9 +7,9 @@
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
 
-class Mesh;
-
 namespace Engine {
+
+	class Mesh;
 
 	class Entity {
 	public:

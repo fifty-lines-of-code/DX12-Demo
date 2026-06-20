@@ -8,15 +8,18 @@ namespace Engine {
 
 	LightsManager::~LightsManager() {}
 
-	bool LightsManager::Initialize(Vector3 sunStrength, Vector3 sunDirection) {
+	bool LightsManager::Initialize() { 
+		// todo:
+		return true;
+	}
+
+	void LightsManager::Load(Vector3 sunStrength, Vector3 sunDirection) {
 		// todo
 
 		mGlobalSun.SetStrength(sunStrength);
 		// lets ensure we normalize the direction here
 		sunDirection.Normalize();
 		mGlobalSun.SetDirection(sunDirection);
-
-		return true;
 	}
 
 	void LightsManager::Update(float deltaTime) {

@@ -4,37 +4,44 @@
 #include <vector>
 #include <wrl.h>
 
-enum class MeshID : uint32_t {
-	Cube = 0,
-	Terrain0x0,
-	Count
-};
+namespace Engine {
 
-class Mesh {
-public:
-	Mesh();
-	~Mesh();
+	enum class MeshID : uint32_t {
+		Cube = 0,
+		Terrain0x0,
+		Count
+	};
 
-	void Load(MeshID id, std::vector<Engine::Vertex> vertices, std::vector<uint16_t> indices);
+	class Mesh {
+	public:
+		Mesh();
+		~Mesh();
 
-	const std::vector<Engine::Vertex>& GetVertices() const;
-	const std::vector<uint16_t>& GetIndices() const;
-	MeshID GetMeshID() const;
-	UINT GetVbByteSize() const;
-	UINT GetIbByteSize() const;
-	const Engine::Vector3& GetLocalMin() const;
-	const Engine::Vector3& GetLocalMax() const;
+		void Load(
+			MeshID id,
+			std::vector<Engine::Vertex> vertices,
+			std::vector<uint16_t> indices
+		);
 
-private:
-	std::vector<Engine::Vertex> mVertices;
-	std::vector<uint16_t> mIndices;
+		const std::vector<Engine::Vertex>& GetVertices() const;
+		const std::vector<uint16_t>& GetIndices() const;
+		MeshID GetMeshID() const;
+		UINT GetVbByteSize() const;
+		UINT GetIbByteSize() const;
+		const Engine::Vector3& GetLocalMin() const;
+		const Engine::Vector3& GetLocalMax() const;
 
-	MeshID mMeshID;
-	uint32_t mVbByteSize;
-	uint32_t mIbByteSize;
-	Engine::Vector3 mLocalMin;
-	Engine::Vector3 mLocalMax;
+	private:
+		std::vector<Engine::Vertex> mVertices;
+		std::vector<uint16_t> mIndices;
 
-private:
-	void CalculateLocalMinAndMax();
-};
+		MeshID mMeshID;
+		uint32_t mVbByteSize;
+		uint32_t mIbByteSize;
+		Engine::Vector3 mLocalMin;
+		Engine::Vector3 mLocalMax;
+
+	private:
+		void CalculateLocalMinAndMax();
+	};
+}

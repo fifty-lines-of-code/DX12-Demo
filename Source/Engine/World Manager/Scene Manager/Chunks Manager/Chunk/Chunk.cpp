@@ -2,7 +2,7 @@
 
 #include "../../Entity/Entity.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	Chunk::Chunk() :
 		mID(-1), // will wrap around to max uint16_t
@@ -24,7 +24,11 @@ namespace Engine {
 		return true;
 	}
 
-	bool Chunk::Load(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager) {
+	bool Chunk::Load(
+		uint8_t* entityStartAddressInBytes,
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
 		// calculate the offset
 		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
 

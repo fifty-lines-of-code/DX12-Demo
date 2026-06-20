@@ -1,7 +1,8 @@
 #include "ChunksManager.h"
 #include "../Entity/Entity.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
+
 	ChunksManager::ChunksManager(void* entitiesStartAddress) :
 		mEntitiesStartAddressInMemory(entitiesStartAddress),
 		mNextChunkID(0),
@@ -19,10 +20,13 @@ namespace Engine {
 		return true;
 	}
 
-	bool ChunksManager::LoadChunks(EngineResources::ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunks(
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
 		// todo:
 		// multi thread loading of each of the initial (x) chunks 
-		return LoadChunkAtSlot0(resourceManager);
+		return LoadChunkAtSlot0(resourceManager, sceneBlueprint);
 	}
 
 #pragma region Privte
@@ -47,12 +51,19 @@ namespace Engine {
 		return true;
 	}
 
-	bool ChunksManager::LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunkAtSlot0(
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
 		ChunkSlot& chunkSlotAt0 = mActiveChunks[0];
 
 		uint8_t* entityStartAddressInBytes = reinterpret_cast<uint8_t*>(const_cast<void*>(mEntitiesStartAddressInMemory));
 
-		chunkSlotAt0.LoadChunk(entityStartAddressInBytes, resourceManager);
+		chunkSlotAt0.LoadChunk(
+			entityStartAddressInBytes, 
+			resourceManager, 
+			sceneBlueprint
+		);
 
 		return true;
 	}

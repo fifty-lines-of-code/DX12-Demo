@@ -17,7 +17,8 @@ namespace Engine {
 		mMesh(nullptr),
 		mIsDirty(true),
 		mIsActive(false),
-		mMaterialType(EngineResources::MaterialType::INVALID)
+		mMaterialType(EngineResources::MaterialType::INVALID),
+		mTextureID(EngineResources::TextureID::INVALID)
 	{}
 
 	Entity::~Entity() {}
@@ -30,6 +31,7 @@ namespace Engine {
 
 	bool Entity::GetIsStatic() const { return mIsStatic; }
 
+	//TODO: store the mesh ID instead of a pointer indirection for efficiency
 	void Entity::SetMesh(const Mesh* mesh) {
 		mMesh = mesh;
 
@@ -39,7 +41,8 @@ namespace Engine {
 		mPhysicsBody.UpdateProductionTransforms();
 	}
 
-	const Mesh* Entity::GetMesh() const { return mMesh; }
+	// thus this returns an ID
+	const Engine::Mesh* Entity::GetMesh() const { return mMesh; }
 
 	void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 		if (mIsDirty) { mPhysicsBody.UpdateProductionTransforms(); }
