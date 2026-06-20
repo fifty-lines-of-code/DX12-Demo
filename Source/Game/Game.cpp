@@ -45,7 +45,6 @@ int Game::Run() {
 
 	while (msg.message != WM_QUIT) {
 		// 1. Process ALL pending Windows messages immediately
-		// This keeps the window snappy and responsive.
 		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -58,15 +57,13 @@ int Game::Run() {
 		// 3. Handle Paused State
 		if (mGameState.GetIsPaused()) {
 			Sleep(100);
-			continue; // Skip the rest of the loop
+			continue;
 		}
 
 		// 4. THE CORE VISION
-		// This is where your breathing math lives
 		Update();
 
 		// 5. DRAWING
-		// We call Draw(), which tells the Renderer to work its magic
 		Draw();
 	}
 

@@ -43,8 +43,8 @@ namespace Engine::DebugSystem {
 
 		uint32_t penX = DebugLimits::MARGIN;
 		uint32_t penY = DebugLimits::MARGIN;
-		int drawableWidth = mWindowWidth - (2 * DebugLimits::MARGIN);
-		int drawableHeight = mWindowHeight - (2 * DebugLimits::MARGIN);
+		uint32_t drawableWidth = mWindowWidth - (2 * DebugLimits::MARGIN);
+		uint32_t drawableHeight = mWindowHeight - (2 * DebugLimits::MARGIN);
 
 		mTotalNumberOfCharactersDrawn = 0;
 
