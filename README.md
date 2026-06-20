@@ -36,8 +36,7 @@ It is built to understand how real-time engines operate at the system level, not
 - Fence-based CPU/GPU synchronization
 - Frame-indexed resource management
 - Safe parallel execution between CPU and GPU
-
-> CPU builds frame N while GPU executes frame N-1.
+- CPU builds frame N while GPU executes frame N-1.
 
 ---
 
@@ -90,7 +89,7 @@ It is built to understand how real-time engines operate at the system level, not
 
 - **Left Stick**
   - < 50% → slow walk  
-  - > 50% → normal walk  
+  - &gt;= 50% → normal walk  
 
 - **Hold B while moving** → Run  
 
@@ -197,7 +196,7 @@ This project is informed by industry-standard graphics and engine development re
 
 ## 📸 Media
 
-> Highly recommended for recruiter impact:
+> Coming soon:
 
 - Gameplay clips
 - Terrain rendering
