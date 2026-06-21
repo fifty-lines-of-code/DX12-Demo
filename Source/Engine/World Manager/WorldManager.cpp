@@ -101,7 +101,6 @@ namespace Engine::EngineWorld {
 
 		// log player X, Z
 		char buffer[32];
-		// Safely bakes the float directly into a local stack buffer with 2 decimal places
 		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.x);
 		std::string posX(buffer);
 		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.z);
@@ -109,11 +108,17 @@ namespace Engine::EngineWorld {
 
 		std::string playerXZ =
 			"PlayerX:" + posX  +
-			",PlayerZ:" + posZ + "\n";
+			"/PlayerZ:" + posZ + "\n";
 		Engine::DebugSystem::DebugSystem::GetInstance().LogText(playerXZ);
 
 		// finally update scene manager
 		mSceneManager.Update(inputSystem, deltaTime, animationSpeed);
+
+		// log number of entities we're gonna draw
+		std::string noOfEntities =
+			"No. Of Entities: " +
+			std::to_string(GetEntityCount()) + "\n";
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(noOfEntities);
 	}
 
 	uint32_t WorldManager::GetEntityCount() const noexcept {

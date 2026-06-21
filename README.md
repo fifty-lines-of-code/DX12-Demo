@@ -209,12 +209,23 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 ## 📸 Media
 
-- Gameplay clips
-- Terrain rendering
-- Debug UI overlays
-- Camera movement
-- Render pass breakdowns
-- Architecture diagrams
+### 🖼️ Screenshots
+
+#### Debug UI
+![Debug UI](Docs/Images/Debug-Menu-And-Blur-Demo.png)
+#### Terrain rendering
+![Terrain Rendering](Docs/Images/Terrain-Rendering-Demo.png)
+#### Blur
+![Debug UI and Blur](Docs/Images/Blur-Demo.png)
+
+---
+
+### 🎥 Videos
+
+- Terrain traversal system (heightmap + triangle interpolation)
+- AABB wall collision demonstration
+- Full engine gameplay / rendering demo
+- Camera movement + scene navigation
 
 ---
 
