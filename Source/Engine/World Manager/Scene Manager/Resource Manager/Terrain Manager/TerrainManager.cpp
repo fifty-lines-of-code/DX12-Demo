@@ -20,9 +20,7 @@ namespace Engine {
 	TerrainManager::~TerrainManager() {}
 
 	uint16_t TerrainManager::TotalNumberOfVerticesForChunk(TerrainLOD lod) const noexcept {
-		int density = 1;
-		if (lod == TerrainLOD::MED) { density = 2; }
-		else if (lod == TerrainLOD::HIGH) { density = 4; }
+		int density = (uint8_t) lod;
 
 		int numberOfVertices = mChunkSize * density;
 
@@ -30,10 +28,7 @@ namespace Engine {
 	}
 
 	uint32_t TerrainManager::TotalNumberOfIndicesForChunk(TerrainLOD lod) const noexcept {
-		int density = 1;
-		if (lod == TerrainLOD::MED) { density = 2; }
-		else if (lod == TerrainLOD::HIGH) { density = 4; }
-
+		int density = (uint8_t) lod;
 		int numberOfVerticesPerEdge = mChunkSize * density + 1;
 		int numberOfQuads = numberOfVerticesPerEdge - 1;
 
@@ -52,16 +47,15 @@ namespace Engine {
 		float startX = chunkCenterX - mChunkSizeHalf;
 		float startZ = chunkCenterZ - mChunkSizeHalf;
 
+		// our bitmap is 33x33 thus 1089 values in the bitmap
 		std::array<uint8_t, 1089> heightValues{};
 
-		if (!LoadHeightmapToArray("Source/Resources/Heightmaps/Chunk0x0-1.png", heightValues)) {
+		if (!LoadHeightmapToArray("Source/Resources/Heightmaps/Chunk0x0-4.png", heightValues)) {
 			assert(false && "Terrain texture asset could not be processed.");
 		}
 
 		// 1. Determine our vertex subdivision factor based on LOD
-		int densityMultiplier = 1;
-		if (lod == TerrainLOD::MED)       densityMultiplier = 2;
-		else if (lod == TerrainLOD::HIGH) densityMultiplier = 4;
+		int densityMultiplier = (uint8_t) lod;
 
 		// 2. Calculate vertex configurations based on LOD
 		int vertsPerEdgeLOD = (mChunkSize * densityMultiplier) + 1;
@@ -74,7 +68,6 @@ namespace Engine {
 
 		Vertex v;
 
-		// Lambda helper to sample height safely at fractional image coordinates
 		// Lambda helper to sample height safely at fractional image coordinates
 		auto sampleHeightLambda = [&](float imgX, float imgZ) -> float {
 			if (imgX < 0.0f) imgX = 0.0f;
@@ -131,14 +124,16 @@ namespace Engine {
 				float hRight = sampleHeightLambda(imgX + offset, imgZ);
 				float hDown = sampleHeightLambda(imgX, imgZ - offset);
 				float hUp = sampleHeightLambda(imgX, imgZ + offset);
-
-				// Calculate tangible orthogonal slopes based on world grid dimensions
-				// World space step distance = offset * vertexSpacing
 				float worldStep = offset * vertexSpacing;
+
+				// Tangent (X-axis) and Bitangent (Z-axis) vectors are
+				// calculated that define the plane of the triangle
 				Engine::Vector3 tangent(2.0f * worldStep, hRight - hLeft, 0.0f);
 				Engine::Vector3 bitangent(0.0f, hUp - hDown, 2.0f * worldStep);
 
-				// Cross product gives us a perfect mathematically smooth perpendicular upward normal vector
+				// they are then crossed to find the perpendicular 
+				// upward-facing vector, which is then normalized
+				// as it represents pure direction (up).
 				Engine::Vector3 normal = bitangent.Cross(tangent);
 				normal.Normalize();
 				v.Normal = normal;

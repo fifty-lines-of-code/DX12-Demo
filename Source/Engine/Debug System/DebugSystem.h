@@ -24,7 +24,11 @@ namespace Engine::DebugSystem {
         DebugSystem& operator=(const DebugSystem&) = delete;
 
         void Initialize(uint32_t windowWidth, uint32_t windowHeight);
-        void LogText(const std::string& text, const Vector4& color = {1.f, 0.f, 0.f, 1.f});
+
+        void LogText(
+            const std::string& text,
+            const Vector4& color = {1.f, 0.f, 0.f, 1.f}
+        );
 
         void CalculateFramePositions();
         void ClearFrameCache();
@@ -49,7 +53,7 @@ namespace Engine::DebugSystem {
 
     private:
         DebugSystem();
-        ~DebugSystem();
+        ~DebugSystem() = default;
 
         void SetupFontAtlasForDebugFont();
     };

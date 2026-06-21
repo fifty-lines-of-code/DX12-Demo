@@ -43,12 +43,12 @@ namespace Engine::EngineWorld {
 		// Player entity
 		result = UpdateBlueprint(
 			0, // raw array index
-			Vector3(-10.f, 0.875f, -10.5f),
-			Vector3(.75f, .75f, .75f),
-			EntityType::PLAYER,
-			EngineResources::MaterialType::PLAYER,
-			EngineResources::TextureID::WOOD_CRATE,
-			MeshID::Cube
+			Vector3(-10.f, 0.875f, -10.5f), // center
+			Vector3(.75f, .75f, .75f), // scale
+			EntityType::PLAYER, // entitytype
+			EngineResources::MaterialType::PLAYER, // mat type
+			EngineResources::TextureID::WOOD_CRATE, // tex type
+			MeshID::Cube // mesh id
 		);
 
 		if (!result) { return false; }
@@ -74,7 +74,7 @@ namespace Engine::EngineWorld {
 		// Wall
 		result = UpdateBlueprint(
 			2, // raw array index
-			Vector3(0.f, 4.1f, 3.f),
+			Vector3(0.f, 4.1f, -1.f), // center
 			Vector3(Vector3(1.5f, 2.f, .2f)),
 			EntityType::WALL,
 			EngineResources::MaterialType::WALL,

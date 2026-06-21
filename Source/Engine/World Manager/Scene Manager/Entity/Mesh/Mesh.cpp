@@ -6,24 +6,26 @@ namespace Engine {
 		mMeshID(MeshID::Count),
 		mVbByteSize(0),
 		mIbByteSize(0)
-	{
-	}
+	{}
 
 	Mesh::~Mesh() {}
 
-	void Mesh::Load(MeshID id, std::vector<Engine::Vertex> vertices, std::vector<uint16_t> indices)
-	{
+	void Mesh::Load(
+		MeshID id,
+		std::vector<Vertex> vertices, 
+		std::vector<uint16_t> indices
+	) {
 		mMeshID = id;
 		mVertices = vertices;
 		mIndices = indices;
 
-		mVbByteSize = (uint32_t)vertices.size() * sizeof(Engine::Vertex);
+		mVbByteSize = (uint32_t)vertices.size() * sizeof(Vertex);
 		mIbByteSize = (uint32_t)indices.size() * sizeof(uint16_t);
 
 		CalculateLocalMinAndMax();
 	}
 
-	const std::vector<Engine::Vertex>& Mesh::GetVertices() const {
+	const std::vector<Vertex>& Mesh::GetVertices() const {
 		return mVertices;
 	}
 
@@ -37,15 +39,15 @@ namespace Engine {
 
 	UINT Mesh::GetIbByteSize() const { return mIbByteSize; }
 
-	const Engine::Vector3& Mesh::GetLocalMin() const { return mLocalMin; }
+	const Vector3& Mesh::GetLocalMin() const { return mLocalMin; }
 
-	const Engine::Vector3& Mesh::GetLocalMax() const { return mLocalMax; }
+	const Vector3& Mesh::GetLocalMax() const { return mLocalMax; }
 
 	void Mesh::CalculateLocalMinAndMax() {
 		if (mVertices.size() < 1) { return; }
 
-		Engine::Vector3 min = mVertices[0].Position;
-		Engine::Vector3 max = mVertices[0].Position;
+		Vector3 min = mVertices[0].Position;
+		Vector3 max = mVertices[0].Position;
 
 		for (int i = 1; i < mVertices.size(); ++i) {
 

@@ -40,7 +40,11 @@ namespace Engine::EngineResources {
 				break;
 
 			case MeshID::Terrain0x0:
-				CreateTerrian0x0(mesh);
+				CreateTerrian(
+					mesh,
+					0.f, 
+					0.f,
+					id);
 				break;
 			}
 
@@ -65,13 +69,17 @@ namespace Engine::EngineResources {
 		return mTextureManager.GetTextures();
 	}
 
+	TerrainLOD ResourceManager::GetTerrainLOD() const noexcept { 
+		return mCurrentTerrainLOD; 
+	}
+
 #pragma region Private
 
 	void ResourceManager::CreateCubeMesh(Mesh* mesh) {
 		std::vector<Vertex> vertices;
 		std::vector<uint16_t> indices;
 
-		// Define the 6 unit directions for a cube's faces based on Left-Handed (+Z into screen)
+		// Define the 6 unit directions for a cube's faces
 		Vector3 normals[6] = {
 			Vector3(0.0f,  0.0f, -1.0f), // Front (pointing out of screen toward eye)
 			Vector3(0.0f,  0.0f,  1.0f), // Back  (pointing into screen away from eye)
@@ -135,24 +143,31 @@ namespace Engine::EngineResources {
 		mesh->Load(MeshID::Cube, vertices, indices);
 	}
 
-	void ResourceManager::CreateTerrian0x0(Mesh* mesh) {
+	void ResourceManager::CreateTerrian(
+		Mesh* mesh,
+		float centerX,
+		float centerZ,
+		MeshID meshID
+	) {
 		std::vector<Engine::Vertex> vertices;
 
-		const uint16_t vertexCount = mTerrainManager.TotalNumberOfVerticesForChunk(TerrainLOD::HIGH);
+		const uint16_t vertexCount = mTerrainManager.TotalNumberOfVerticesForChunk(mCurrentTerrainLOD);
 		vertices.reserve(vertexCount);
 
 		std::vector<uint16_t> indices;
-		const uint32_t indexCount = mTerrainManager.TotalNumberOfIndicesForChunk(TerrainLOD::HIGH);
+		const uint32_t indexCount = mTerrainManager.TotalNumberOfIndicesForChunk(
+			mCurrentTerrainLOD
+		);
 		indices.reserve(indexCount);
 
 		mTerrainManager.GenerateTerrainFor(
-			0,
-			0,
-			TerrainLOD::HIGH,
+			centerX,
+			centerZ,
+			mCurrentTerrainLOD,
 			vertices,
 			indices
 		);
-		mesh->Load(MeshID::Terrain0x0, vertices, indices);
+		mesh->Load(meshID, vertices, indices);
 	}
 
 	bool ResourceManager::GetIsLoaded(size_t index) {

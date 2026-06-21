@@ -14,8 +14,6 @@ namespace Engine::DebugSystem {
 		mUVCellWidth = mFontAtlasDesc.CellWidth / (float)mFontAtlasDesc.TextureWidth;
 	}
 
-	DebugSystem::~DebugSystem() {}
-
 	void DebugSystem::Initialize(uint32_t windowWidth, uint32_t windowHeight) {
 		mWindowWidth = windowWidth;
 		mWindowHeight = windowHeight;

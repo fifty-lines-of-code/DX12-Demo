@@ -3,6 +3,7 @@
 #include "../../../Math/Geometry.h"
 #include "../../../Math/BasisVectors.h"
 #include "PerPassAndPerEntityConstantBufferData.h"
+#include "EntityType.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
@@ -51,10 +52,16 @@ namespace Engine {
 		EngineResources::TextureID GetTextureID() const;
 		void SetTextureID(EngineResources::TextureID tID);
 
+		bool GetIsTerrainOrFloor() const noexcept;
+		
+		void SetEntityType(EntityType entityType) noexcept;
+		EntityType GetEntityType() const noexcept;
+
 	private:
 		EnginePhysics::PhysicsBody mPhysicsBody;
 		const Mesh* mMesh;
 		uint32_t mID;
+		EntityType mEntityType;
 		EngineResources::TextureID mTextureID;
 		EngineResources::MaterialType mMaterialType;
 		bool mIsStatic;

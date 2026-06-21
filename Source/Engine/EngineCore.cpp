@@ -106,9 +106,6 @@ namespace Engine {
 	void EngineCore::Update(float deltaTime) {
 		// todo: 
 
-		// calculate our geometry and related data of Debug System
-		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
-
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
 
@@ -122,6 +119,9 @@ namespace Engine {
 
 		// update the camera with updated player center
 		mCamera.UpdateWithTarget(mWorldManager.GetPlayerCenter());
+
+		// calculate our geometry and related data of Debug System
+		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
 
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();

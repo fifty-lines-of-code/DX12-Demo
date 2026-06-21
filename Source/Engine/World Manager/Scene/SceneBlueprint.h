@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "../../Math/EngineMath.h"
+#include "../Scene Manager/Entity/EntityType.h"
 #include "../Scene Manager/Resource Manager/Materials Manager/Material/Material.h"
 #include "../Scene Manager/Resource Manager/Texture Manager/TextureID.h"
 
@@ -13,12 +14,6 @@ namespace Engine::EngineWorld {
 		HEIGHTMAP,
 		COUNT,
 		INVALID
-	};
-
-	enum class EntityType : uint32_t {
-		PLAYER,
-		TERRAIN,
-		WALL
 	};
 
 	struct EntityBlueprint {

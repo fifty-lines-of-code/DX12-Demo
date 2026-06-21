@@ -23,7 +23,10 @@ namespace Engine::EngineWorld {
 			EngineResources::ResourceManager& resourceManager,
 			SceneBlueprint& sceneBlueprint
 		);
+
 		uint16_t GetID() const noexcept;
+
+		uint16_t GetIdOfTerrainOrFloor() const noexcept;
 
 	public:
 		static constexpr uint8_t MAX_ENTITIES_IN_A_CHUNK = 64;
@@ -36,6 +39,7 @@ namespace Engine::EngineWorld {
 		Vector3 mCenter;
 		uint16_t mID;
 		uint16_t mNextEntityID;
+		uint16_t mIdOfTerrainOrFloor;
 		uint8_t mTotalNumberOfEntities;
 
 	private:

@@ -7,6 +7,7 @@ namespace Engine::EngineWorld {
 	Chunk::Chunk() :
 		mID(-1), // will wrap around to max uint16_t
 		mTotalNumberOfEntities(0),
+		mIdOfTerrainOrFloor(-1), // sets to uint16_t max
 		mNextEntityID(0)
 	{}
 
@@ -46,6 +47,7 @@ namespace Engine::EngineWorld {
 			case EntityType::TERRAIN: 
 				// get pointer to the terrain mesh
 				mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+				mIdOfTerrainOrFloor = mNextEntityID;
 				break;
 			case EntityType::WALL: 
 				// get pointer to the terrain mesh
@@ -57,6 +59,7 @@ namespace Engine::EngineWorld {
 			if (mesh != nullptr) {
 				entity.SetIsActive(true);
 				entity.SetID(mNextEntityID);
+				entity.SetEntityType(entityBlueprint.EntityType);
 				entity.GetPhysicsBody().Center = entityBlueprint.Center;
 				entity.SetScale(entityBlueprint.Scale);
 				entity.SetMesh(mesh);
@@ -78,6 +81,10 @@ namespace Engine::EngineWorld {
 	}
 
 	uint16_t Chunk::GetID() const noexcept { return mID; }
+
+	uint16_t Chunk::GetIdOfTerrainOrFloor() const noexcept {
+		return mIdOfTerrainOrFloor; 
+	}
 
 #pragma region Private
 

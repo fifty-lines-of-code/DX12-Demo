@@ -22,6 +22,11 @@ namespace Engine::EngineWorld {
 			EngineResources::ResourceManager& resourceManager,
 			SceneBlueprint& sceneBlueprint
 		);
+		Vector2 GetCenterXZOfChunkContaining(const Vector2& entityXZ);
+		uint16_t GetIdOfTerrainOrFloor(
+			float entityX, 
+			float entityZ
+		);
 
 		static constexpr uint16_t CHUNK_SIZE = 32;
 	private:
@@ -34,7 +39,6 @@ namespace Engine::EngineWorld {
 		const void* mEntitiesStartAddressInMemory;
 		uint16_t mNextChunkID;
 		uint32_t mChunkEntitiesStartingID;
-		uint8_t mActiveChunkCount;
 
 	private:
 		bool InitializeInitialChunks();

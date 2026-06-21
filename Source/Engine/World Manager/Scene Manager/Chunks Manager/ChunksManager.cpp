@@ -9,14 +9,13 @@ namespace Engine::EngineWorld {
 	) :
 		mEntitiesStartAddressInMemory(entitiesStartAddress),
 		mNextChunkID(0),
-		mChunkEntitiesStartingID(chunkEntitiesStartingID),
-		mActiveChunkCount(0)
+		mChunkEntitiesStartingID(chunkEntitiesStartingID)
 	{}
 
 	ChunksManager::~ChunksManager() {}
 
 	bool ChunksManager::Initialize() {
-		mActiveChunkCount = 0;
+		mNextChunkID = 0;
 
 		if (!InitializeInitialChunks()) { return false; }
 		// todo
@@ -34,23 +33,35 @@ namespace Engine::EngineWorld {
 		return LoadChunkAtSlot0(resourceManager, sceneBlueprint);
 	}
 
+	Vector2 ChunksManager::GetCenterXZOfChunkContaining(const Vector2& entityXZ) {
+		// TODO:
+		return Vector2(0.f);
+	}
+
+	uint16_t ChunksManager::GetIdOfTerrainOrFloor(float entityX, float entityZ) {
+		// step 1: identify what chunk entity is in using x and z
+		// TODO:
+		// for now we only have a single chunk so we go straight to mActiveChunks[0]
+
+		// step 2: Query that chunk slot for the id of the terrain or floor entity
+		Chunk& chunk = mActiveChunks[0].GetChunk();
+		return chunk.GetIdOfTerrainOrFloor();
+	}
+
 #pragma region Privte
 
 	bool ChunksManager::InitializeInitialChunks() {
 		// todo:
 		// multi thread loading of each of the initial (x) chunks 
 
-		if (mActiveChunkCount >= MAX_ACTIVE_CHUNKS ||
-			mNextChunkID >= MAX_CHUNKS) { 
+		if (mNextChunkID >= MAX_CHUNKS) { 
 			return false;
 		}
 
-		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount];
+		ChunkSlot &chunkSlotAt0 = mActiveChunks[mNextChunkID];
 		// this chunk's center is 0, 0, 0
 		Vector3 center;
 
-		// +1 because Player index is always 0
-		// todo: find a better way to do this
 		uint32_t chunkEntityStartIndex = 
 			mChunkEntitiesStartingID + 
 			mNextChunkID * Chunk::MAX_ENTITIES_IN_A_CHUNK;
@@ -59,8 +70,7 @@ namespace Engine::EngineWorld {
 			return false;
 		}
 
-		// explicitly update the next chunk ID and active chunk count
-		mActiveChunkCount++;
+		// explicitly update the next chunk ID
 		mNextChunkID++;
 
 		return true;

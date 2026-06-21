@@ -46,7 +46,7 @@ namespace Engine {
 		float mPitch = MathHelper::ConvertToRadians(30);
 		float mPitchMin = MathHelper::ConvertToRadians(-1);
 		float mPitchMax = MathHelper::ConvertToRadians(45);
-		float mRadius = 5.f;
+		float mRadius = 5.75f;
 		float mYawSpeed = .75f;
 		float mPitchSpeed = .5f;
 		const float mTrackingSpeed = 4.f;
