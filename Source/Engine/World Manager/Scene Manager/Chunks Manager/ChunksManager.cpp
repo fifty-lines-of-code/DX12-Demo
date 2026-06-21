@@ -33,6 +33,11 @@ namespace Engine::EngineWorld {
 		return LoadChunkAtSlot0(resourceManager, sceneBlueprint);
 	}
 
+	Vector2 ChunksManager::GetCenterXZOfChunkContaining(const Vector2& entityXZ) {
+		// TODO:
+		return Vector2(0.f);
+	}
+
 	uint16_t ChunksManager::GetIdOfTerrainOrFloor(float entityX, float entityZ) {
 		// step 1: identify what chunk entity is in using x and z
 		// TODO:

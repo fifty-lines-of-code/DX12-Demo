@@ -74,6 +74,7 @@ namespace Engine::EngineWorld {
 			const Mesh& terrainMesh,
 			float entityX,
 			float enityZ,
+			const Vector2& chunkCenterXZ,
 			float deltaTime
 		);
 	};

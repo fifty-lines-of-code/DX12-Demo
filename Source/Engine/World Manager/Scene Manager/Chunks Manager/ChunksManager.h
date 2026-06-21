@@ -22,6 +22,7 @@ namespace Engine::EngineWorld {
 			EngineResources::ResourceManager& resourceManager,
 			SceneBlueprint& sceneBlueprint
 		);
+		Vector2 GetCenterXZOfChunkContaining(const Vector2& entityXZ);
 		uint16_t GetIdOfTerrainOrFloor(
 			float entityX, 
 			float entityZ

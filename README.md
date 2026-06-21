@@ -55,13 +55,11 @@ It is built to understand how real-time engines operate at the system level, not
 - Heightmap-based terrain per chunk
 - Each chunk contains its own vertex grid and spacing data
 - Terrain rendered as a triangulated grid (two triangles per quad)
-
-- Player movement is fully terrain-aware:
+- Player movement is terrain-aware:
   - Converts world position → chunk space
   - Identifies current terrain quad
   - Determines which triangle of the quad the player is over
   - Uses triangle-based interpolation for height sampling
-
 - Ensures gameplay surface matches rendered geometry exactly
 - Prevents mismatch between physics, collision, and rendering
 
@@ -82,7 +80,8 @@ It is built to understand how real-time engines operate at the system level, not
 - AABB-based collision detection for entity interactions
 - Real-time gameplay validation and physics approximation
 - Terrain collision system:
-  - Player height is sampled directly from terrain triangle data
+  - Player height sampled directly from terrain triangle data
+  - Chunk-based terrain queries ensure correct surface resolution
   - Triangle interpolation ensures accurate collision with rendered mesh
 - Prevents clipping, floating, and terrain desync issues
 
@@ -109,8 +108,8 @@ It is built to understand how real-time engines operate at the system level, not
 ### Xbox Controller
 
 - Left Stick:
-  - < 50% → slow walk  
-  - >= 50% → normal walk  
+  - &lt; 50% → slow walk  
+  - &gt;= 50% → normal walk  
 
 - Hold B while moving → Run  
 

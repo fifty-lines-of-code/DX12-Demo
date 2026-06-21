@@ -154,14 +154,20 @@ namespace Engine::EngineWorld {
 		Entity& entity = mEntities[terrainOrFloorId];
 		if (entity.GetIsTerrainOrFloor()) {
 			switch (entity.GetEntityType()) {
-			case EntityType::TERRAIN:
-				// todo:
+			case EntityType::TERRAIN: {
+				Vector2 entityXZ = Vector2(entityX, entityZ);
+				Vector2 chunkCenterXZ = mChunksManager.GetCenterXZOfChunkContaining(
+					entityXZ
+				);
+
 				return CalculateProposedYOfTerrain(
 					*mEntities[terrainOrFloorId].GetMesh(),
-					entityX, 
+					entityX,
 					entityZ,
+					chunkCenterXZ,
 					deltaTime
 				);
+			}
 			case EntityType::FLOOR:
 				// add a small delta value (0.05f) so that
 				// object appears just above the floor
@@ -236,18 +242,25 @@ namespace Engine::EngineWorld {
 		const Mesh& terrainMesh,
 		float entityX,
 		float entityZ,
+		const Vector2& chunkCenterXZ,
 		float deltaTime
 	) {
 		int density = (uint8_t)mResourceManager.GetTerrainLOD();
-		float entityLocalX = entityX + ChunksManager::CHUNK_SIZE / 2;
-		float entityLocalZ = entityZ + ChunksManager::CHUNK_SIZE / 2;
+
+		float relativeToCenterX = entityX - chunkCenterXZ.x;
+		float relativeToCenterZ = entityZ - chunkCenterXZ.y;
+
+		// Subtracting the chunk's world center converts the entity's global position 
+		// into local chunk coordinates, normalizing them into a 0 to CHUNK_SIZE range.
+		float entityLocalX = relativeToCenterX + ChunksManager::CHUNK_SIZE / 2;
+		float entityLocalZ = relativeToCenterZ + ChunksManager::CHUNK_SIZE / 2;
 
 		uint32_t numberOfQuads = ChunksManager::CHUNK_SIZE * density;
 		uint32_t numberOfVertices = numberOfQuads + 1;
 		float vertexSpacing = 1.f / density;
 
-		int x = (int)std::floor(entityLocalX / vertexSpacing);
-		int z = (int)std::floor(entityLocalZ / vertexSpacing);
+		uint32_t x = (int)std::floor(entityLocalX / vertexSpacing);
+		uint32_t z = (int)std::floor(entityLocalZ / vertexSpacing);
 
 		if (x < 0 || x >= numberOfQuads ||
 			z < 0 || z >= numberOfQuads) {
