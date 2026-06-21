@@ -6,7 +6,9 @@
 namespace Engine::EngineWorld {
 
 	SceneManager::SceneManager() :
-		mChunksManager(&mEntities[1]), // 0th index is always Player stored in scene manager
+		// Chunks manager entities id always start at 1
+		// cause the player index is always 0
+		mChunksManager(&mEntities[0], 1),
 		mResourceManager(ChunksManager::CHUNK_SIZE)
 	{}
 

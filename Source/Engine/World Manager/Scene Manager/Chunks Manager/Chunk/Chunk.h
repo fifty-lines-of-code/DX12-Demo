@@ -12,7 +12,12 @@ namespace Engine::EngineWorld {
 		Chunk();
 		~Chunk();
 
-		bool Initialize(uint16_t id, Vector3& center);
+		bool Initialize(
+			uint16_t id, 
+			Vector3& center,
+			uint32_t chunkEntityStartIndex
+		);
+
 		bool Load(
 			uint8_t* entityStartAddressInBytes, 
 			EngineResources::ResourceManager& resourceManager,

@@ -10,11 +10,12 @@ namespace Engine::EngineWorld {
 	public:
 		bool Initialize(
 			uint16_t chunkID,
-			Vector3& chunkCenter
+			Vector3& chunkCenter,
+			uint32_t chunkEntityStartIndex
 		) {
 			if (isLoaded) { return false; }
 
-			if (!mChunk.Initialize(chunkID, chunkCenter)) { return false; }
+			if (!mChunk.Initialize(chunkID, chunkCenter, chunkEntityStartIndex)) { return false; }
 
 			return true;
 		}

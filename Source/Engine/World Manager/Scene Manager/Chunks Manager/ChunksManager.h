@@ -10,7 +10,11 @@ namespace Engine::EngineWorld {
 
 	class ChunksManager {
 	public:
-		ChunksManager(void* mEntitiesStartAddressInMemory);
+		ChunksManager(
+			void* mEntitiesStartAddressInMemory, 
+			uint32_t chunkEntitiesStartingID
+		);
+
 		~ChunksManager();
 
 		bool Initialize();
@@ -29,6 +33,7 @@ namespace Engine::EngineWorld {
 		std::array<ChunkSlot, MAX_ACTIVE_CHUNKS> mActiveChunks;
 		const void* mEntitiesStartAddressInMemory;
 		uint16_t mNextChunkID;
+		uint32_t mChunkEntitiesStartingID;
 		uint8_t mActiveChunkCount;
 
 	private:

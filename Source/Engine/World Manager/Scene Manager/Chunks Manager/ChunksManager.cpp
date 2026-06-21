@@ -3,9 +3,13 @@
 
 namespace Engine::EngineWorld {
 
-	ChunksManager::ChunksManager(void* entitiesStartAddress) :
+	ChunksManager::ChunksManager(
+		void* entitiesStartAddress,
+		uint32_t chunkEntitiesStartingID
+	) :
 		mEntitiesStartAddressInMemory(entitiesStartAddress),
 		mNextChunkID(0),
+		mChunkEntitiesStartingID(chunkEntitiesStartingID),
 		mActiveChunkCount(0)
 	{}
 
@@ -41,13 +45,23 @@ namespace Engine::EngineWorld {
 			return false;
 		}
 
-		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount++];
+		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount];
 		// this chunk's center is 0, 0, 0
 		Vector3 center;
 
-		if (!chunkSlotAt0.Initialize(mNextChunkID++, center)) {
+		// +1 because Player index is always 0
+		// todo: find a better way to do this
+		uint32_t chunkEntityStartIndex = 
+			mChunkEntitiesStartingID + 
+			mNextChunkID * Chunk::MAX_ENTITIES_IN_A_CHUNK;
+
+		if (!chunkSlotAt0.Initialize(mNextChunkID, center, chunkEntityStartIndex)) {
 			return false;
 		}
+
+		// explicitly update the next chunk ID and active chunk count
+		mActiveChunkCount++;
+		mNextChunkID++;
 
 		return true;
 	}

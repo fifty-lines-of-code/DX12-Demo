@@ -12,14 +12,11 @@ namespace Engine::EngineWorld {
 
 	Chunk::~Chunk() {}
 
-	bool Chunk::Initialize(uint16_t chunkID, Vector3& center) {
+	bool Chunk::Initialize(uint16_t chunkID, Vector3& center, uint32_t chunkEntityStartIndex) {
 		mID = chunkID;
 		mCenter = center;
 		mTotalNumberOfEntities = 0;
-
-		// +1 because player is always ID 0
-		// todo: find a better way to do this
-		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK + 1;
+		mNextEntityID = chunkEntityStartIndex;
 
 		return true;
 	}
@@ -29,28 +26,21 @@ namespace Engine::EngineWorld {
 		EngineResources::ResourceManager& resourceManager,
 		SceneBlueprint& sceneBlueprint
 	) {
-		// first is always player, so no point in running this 
-		// if there's only a single entity 
-		// TODO: find a better way to handle this
-
-		if (sceneBlueprint.EntityCount <= 1) { return false; }
-
-		// calculate the offset
-		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
-
-		// -1 because player index starts at 1
-		// and within this chunk we want a 0 - based indexing
-		// todo: gotta find a better way to do this
-		uint32_t offsetForThisEntity = offsetForThisChunk + ((mNextEntityID - 1) * sizeof(Entity));
+		// offset in bytes for this Entity
+		uint32_t offsetForThisEntity = mNextEntityID * sizeof(Entity);
 
 		// get address of first entity
 		uint8_t* targetEntityAddress = entityStartAddressInBytes + offsetForThisEntity;
 
-		for (uint32_t i = 1; i < sceneBlueprint.EntityCount; ++i) {
+		for (uint32_t i = 0; i < sceneBlueprint.EntityCount; ++i) {
+			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
+			if (entityBlueprint.EntityType == EntityType::PLAYER) {
+				// skip all Player entities
+				continue;
+			}
 			bool didUpdate = false;
 			const Mesh* mesh = nullptr;
 			Entity& entity = *reinterpret_cast<Entity*>(targetEntityAddress);
-			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
 
 			switch (entityBlueprint.EntityType) {
 			case EntityType::TERRAIN: 
