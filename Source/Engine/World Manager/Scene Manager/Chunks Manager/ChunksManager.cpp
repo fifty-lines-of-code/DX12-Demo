@@ -26,6 +26,7 @@ namespace Engine::EngineWorld {
 	) {
 		// todo:
 		// multi thread loading of each of the initial (x) chunks 
+		// for now we load a single central chunk
 		return LoadChunkAtSlot0(resourceManager, sceneBlueprint);
 	}
 

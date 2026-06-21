@@ -43,9 +43,9 @@ namespace Engine::EngineWorld {
 		// Player entity
 		result = UpdateBlueprint(
 			0, // raw array index
-			1, // ID
 			Vector3(-10.f, 0.875f, -10.5f),
 			Vector3(.75f, .75f, .75f),
+			EntityType::PLAYER,
 			EngineResources::MaterialType::PLAYER,
 			EngineResources::TextureID::WOOD_CRATE,
 			MeshID::Cube
@@ -59,9 +59,9 @@ namespace Engine::EngineWorld {
 		// Terrain
 		result = UpdateBlueprint(
 			1, // raw array index
-			1, // ID
 			Vector3(0.f, 0.f, 0.f),
 			Vector3(Vector3(1.f)),
+			EntityType::TERRAIN,
 			EngineResources::MaterialType::TERRAIN,
 			EngineResources::TextureID::INVALID,
 			MeshID::Terrain0x0
@@ -74,9 +74,9 @@ namespace Engine::EngineWorld {
 		// Wall
 		result = UpdateBlueprint(
 			2, // raw array index
-			2, // ID
 			Vector3(0.f, 4.1f, 3.f),
 			Vector3(Vector3(1.5f, 2.f, .2f)),
+			EntityType::WALL,
 			EngineResources::MaterialType::WALL,
 			EngineResources::TextureID::INVALID,
 			MeshID::Cube
@@ -103,9 +103,9 @@ namespace Engine::EngineWorld {
 
 	bool SceneFactory::UpdateBlueprint(
 		uint32_t index,
-		uint32_t ID,
-		Vector3 Center,
-		Vector3 Scale,
+		Vector3 center,
+		Vector3 scale,
+		EntityType entityType,
 		EngineResources::MaterialType materialType,
 		EngineResources::TextureID textureID,
 		MeshID meshID
@@ -116,9 +116,9 @@ namespace Engine::EngineWorld {
 		}
 
 		EntityBlueprint& blueprintAtIndex = mBlueprintBackingMemory[index];
-		blueprintAtIndex.ID = ID;
-		blueprintAtIndex.Center = Center;
-		blueprintAtIndex.Scale = Scale;
+		blueprintAtIndex.Center = center;
+		blueprintAtIndex.Scale = scale;
+		blueprintAtIndex.EntityType = entityType;
 		blueprintAtIndex.MaterialType = materialType;
 		blueprintAtIndex.TextureID = textureID;
 		blueprintAtIndex.MeshID = meshID;

@@ -27,9 +27,9 @@ namespace Engine::EngineWorld {
 		bool LoadHeightMapScene(SceneBlueprint& sceneBlueprint);
 		bool UpdateBlueprint(
 			uint32_t index,
-			uint32_t ID, 
-			Vector3 Center, 
-			Vector3 Scale, 
+			Vector3 center, 
+			Vector3 scale, 
+			EntityType entityType, 
 			EngineResources::MaterialType materialType, 
 			EngineResources::TextureID textureID,
 			Engine::MeshID meshID

@@ -17,7 +17,7 @@ namespace Engine::EngineWorld {
 		mCenter = center;
 		mTotalNumberOfEntities = 0;
 
-		// +1 because player is always ID 0
+		// +1 because player is always Player ID 0
 		// todo: find a better way to do this
 		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK + 1;
 
@@ -29,6 +29,12 @@ namespace Engine::EngineWorld {
 		EngineResources::ResourceManager& resourceManager,
 		SceneBlueprint& sceneBlueprint
 	) {
+		// first is always player, so no point in running this 
+		// if there's only a single entity 
+		// TODO: find a better way to handle this
+
+		if (sceneBlueprint.EntityCount <= 1) { return false; }
+
 		// calculate the offset
 		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
 
@@ -37,42 +43,63 @@ namespace Engine::EngineWorld {
 		// todo: gotta find a better way to do this
 		uint32_t offsetForThisEntity = offsetForThisChunk + ((mNextEntityID - 1) * sizeof(Entity));
 
-		// get address of this entity
+		// get address of first entity
 		uint8_t* targetEntityAddress = entityStartAddressInBytes + offsetForThisEntity;
 
-		// get pointer to the terrain mesh
-		const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+		for (int i = 1; i < sceneBlueprint.EntityCount; ++i) {
+			bool didUpdate = false;
+			const Mesh* mesh = nullptr;
+			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
 
-		// generate the terrain
-		Entity& terrain = *reinterpret_cast<Entity*>(targetEntityAddress);
-		terrain.SetIsActive(true);
-		terrain.SetID(mNextEntityID);
-		terrain.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		terrain.SetScale(Vector3(1.f));
-		terrain.SetMesh(terrain0x0Mesh);
-		terrain.SetMaterialType(EngineResources::MaterialType::TERRAIN);
-		terrain.SetTextureID(EngineResources::TextureID::INVALID);
-		terrain.SetIsDirty(true);
+			switch (entityBlueprint.EntityType) {
+			case EntityType::PLAYER:
+				// we do nothing here
+				break;
+			case EntityType::TERRAIN: {
+				// get pointer to the terrain mesh
+				const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
 
-		if (!Insert(mNextEntityID)) { return false; }
+				// update the entity that's now terrain
+				Entity& terrain = *reinterpret_cast<Entity*>(targetEntityAddress);
+				terrain.SetIsActive(true);
+				terrain.SetID(mNextEntityID);
+				terrain.GetPhysicsBody().Center = entityBlueprint.Center;
+				terrain.SetScale(entityBlueprint.Scale);
+				terrain.SetMesh(terrain0x0Mesh);
+				terrain.SetMaterialType(entityBlueprint.MaterialType);
+				terrain.SetTextureID(entityBlueprint.TextureID);
+				terrain.SetIsDirty(true);
 
-		// generate the wall
-		// go to next Entity by walking the Stride(Entity)
-		targetEntityAddress += sizeof(Entity);
+				if (!Insert(mNextEntityID)) { return false; }
 
-		// get pointer to the cube mesh
-		const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
-		Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
-		wall.SetIsActive(true);
-		wall.SetID(mNextEntityID);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 4.1f, 3.f);
-		wall.SetScale(Vector3(1.5f, 2.f, .2f));
-		wall.SetMesh(cubeMesh);
-		wall.SetMaterialType(EngineResources::MaterialType::WALL);
-		wall.SetTextureID(EngineResources::TextureID::INVALID);
-		wall.SetIsDirty(true);
+				didUpdate = true;
+				break;
+			}
+			case EntityType::WALL: {
+				// get pointer to the cube mesh
+				const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
+				Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
+				wall.SetIsActive(true);
+				wall.SetID(mNextEntityID);
+				wall.GetPhysicsBody().Center = entityBlueprint.Center;
+				wall.SetScale(entityBlueprint.Scale);
+				wall.SetMesh(cubeMesh);
+				wall.SetMaterialType(entityBlueprint.MaterialType);
+				wall.SetTextureID(entityBlueprint.TextureID);
+				wall.SetIsDirty(true);
 
-		if (!Insert(mNextEntityID)) { return false; }
+				if (!Insert(mNextEntityID)) { return false; }
+
+				didUpdate = true;
+				break;
+			}
+			}
+
+			if (didUpdate) {
+				// go to next Entity by walking the Stride(Entity)
+				targetEntityAddress += sizeof(Entity);
+			}
+		}
 
 		return true;
 	}

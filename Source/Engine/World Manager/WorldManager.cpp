@@ -128,7 +128,7 @@ namespace Engine::EngineWorld {
 
 		// get scene factory to load the scene
 		mSceneFactory.LoadScene(
-			Scene::HEIGHTMAP, 
+			Scene::HEIGHTMAP,
 			blueprint,
 			isLoaded
 		);

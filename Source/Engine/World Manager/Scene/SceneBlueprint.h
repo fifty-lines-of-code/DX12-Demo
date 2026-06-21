@@ -15,10 +15,16 @@ namespace Engine::EngineWorld {
 		INVALID
 	};
 
+	enum class EntityType : uint32_t {
+		PLAYER,
+		TERRAIN,
+		WALL
+	};
+
 	struct EntityBlueprint {
-		uint32_t ID;
 		Vector3 Center;
 		Vector3 Scale;
+		EntityType EntityType;
 		EngineResources::MaterialType MaterialType;
 		EngineResources::TextureID TextureID;
 		MeshID MeshID;
