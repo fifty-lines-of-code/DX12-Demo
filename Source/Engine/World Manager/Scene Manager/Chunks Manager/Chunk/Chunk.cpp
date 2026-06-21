@@ -17,7 +17,7 @@ namespace Engine::EngineWorld {
 		mCenter = center;
 		mTotalNumberOfEntities = 0;
 
-		// +1 because player is always Player ID 0
+		// +1 because player is always ID 0
 		// todo: find a better way to do this
 		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK + 1;
 
@@ -46,53 +46,36 @@ namespace Engine::EngineWorld {
 		// get address of first entity
 		uint8_t* targetEntityAddress = entityStartAddressInBytes + offsetForThisEntity;
 
-		for (int i = 1; i < sceneBlueprint.EntityCount; ++i) {
+		for (uint32_t i = 1; i < sceneBlueprint.EntityCount; ++i) {
 			bool didUpdate = false;
 			const Mesh* mesh = nullptr;
+			Entity& entity = *reinterpret_cast<Entity*>(targetEntityAddress);
 			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
 
 			switch (entityBlueprint.EntityType) {
-			case EntityType::PLAYER:
-				// we do nothing here
-				break;
-			case EntityType::TERRAIN: {
+			case EntityType::TERRAIN: 
 				// get pointer to the terrain mesh
-				const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+				mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+				break;
+			case EntityType::WALL: 
+				// get pointer to the terrain mesh
+				mesh = resourceManager.GetMesh(MeshID::Cube);
+				break;
+			default: break;
+			}
 
-				// update the entity that's now terrain
-				Entity& terrain = *reinterpret_cast<Entity*>(targetEntityAddress);
-				terrain.SetIsActive(true);
-				terrain.SetID(mNextEntityID);
-				terrain.GetPhysicsBody().Center = entityBlueprint.Center;
-				terrain.SetScale(entityBlueprint.Scale);
-				terrain.SetMesh(terrain0x0Mesh);
-				terrain.SetMaterialType(entityBlueprint.MaterialType);
-				terrain.SetTextureID(entityBlueprint.TextureID);
-				terrain.SetIsDirty(true);
+			if (mesh != nullptr) {
+				entity.SetIsActive(true);
+				entity.SetID(mNextEntityID);
+				entity.GetPhysicsBody().Center = entityBlueprint.Center;
+				entity.SetScale(entityBlueprint.Scale);
+				entity.SetMesh(mesh);
+				entity.SetMaterialType(entityBlueprint.MaterialType);
+				entity.SetTextureID(entityBlueprint.TextureID);
+				entity.SetIsDirty(true);
 
 				if (!Insert(mNextEntityID)) { return false; }
-
 				didUpdate = true;
-				break;
-			}
-			case EntityType::WALL: {
-				// get pointer to the cube mesh
-				const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
-				Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
-				wall.SetIsActive(true);
-				wall.SetID(mNextEntityID);
-				wall.GetPhysicsBody().Center = entityBlueprint.Center;
-				wall.SetScale(entityBlueprint.Scale);
-				wall.SetMesh(cubeMesh);
-				wall.SetMaterialType(entityBlueprint.MaterialType);
-				wall.SetTextureID(entityBlueprint.TextureID);
-				wall.SetIsDirty(true);
-
-				if (!Insert(mNextEntityID)) { return false; }
-
-				didUpdate = true;
-				break;
-			}
 			}
 
 			if (didUpdate) {
