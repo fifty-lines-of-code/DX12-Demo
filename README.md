@@ -36,7 +36,7 @@ It is built to understand how real-time engines operate at the system level, not
 - Fence-based CPU/GPU synchronization
 - Frame-indexed resource management
 - Safe parallel execution between CPU and GPU
-- CPU builds frame N while GPU executes frame N-1.
+- CPU builds frame N while GPU executes frame N-1
 
 ---
 
@@ -46,6 +46,24 @@ It is built to understand how real-time engines operate at the system level, not
 - Slot reuse allocation system (no fragmentation)
 - Chunk-based world partitioning system
 - Octree spatial structure for fast queries and culling
+- Terrain system integrated per chunk (heightmap-driven world data)
+
+---
+
+### 🌍 Terrain System
+
+- Heightmap-based terrain per chunk
+- Each chunk contains its own vertex grid and spacing data
+- Terrain rendered as a triangulated grid (two triangles per quad)
+
+- Player movement is fully terrain-aware:
+  - Converts world position → chunk space
+  - Identifies current terrain quad
+  - Determines which triangle of the quad the player is over
+  - Uses triangle-based interpolation for height sampling
+
+- Ensures gameplay surface matches rendered geometry exactly
+- Prevents mismatch between physics, collision, and rendering
 
 ---
 
@@ -61,9 +79,12 @@ It is built to understand how real-time engines operate at the system level, not
 
 ### ⚔️ Collision System
 
-- AABB-based collision detection
-- Lightweight entity integration
-- Real-time gameplay validation
+- AABB-based collision detection for entity interactions
+- Real-time gameplay validation and physics approximation
+- Terrain collision system:
+  - Player height is sampled directly from terrain triangle data
+  - Triangle interpolation ensures accurate collision with rendered mesh
+- Prevents clipping, floating, and terrain desync issues
 
 ---
 
@@ -87,18 +108,16 @@ It is built to understand how real-time engines operate at the system level, not
 
 ### Xbox Controller
 
-- **Left Stick**
+- Left Stick:
   - < 50% → slow walk  
-  - &gt;= 50% → normal walk  
+  - >= 50% → normal walk  
 
-- **Hold B while moving** → Run  
+- Hold B while moving → Run  
 
-- **Press B from idle**
+- Press B from idle:
   - Short intent window (~X seconds):
     - If movement intent detected → run from idle
     - Otherwise → backwards dash
-
-> Input system resolves movement intent vs action ambiguity using a short buffering window.
 
 ---
 
@@ -128,8 +147,8 @@ It is built to understand how real-time engines operate at the system level, not
 
 > The engine is structured around explicit CPU/GPU parallelism:
 >
-> The CPU builds commands for the current frame while the GPU may still be executing work submitted from previous frames.
-> Before reusing frame-indexed resources, the engine waits on the associated fence value to ensure the GPU has completed work referencing those resources.
+> The CPU builds commands for the current frame while the GPU may still be executing work from previous frames.
+> Before reusing frame-indexed resources, the engine waits on the associated fence value to ensure GPU completion.
 
 ### Initialization
 - Initialize subsystems (camera, scene, input, rendering, spatial structures)
@@ -138,7 +157,7 @@ It is built to understand how real-time engines operate at the system level, not
 - Poll double-buffered input system
 - Update simulation systems (world, camera, gameplay)
 - Perform collision detection (AABB)
-- Synchronize frame resources using fences
+- Synchronize frame using fences
 - Execute render pass system
 - Record DirectX 12 command lists (GPU submission pipeline)
 - Submit work via GPU command queue
@@ -150,28 +169,23 @@ It is built to understand how real-time engines operate at the system level, not
 
 This project is informed by industry-standard graphics and engine development resources:
 
-- **Introduction to 3D Game Programming with DirectX 12 (1st Edition)** — Frank Luna  
-  Core reference for DirectX 12 rendering pipeline, GPU resource management, and explicit graphics programming.
+- **Introduction to 3D Game Programming with DirectX 12 (Frank Luna)**
+- **Game Engine Architecture (Jason Gregory)**
+- **Microsoft DirectX 12 Documentation**
 
-- **Game Engine Architecture (3rd Edition)** — Jason Gregory  
-  Reference for large-scale engine architecture, system design, and real-time engine organization.
-
-- **Microsoft DirectX 12 Documentation (Official API Reference)**  
-  Primary reference for API behavior, resource binding, synchronization models, and low-level GPU programming details.
-
-- Additional learning derived from graphics experimentation, GPU debugging, and iterative engine development.
+Additional learning comes from iterative engine development, GPU debugging, and system-level experimentation.
 
 ---
 
 ## 📌 What This Demonstrates
 
-- Real-time engine architecture design from first principles
+- Real-time engine architecture from first principles
 - Explicit GPU submission and frame scheduling systems
 - Low-level graphics API proficiency (DirectX 12)
 - Barrier-based synchronization and resource lifetime management
 - Data-oriented performance engineering
-- Integration of rendering, gameplay, and physics systems
-- Understanding of CPU/GPU parallel execution models
+- Integration of rendering, gameplay, collision, and physics systems
+- CPU/GPU parallel execution model understanding
 
 ---
 
@@ -184,7 +198,7 @@ This project is informed by industry-standard graphics and engine development re
 
 ## 🚀 Future Work
 
-- Dynamic Chunk loading 
+- Dynamic chunk streaming system (world loading around player)
 - Shadow mapping system
 - FBX skeletal animation system
 - Physically Based Rendering (PBR)
@@ -196,14 +210,12 @@ This project is informed by industry-standard graphics and engine development re
 
 ## 📸 Media
 
-> Coming soon:
-
 - Gameplay clips
 - Terrain rendering
 - Debug UI overlays
 - Camera movement
 - Render pass breakdowns
-- Architecture diagram
+- Architecture diagrams
 
 ---
 
