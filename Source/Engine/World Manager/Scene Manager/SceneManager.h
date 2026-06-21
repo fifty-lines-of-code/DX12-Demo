@@ -51,10 +51,15 @@ namespace Engine::EngineWorld {
 
 		void PrepareForUpdate();
 
+		float GetProposedYOfTerrainOrFloor(
+			float entityX, 
+			float entityZ,
+			float deltaTime
+		);
+
 	private:
 		static constexpr uint32_t PLAYER_INDEX = 0;
-		// todo: update once we integrate SceneBlueprint
-		uint32_t mEntityCount = 3;
+		uint32_t mEntityCount;
 		OctTree mOctTree;
 		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES> mEntities;
 		EngineResources::ResourceManager mResourceManager;
@@ -65,5 +70,11 @@ namespace Engine::EngineWorld {
 	private:
 		bool GeneratePlayerEntity(SceneBlueprint& sceneblueprint);
 		void PrepareForCollisionPass();
+		float CalculateProposedYOfTerrain(
+			const Mesh& terrainMesh,
+			float entityX,
+			float enityZ,
+			float deltaTime
+		);
 	};
 }

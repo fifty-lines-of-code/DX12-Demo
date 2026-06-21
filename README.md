@@ -177,7 +177,6 @@ This project is informed by industry-standard graphics and engine development re
 
 ## 🧭 Current Work
 
-- Runtime scene system transition
 - Planar reflection system (render-to-texture)
 - Pre-shadow projection experiments
 
@@ -185,6 +184,7 @@ This project is informed by industry-standard graphics and engine development re
 
 ## 🚀 Future Work
 
+- Dynamic Chunk loading 
 - Shadow mapping system
 - FBX skeletal animation system
 - Physically Based Rendering (PBR)

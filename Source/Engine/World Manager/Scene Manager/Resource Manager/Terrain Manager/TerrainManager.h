@@ -6,10 +6,10 @@
 
 namespace Engine {
 
-	enum class TerrainLOD {
-		LOW,
-		MED,
-		HIGH
+	enum class TerrainLOD : uint8_t {
+		LOW = 1,
+		MED = 2,
+		HIGH = 4
 	};
 
 	class TerrainManager {
@@ -36,6 +36,7 @@ namespace Engine {
 	private:
 		bool LoadHeightmapToArray(
 			const std::string& filename,
+			// our bitmap is 33x33 thus 1089 values in the bitmap
 			std::array<uint8_t, 1089>& outPixelArray
 		);
 	};

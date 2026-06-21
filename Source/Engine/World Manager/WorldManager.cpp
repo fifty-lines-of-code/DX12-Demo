@@ -1,5 +1,6 @@
 #include "WorldManager.h"
 
+#include "../Debug System/DebugSystem.h"
 #include "Scene Manager/Entity/Entity.h"
 #include "WorldDimensions.h"
 
@@ -31,7 +32,12 @@ namespace Engine::EngineWorld {
 		return true;
 	}
 
-	void WorldManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed, const BasisVectors& cameraBasisVectors) {
+	void WorldManager::Update(
+		const IInputSystem* const inputSystem,
+		float deltaTime, 
+		float animationSpeed, 
+		const BasisVectors& cameraBasisVectors
+	) {
 		// first prepare for new frame
 		PrepareForUpdate();
 
@@ -51,16 +57,60 @@ namespace Engine::EngineWorld {
 			collisionCandidates
 		);
 
+		// generate physics entites from collision result
 		Engine::EnginePhysics::CollisionResult collisionResult;
+		std::vector<EnginePhysics::PhysicsEntity> collisionCandidatesPhysicsEntites;
+		collisionCandidatesPhysicsEntites.reserve(collisionCandidates.size());
+
+		for (int i = 0; i < collisionCandidates.size(); ++i) {
+			const Entity* entity = collisionCandidates[i];
+			EnginePhysics::PhysicsEntity physicsEntity;
+			physicsEntity.AABB = entity->GetAABB();
+			physicsEntity.ID = entity->GetID();
+			physicsEntity.IsTerrain = entity->GetIsTerrainOrFloor();
+			collisionCandidatesPhysicsEntites.push_back(physicsEntity);
+		}
+
+		// get the Y for current terrain/floor
+		Entity& playerEntity = mSceneManager.GetPlayerEntity();
+
+		// each chunk should have a single entity that represents
+		// the "terrain" or the "floor" even if the floor may have "holes"
+		// in them
+		// TODO:
+		EnginePhysics::PhysicsBody& physicsBody = playerEntity.GetPhysicsBody();
+		float playerX = physicsBody.Center.x;
+		float playerZ = physicsBody.Center.z;
+		float proposedY = mSceneManager.GetProposedYOfTerrainOrFloor(
+			playerX,
+			playerZ,
+			deltaTime
+		);
+
+		// resolve collision
 		mPhysicsSystem.ResolveEntityMovement(
-			mSceneManager.GetPlayerEntity(),
-			collisionCandidates,
+			playerEntity,
+			collisionCandidatesPhysicsEntites,
+			proposedY,
 			collisionResult
 		);
 
 		// todo: tell all entities to handle collision result
 		// for now it's just the player
 		mPlayer.PostPhysicsUpdate(collisionResult);
+
+		// log player X, Z
+		char buffer[32];
+		// Safely bakes the float directly into a local stack buffer with 2 decimal places
+		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.x);
+		std::string posX(buffer);
+		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.z);
+		std::string posZ(buffer);
+
+		std::string playerXZ =
+			"PlayerX:" + posX  +
+			",PlayerZ:" + posZ + "\n";
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(playerXZ);
 
 		// finally update scene manager
 		mSceneManager.Update(inputSystem, deltaTime, animationSpeed);

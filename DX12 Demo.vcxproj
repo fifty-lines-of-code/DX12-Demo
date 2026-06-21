@@ -173,6 +173,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h" />
@@ -248,6 +249,9 @@
     <Image Include="small.ico" />
     <Image Include="Source\Resources\Fonts\Font.dds" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0-1.png" />
+    <Image Include="Source\Resources\Heightmaps\chunk0x0-2.png" />
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-3.png" />
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-4.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
     <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
   </ItemGroup>

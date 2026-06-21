@@ -10,15 +10,21 @@ namespace Engine {
 		Entity(-1, Vector3(), Vector3(), true, false)
 	{}
 
-	Entity::Entity(uint32_t Id, Vector3 center, Vector3 scale, bool isStatic, bool isActive) :
-		mID(Id),
-		mPhysicsBody(center, scale),
-		mIsStatic(isStatic),
+	Entity::Entity(
+		uint32_t Id, 
+		Vector3 center, 
+		Vector3 scale, 
+		bool isStatic, 
+		bool isActive
+	) :	mPhysicsBody(center, scale),
 		mMesh(nullptr),
-		mIsDirty(true),
-		mIsActive(false),
+		mID(Id),
+		mEntityType(EntityType::INVALID),
 		mMaterialType(EngineResources::MaterialType::INVALID),
-		mTextureID(EngineResources::TextureID::INVALID)
+		mTextureID(EngineResources::TextureID::INVALID),
+		mIsStatic(isStatic),
+		mIsDirty(true),
+		mIsActive(false)
 	{}
 
 	Entity::~Entity() {}
@@ -88,4 +94,16 @@ namespace Engine {
 	EngineResources::TextureID Entity::GetTextureID() const { return mTextureID; }
 
 	void Entity::SetTextureID(EngineResources::TextureID tID) { mTextureID = tID; }
+
+	bool Entity::GetIsTerrainOrFloor() const noexcept { 
+		return 
+			mEntityType == EntityType::TERRAIN ||
+			mEntityType == EntityType::FLOOR; 
+	}
+
+	void Entity::SetEntityType(EntityType entityType) noexcept {
+		mEntityType = entityType;
+	}
+
+	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
 }

@@ -23,6 +23,7 @@ namespace Engine::EngineResources {
 		const MeshArray& GetMeshes() const;
 		MaterialArray& GetMaterials() noexcept;
 		TextureArray& GetTextures() noexcept;
+		TerrainLOD GetTerrainLOD() const noexcept;
 
 	private:
 		MaterialsManager mMaterialsManager;
@@ -33,10 +34,16 @@ namespace Engine::EngineResources {
 		// and index into the uint64 inside the array based on div by 64 and modulo 64
 		uint64_t mLoadedBitMask;
 		TerrainManager mTerrainManager;
+		TerrainLOD mCurrentTerrainLOD = TerrainLOD::HIGH;
 
 	private:
 		static void CreateCubeMesh(Mesh* mesh);
-		void CreateTerrian0x0(Mesh* mesh);
+		void CreateTerrian(
+			Mesh* mesh,
+			float centerX,
+			float centerZ,
+			MeshID meshID
+		);
 		bool GetIsLoaded(size_t index);
 		void SetIsLoaded(size_t index);
 		void SetIsUnloaded(size_t index);

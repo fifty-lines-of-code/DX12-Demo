@@ -8,8 +8,10 @@ namespace Engine::EngineWorld {
 	SceneManager::SceneManager() :
 		// Chunks manager entities id always start at 1
 		// cause the player index is always 0
+		// we pass in the start of the array
 		mChunksManager(&mEntities[0], 1),
-		mResourceManager(ChunksManager::CHUNK_SIZE)
+		mResourceManager(ChunksManager::CHUNK_SIZE),
+		mEntityCount(0)
 	{}
 
 	SceneManager::~SceneManager() {}
@@ -31,6 +33,9 @@ namespace Engine::EngineWorld {
 	}
 
 	bool SceneManager::LoadScene(SceneBlueprint& blueprint) {
+		// update entity count
+		mEntityCount = blueprint.EntityCount;
+
 		// ALWAYS create Player Entity first so it has ID 0
 		// todo: find a better way to enforce this
 		if (!GeneratePlayerEntity(blueprint)) { return false; }
@@ -130,6 +135,50 @@ namespace Engine::EngineWorld {
 		mOctTree.ClearDynamicEntities();
 	}
 
+	float SceneManager::GetProposedYOfTerrainOrFloor(
+		float entityX, 
+		float entityZ,
+		float deltaTime
+	) {
+		uint16_t terrainOrFloorId = mChunksManager.GetIdOfTerrainOrFloor(
+			entityX,
+			entityZ
+		);
+
+		if (terrainOrFloorId >= EngineConfig::EngineConfig::MAX_ENTITIES ||
+			// wraps around to uint16_t max
+			terrainOrFloorId == uint16_t(-1)) {
+			return uint16_t(-1);
+		}
+
+		Entity& entity = mEntities[terrainOrFloorId];
+		if (entity.GetIsTerrainOrFloor()) {
+			switch (entity.GetEntityType()) {
+			case EntityType::TERRAIN:
+				// todo:
+				return CalculateProposedYOfTerrain(
+					*mEntities[terrainOrFloorId].GetMesh(),
+					entityX, 
+					entityZ,
+					deltaTime
+				);
+			case EntityType::FLOOR:
+				// add a small delta value (0.05f) so that
+				// object appears just above the floor
+				// TODO: extract this constant somewhere
+
+				return entity.GetPhysicsBody().Scale.y * 0.5f + 0.05f;
+			default:
+				// it should never reach here, something has gone wrong
+				return uint16_t(-1);
+			}
+		}
+		else {
+			// something went wrong this entity should be a terrain or a floor
+			return uint16_t(-1);
+		}
+	}
+
 #pragma region Private
 
 	void SceneManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
@@ -181,6 +230,75 @@ namespace Engine::EngineWorld {
 				);
 			}
 		}
+	}
+
+	float SceneManager::CalculateProposedYOfTerrain(
+		const Mesh& terrainMesh,
+		float entityX,
+		float entityZ,
+		float deltaTime
+	) {
+		int density = (uint8_t)mResourceManager.GetTerrainLOD();
+		float entityLocalX = entityX + ChunksManager::CHUNK_SIZE / 2;
+		float entityLocalZ = entityZ + ChunksManager::CHUNK_SIZE / 2;
+
+		uint32_t numberOfQuads = ChunksManager::CHUNK_SIZE * density;
+		uint32_t numberOfVertices = numberOfQuads + 1;
+		float vertexSpacing = 1.f / density;
+
+		int x = (int)std::floor(entityLocalX / vertexSpacing);
+		int z = (int)std::floor(entityLocalZ / vertexSpacing);
+
+		if (x < 0 || x >= numberOfQuads ||
+			z < 0 || z >= numberOfQuads) {
+			// something went wrong, we are looking outside of this chunk
+			return uint16_t(-1);
+		}
+
+		int bottomLeft = (z * numberOfVertices) + x;
+		int bottomRight = bottomLeft + 1;
+		int topLeft = bottomLeft + numberOfVertices;
+		int topRight = topLeft + 1;
+
+		const std::vector<Vertex>& vertices = terrainMesh.GetVertices();
+
+		if (bottomLeft < 0 || bottomLeft >= vertices.size() ||
+			bottomRight < 0 || bottomRight >= vertices.size() ||
+			topLeft < 0 || topLeft >= vertices.size() ||
+			topRight < 0 || topRight >= vertices.size()) {
+			// something went wrong
+			return uint16_t(-1);
+		}
+		float hBottomL = vertices[bottomLeft].Position.y;
+		float hBottomR = vertices[bottomRight].Position.y;
+		float hTopL = vertices[topLeft].Position.y;
+		float hTopR = vertices[topRight].Position.y;
+
+		// find fractional x
+		float s = (entityLocalX / vertexSpacing) - std::floor(entityLocalX / vertexSpacing);
+		// find fractional z
+		float t = (entityLocalZ / vertexSpacing) - std::floor(entityLocalZ / vertexSpacing);
+
+		float proposedY = hBottomL;
+
+		// Determine which of the two triangles in the quad the player is standing on.
+		if (t >= s) {
+			// Triangle 1: bottomLeft -> topLeft -> topRight
+			float dy = hTopL - hBottomL;
+			float dx = hTopR - hTopL;
+			proposedY = hBottomL + (t * dy) + (s * dx);
+		}
+		else {
+			// Triangle 2: bottomLeft -> topRight -> bottomRight
+			float dy = hTopR - hBottomR;
+			float dx = hBottomR - hBottomL;
+			proposedY = hBottomL + (t * dy) + (s * dx);
+		}
+
+		// add a tiny Y to elevate the entity above the terrain
+		proposedY += 0.35f;
+
+		return proposedY;
 	}
 
 #pragma endregion

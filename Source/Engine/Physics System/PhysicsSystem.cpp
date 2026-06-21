@@ -3,9 +3,11 @@
 #include "../World Manager/Scene Manager/Entity/Entity.h"
 
 namespace Engine::EnginePhysics {
+
 	void PhysicsSystem::ResolveEntityMovement(
 		Entity& entity, 
-		const std::vector<const Entity*>& candidates,
+		const std::vector<PhysicsEntity>& candidates,
+		float terrainGroundY,
 		CollisionResult& collisionResult
 	) {
 		PhysicsBody& physicsBody = entity.GetPhysicsBody();
@@ -88,6 +90,9 @@ namespace Engine::EnginePhysics {
 			}
 		}
 
+		// resolve movement in Y
+		safeCenter.y = terrainGroundY + physicsBody.Scale.y * 0.5f;
+
 		// commit the movement
 		collisionResult.ProposedCenter = safeCenter;
 	}
@@ -95,13 +100,18 @@ namespace Engine::EnginePhysics {
 	bool PhysicsSystem::ResolveCollision(
 		uint32_t entityID,
 		const AABB& aabb,
-		const std::vector<const Entity*>& candidates
+		const std::vector<PhysicsEntity>& candidates
 	) {
 
-		for (const Engine::Entity* candidate : candidates) {
-			if (entityID == candidate->GetID()) { continue; }
+		for (const PhysicsEntity& candidate : candidates) {
 
-			if (GeometryHelper::AABBIntersect(aabb, candidate->GetAABB())) {
+			// skip collision checks with terrain
+			if (candidate.IsTerrain) { continue; }
+
+			// skip collision checks with entity itself
+			if (entityID == candidate.ID) { continue; }
+
+			if (GeometryHelper::AABBIntersect(aabb, candidate.AABB)) {
 				return true;
 			}
 		}

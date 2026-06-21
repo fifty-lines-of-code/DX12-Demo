@@ -9,6 +9,13 @@ class Entity;
 
 namespace Engine::EnginePhysics {
 
+	struct PhysicsEntity {
+		AABB AABB;
+		uint32_t ID = 0;
+		float scaleY = 0.f;
+		bool IsTerrain = false;
+	};
+
 	class PhysicsSystem {
 	public:
 		PhysicsSystem() = default;
@@ -16,7 +23,8 @@ namespace Engine::EnginePhysics {
 
 		void ResolveEntityMovement(
 			Entity& entity,
-			const std::vector<const Entity*>& candidates, 
+			const std::vector<PhysicsEntity>& candidates,
+			float terrainGroundY,
 			CollisionResult& collisionResult
 		);
 
@@ -24,7 +32,7 @@ namespace Engine::EnginePhysics {
 		bool ResolveCollision(
 			uint32_t entityID,
 			const AABB& aabb, 
-			const std::vector<const Entity*>& candidates
+			const std::vector<PhysicsEntity>& candidates
 		);
 	};
 }

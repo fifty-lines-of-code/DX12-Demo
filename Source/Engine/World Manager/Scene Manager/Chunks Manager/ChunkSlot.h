@@ -39,6 +39,8 @@ namespace Engine::EngineWorld {
 
 		uint16_t GetChunkID() { return mChunk.GetID(); }
 
+		Chunk& GetChunk() noexcept { return mChunk; }
+
 	private:
 		Chunk mChunk;
 		bool isLoaded = false;

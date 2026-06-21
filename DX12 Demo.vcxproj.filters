@@ -277,6 +277,9 @@
     <Filter Include="Source Files\Engine\World Manager\Scene">
       <UniqueIdentifier>{20d480b2-65b2-4032-bee1-fbb6b527ea9f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Shaders\Opaque Render System">
+      <UniqueIdentifier>{58c9e7af-d4a2-40a2-a0a8-804874d68e0b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -501,6 +504,9 @@
     <ClInclude Include="Source\Engine\World Manager\Scene\SceneFactory.h">
       <Filter>Header Files\Engine\World Manager\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -640,14 +646,17 @@
     <Image Include="Source\Resources\Fonts\Font.dds">
       <Filter>Resource Files\Fonts</Filter>
     </Image>
+    <Image Include="Source\Resources\Heightmaps\chunk0x0-2.png">
+      <Filter>Resource Files\Heightmaps</Filter>
+    </Image>
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-3.png">
+      <Filter>Resource Files\Heightmaps</Filter>
+    </Image>
+    <Image Include="Source\Resources\Heightmaps\Chunk0x0-4.png">
+      <Filter>Resource Files\Heightmaps</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\Resources\Shaders\color.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
     <None Include="Source\Resources\Shaders\Debug\debug_ps.hlsl">
       <Filter>Resource Files\Shaders\Debug System</Filter>
     </None>
@@ -656,6 +665,12 @@
     </None>
     <None Include="Source\Resources\Shaders\Blur\blur_cs.hlsl">
       <Filter>Resource Files\Shaders\Blur</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\color.hlsl">
+      <Filter>Resource Files\Shaders\Opaque Render System</Filter>
+    </None>
+    <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
+      <Filter>Resource Files\Shaders\Opaque Render System</Filter>
     </None>
   </ItemGroup>
 </Project>
