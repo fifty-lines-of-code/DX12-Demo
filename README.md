@@ -78,12 +78,23 @@ It is built to understand how real-time engines operate at the system level, not
 ### ⚔️ Collision System
 
 - AABB-based collision detection for entity interactions
+- Terrain collision integrated via height sampling and triangle interpolation
 - Real-time gameplay validation and physics approximation
-- Terrain collision system:
-  - Player height sampled directly from terrain triangle data
-  - Chunk-based terrain queries ensure correct surface resolution
-  - Triangle interpolation ensures accurate collision with rendered mesh
 - Prevents clipping, floating, and terrain desync issues
+
+---
+
+### 🔊 Audio System (WIP)
+
+- Looping background audio playback system
+- One-shot sound trigger via Xbox RT input
+- Dynamic audio mixing system:
+  - Background audio fades down to ~0.4 volume
+  - One-shot audio fades in from 0 → 1.0 over ~50ms
+  - One-shot fades out in final ~50ms
+  - Background audio returns to full volume (1.0)
+- Designed for smooth, non-jarring audio transitions
+- Supports layered audio blending for gameplay feedback
 
 ---
 
@@ -117,6 +128,9 @@ It is built to understand how real-time engines operate at the system level, not
   - Short intent window (~X seconds):
     - If movement intent detected → run from idle
     - Otherwise → backwards dash
+
+- RT (Right Trigger):
+  - Triggers one-shot audio event with dynamic audio blending system
 
 ---
 
@@ -183,7 +197,7 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 - Low-level graphics API proficiency (DirectX 12)
 - Barrier-based synchronization and resource lifetime management
 - Data-oriented performance engineering
-- Integration of rendering, gameplay, collision, and physics systems
+- Integration of rendering, gameplay, collision, physics, and audio systems
 - CPU/GPU parallel execution model understanding
 
 ---
@@ -192,6 +206,7 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 - Planar reflection system (render-to-texture)
 - Pre-shadow projection experiments
+- Audio system expansion (mixing + spatial audio improvements)
 
 ---
 
@@ -204,6 +219,7 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 - Render graph architecture
 - Frustum culling (octree-driven)
 - Wireframe debug rendering mode
+- Advanced audio system (3D spatialization)
 
 ---
 
@@ -213,10 +229,12 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 #### Debug UI
 ![Debug UI](Docs/Images/Debug-Menu-And-Blur-Demo.png)
-#### Terrain rendering
+
+#### Terrain Rendering
 ![Terrain Rendering](Docs/Images/Terrain-Rendering-Demo.png)
-#### Blur
-![Debug UI and Blur](Docs/Images/Blur-Demo.png)
+
+#### Blur Effect
+![Blur Demo](Docs/Images/Blur-Demo.png)
 
 ---
 
