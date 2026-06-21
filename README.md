@@ -128,8 +128,8 @@ It is built to understand how real-time engines operate at the system level, not
 
 > The engine is structured around explicit CPU/GPU parallelism:
 >
-> The CPU builds command lists for frame N while the GPU executes frame N-1.
-> Synchronization is handled explicitly using fences and frame-indexed resources.
+> The CPU builds commands for the current frame while the GPU may still be executing work submitted from previous frames.
+> Before reusing frame-indexed resources, the engine waits on the associated fence value to ensure the GPU has completed work referencing those resources.
 
 ### Initialization
 - Initialize subsystems (camera, scene, input, rendering, spatial structures)
@@ -138,10 +138,10 @@ It is built to understand how real-time engines operate at the system level, not
 - Poll double-buffered input system
 - Update simulation systems (world, camera, gameplay)
 - Perform collision detection (AABB)
+- Synchronize frame resources using fences
 - Execute render pass system
 - Record DirectX 12 command lists (GPU submission pipeline)
 - Submit work via GPU command queue
-- Synchronize frame using fences
 - Present frame
 
 ---
