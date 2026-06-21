@@ -271,6 +271,12 @@
     <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Opaque Render Pass">
       <UniqueIdentifier>{457e21f0-2fe6-4d4a-8a6c-3d14dc91008a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene">
+      <UniqueIdentifier>{8aa6a497-e45d-45c7-bbe3-da52aacb9db6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene">
+      <UniqueIdentifier>{20d480b2-65b2-4032-bee1-fbb6b527ea9f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -489,6 +495,12 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene\SceneBlueprint.h">
+      <Filter>Header Files\Engine\World Manager\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene\SceneFactory.h">
+      <Filter>Header Files\Engine\World Manager\Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -604,6 +616,9 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Pipeline Pass\Opaque Render Pass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene\SceneFactory.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
