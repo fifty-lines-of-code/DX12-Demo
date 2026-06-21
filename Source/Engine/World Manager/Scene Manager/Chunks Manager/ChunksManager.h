@@ -3,17 +3,25 @@
 #include <array>
 #include "ChunkSlot.h"
 #include "../Resource Manager/ResourceManager.h"
+#include "../../Scene/SceneBlueprint.h"
 #include "../../WorldDimensions.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	class ChunksManager {
 	public:
-		ChunksManager(void* mEntitiesStartAddressInMemory);
+		ChunksManager(
+			void* mEntitiesStartAddressInMemory, 
+			uint32_t chunkEntitiesStartingID
+		);
+
 		~ChunksManager();
 
 		bool Initialize();
-		bool LoadChunks(EngineResources::ResourceManager& resourceManager);
+		bool LoadChunks(
+			EngineResources::ResourceManager& resourceManager,
+			SceneBlueprint& sceneBlueprint
+		);
 
 		static constexpr uint16_t CHUNK_SIZE = 32;
 	private:
@@ -25,10 +33,14 @@ namespace Engine {
 		std::array<ChunkSlot, MAX_ACTIVE_CHUNKS> mActiveChunks;
 		const void* mEntitiesStartAddressInMemory;
 		uint16_t mNextChunkID;
+		uint32_t mChunkEntitiesStartingID;
 		uint8_t mActiveChunkCount;
 
 	private:
 		bool InitializeInitialChunks();
-		bool LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager);
+		bool LoadChunkAtSlot0(
+			EngineResources::ResourceManager& resourceManager,
+			SceneBlueprint& sceneBlueprint
+		);
 	};
 }

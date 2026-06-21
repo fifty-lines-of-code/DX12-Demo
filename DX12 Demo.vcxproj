@@ -190,6 +190,8 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureID.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\SceneManager.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene\SceneBlueprint.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene\SceneFactory.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h" />
     <ClInclude Include="Source\Engine\World Manager\WorldManager.h" />
     <ClInclude Include="Source\Game\Game State\DebugGameState.h" />
@@ -233,6 +235,7 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\SceneManager.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene\SceneFactory.cpp" />
     <ClCompile Include="Source\Engine\World Manager\WorldManager.cpp" />
     <ClCompile Include="Source\Game\Game State\GameState.cpp" />
     <ClCompile Include="Source\Game\Game Timer\GameTimer.cpp" />

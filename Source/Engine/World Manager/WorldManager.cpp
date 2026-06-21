@@ -3,7 +3,7 @@
 #include "Scene Manager/Entity/Entity.h"
 #include "WorldDimensions.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	WorldManager::WorldManager() :
 		mSceneManager(SceneManager()),
@@ -94,7 +94,7 @@ namespace Engine {
 		mSceneManager.GetLightsData(lights);
 	}
 
-	std::array<Entity, SceneManager::MAX_ENTITIES>& WorldManager::GetEntities() {
+	std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& WorldManager::GetEntities() {
 		return mSceneManager.GetEntities();
 	}
 
@@ -123,7 +123,19 @@ namespace Engine {
 #pragma region Private
 	
 	bool WorldManager::LoadScene() {
-		if (!mSceneManager.LoadScene()) { return false; }
+		bool isLoaded = false;
+		SceneBlueprint blueprint;
+
+		// get scene factory to load the scene
+		mSceneFactory.LoadScene(
+			Scene::HEIGHTMAP,
+			blueprint,
+			isLoaded
+		);
+
+		if (!isLoaded || blueprint.Scene != Scene::HEIGHTMAP) { return false; }
+
+		if (!mSceneManager.LoadScene(blueprint)) { return false; }
 
 		mPlayer.SetEntity(mSceneManager.GetPlayerEntity());
 

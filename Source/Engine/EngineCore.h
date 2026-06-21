@@ -33,7 +33,7 @@ namespace Engine {
 		void OnResize(UINT newClientWidth, UINT newClientHeight);
 
 	private:
-		WorldManager mWorldManager;
+		EngineWorld::WorldManager mWorldManager;
 		EngineRenderer::DX12Renderer::DX12Renderer mRenderer;
 		Camera mCamera;
 		XboxInputSystem mInputSystem;

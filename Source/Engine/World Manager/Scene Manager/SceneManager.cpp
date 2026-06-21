@@ -3,10 +3,12 @@
 #include "../../../Engine/Input System/IInputSystem.h"
 #include "Resource Manager/ResourceManager.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	SceneManager::SceneManager() :
-		mChunksManager(&mEntities[1]), // 0th index is always Player stored in scene manager
+		// Chunks manager entities id always start at 1
+		// cause the player index is always 0
+		mChunksManager(&mEntities[0], 1),
 		mResourceManager(ChunksManager::CHUNK_SIZE)
 	{}
 
@@ -23,22 +25,21 @@ namespace Engine {
 
 		if (!mOctTree.Initialize(halfWidth)) { return false; }
 
-		// todo:
-		// load the sun data from somewhere
-		Vector3 strength = { 1.0f, 1.0f, 0.9f };
-		Vector3 direction = { 0.577f, -0.577f, 0.577f };
-		mLightsManager.Initialize(strength, direction);
+		if (!mLightsManager.Initialize()) { return false; }
 
 		return true;
 	}
 
-	bool SceneManager::LoadScene() {
+	bool SceneManager::LoadScene(SceneBlueprint& blueprint) {
 		// ALWAYS create Player Entity first so it has ID 0
 		// todo: find a better way to enforce this
-		if (!GeneratePlayerEntity()) { return false; }
+		if (!GeneratePlayerEntity(blueprint)) { return false; }
+
+		// load the lights
+		mLightsManager.Load(blueprint.SunStrength, blueprint.SunDirection);
 
 		// load the chunks
-		if (!mChunksManager.LoadChunks(mResourceManager)) { return false; }
+		if (!mChunksManager.LoadChunks(mResourceManager, blueprint)) { return false; }
 
 		// only add static entities to the OctTree during Load
 		for (const auto& entity : mEntities) {
@@ -66,7 +67,7 @@ namespace Engine {
 		);
 
 		for (uint32_t index : candidateIndexes) {
-			if (index >= 0 && index < MAX_ENTITIES) {
+			if (index >= 0 && index < EngineConfig::EngineConfig::MAX_ENTITIES) {
 				candidates.push_back(&mEntities[index]);
 			}
 		}
@@ -86,7 +87,7 @@ namespace Engine {
 	}
 
 	uint32_t SceneManager::GetEntityCount() const noexcept {
-		return MAX_ENTITIES;
+		return mEntityCount;
 	}
 
 	uint32_t SceneManager::GetMaterialCount() const noexcept {
@@ -113,7 +114,7 @@ namespace Engine {
 		lights[0] = mLightsManager.GetLightsData();
 	}
 
-	std::array<Entity, SceneManager::MAX_ENTITIES>& SceneManager::GetEntities() {
+	std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& SceneManager::GetEntities() {
 		return mEntities;
 	}
 
@@ -144,21 +145,25 @@ namespace Engine {
 		return mEntities[PLAYER_INDEX];
 	}
 
-	bool SceneManager::GeneratePlayerEntity() {
+	bool SceneManager::GeneratePlayerEntity(SceneBlueprint& blueprint) {
+		if (blueprint.EntityCount == 0) { return false; }
+
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
+		// currently player is always at index 0
+		// TODO: find a better way to do this
+		const EntityBlueprint& playerBlueprint = blueprint.EntityBlueprints[PLAYER_INDEX];
 		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
-		playerEntity.GetPhysicsBody().Center = Vector3(-10.f, 0.875f, -10.5f);
-		playerEntity.SetScale(Vector3(.75f, .75f, .75f));
+		playerEntity.GetPhysicsBody().Center = playerBlueprint.Center;
+		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
-		playerEntity.SetMaterialType(EngineResources::MaterialType::PLAYER);
-		playerEntity.SetTextureID(EngineResources::TextureID::WOOD_CRATE);
+		playerEntity.SetMaterialType(playerBlueprint.MaterialType);
+		playerEntity.SetTextureID(playerBlueprint.TextureID);
 		playerEntity.SetIsDirty(true);
+		const Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
+		playerEntity.SetMesh(cubeMesh);
 
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
-
-		const Mesh* cubeMesh = mResourceManager.GetMesh(MeshID::Cube);
-		playerEntity.SetMesh(cubeMesh);
 
 		return true;
 	}
@@ -166,7 +171,7 @@ namespace Engine {
 	void SceneManager::PrepareForCollisionPass() {
 		// add dynamic entities to the octtree
 		for (uint32_t index : mIndexesOfDynamicEntities) {
-			if (index >= 0 && index < MAX_ENTITIES) {
+			if (index >= 0 && index < EngineConfig::EngineConfig::MAX_ENTITIES) {
 				Entity& entity = mEntities[index];
 
 				mOctTree.Insert(

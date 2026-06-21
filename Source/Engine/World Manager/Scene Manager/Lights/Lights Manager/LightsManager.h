@@ -9,8 +9,10 @@ namespace Engine {
 		LightsManager();
 		~LightsManager();
 
-		bool Initialize(Vector3 sunStrength, Vector3 sunDirection);
+		bool Initialize();
 		
+		void Load(Vector3 sunStrength, Vector3 sunDirection);
+
 		void Update(float deltaTime);
 
 		const Vector4& GetAmbientLight() const noexcept;

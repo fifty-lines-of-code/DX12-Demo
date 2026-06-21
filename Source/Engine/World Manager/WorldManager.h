@@ -4,13 +4,14 @@
 #include <memory>
 #include "Player/Player.h"
 #include "../Physics System/PhysicsSystem.h"
+#include "Scene/SceneFactory.h"
 #include "Scene Manager/SceneManager.h"
 #include <vector>
 
 class Entity;
 class IInputSystem;
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	class WorldManager {
 	public:
@@ -19,7 +20,12 @@ namespace Engine {
 
 		bool Initialize();
 
-		void Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed, const BasisVectors& cameraBasisVectors);
+		void Update(
+			const IInputSystem* const inputSystem, 
+			float deltaTime, 
+			float animationSpeed,
+			const BasisVectors& cameraBasisVectors
+		);
 
 		uint32_t GetEntityCount() const noexcept;
 		uint32_t GetMaterialCount() const noexcept;
@@ -28,7 +34,7 @@ namespace Engine {
 		uint32_t GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept;
 		const Vector4& GetAmbientLight() const noexcept;
 		void GetLightsData(LightsArray16& lights) const;
-		std::array<Entity, SceneManager::MAX_ENTITIES>& GetEntities();
+		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& GetEntities();
 		EngineResources::MaterialArray& GetMaterials() noexcept;
 		EngineResources::TextureArray& GetTextures() noexcept;
 		const Vector3& GetPlayerCenter() const;
@@ -37,6 +43,7 @@ namespace Engine {
 
 	private:
 		SceneManager mSceneManager;
+		SceneFactory mSceneFactory;
 		Player mPlayer;
 		EnginePhysics::PhysicsSystem mPhysicsSystem;
 

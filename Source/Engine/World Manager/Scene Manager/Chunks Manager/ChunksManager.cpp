@@ -1,10 +1,15 @@
 #include "ChunksManager.h"
 #include "../Entity/Entity.h"
 
-namespace Engine {
-	ChunksManager::ChunksManager(void* entitiesStartAddress) :
+namespace Engine::EngineWorld {
+
+	ChunksManager::ChunksManager(
+		void* entitiesStartAddress,
+		uint32_t chunkEntitiesStartingID
+	) :
 		mEntitiesStartAddressInMemory(entitiesStartAddress),
 		mNextChunkID(0),
+		mChunkEntitiesStartingID(chunkEntitiesStartingID),
 		mActiveChunkCount(0)
 	{}
 
@@ -19,10 +24,14 @@ namespace Engine {
 		return true;
 	}
 
-	bool ChunksManager::LoadChunks(EngineResources::ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunks(
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
 		// todo:
 		// multi thread loading of each of the initial (x) chunks 
-		return LoadChunkAtSlot0(resourceManager);
+		// for now we load a single central chunk
+		return LoadChunkAtSlot0(resourceManager, sceneBlueprint);
 	}
 
 #pragma region Privte
@@ -36,23 +45,40 @@ namespace Engine {
 			return false;
 		}
 
-		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount++];
+		ChunkSlot &chunkSlotAt0 = mActiveChunks[mActiveChunkCount];
 		// this chunk's center is 0, 0, 0
 		Vector3 center;
 
-		if (!chunkSlotAt0.Initialize(mNextChunkID++, center)) {
+		// +1 because Player index is always 0
+		// todo: find a better way to do this
+		uint32_t chunkEntityStartIndex = 
+			mChunkEntitiesStartingID + 
+			mNextChunkID * Chunk::MAX_ENTITIES_IN_A_CHUNK;
+
+		if (!chunkSlotAt0.Initialize(mNextChunkID, center, chunkEntityStartIndex)) {
 			return false;
 		}
+
+		// explicitly update the next chunk ID and active chunk count
+		mActiveChunkCount++;
+		mNextChunkID++;
 
 		return true;
 	}
 
-	bool ChunksManager::LoadChunkAtSlot0(EngineResources::ResourceManager& resourceManager) {
+	bool ChunksManager::LoadChunkAtSlot0(
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
 		ChunkSlot& chunkSlotAt0 = mActiveChunks[0];
 
 		uint8_t* entityStartAddressInBytes = reinterpret_cast<uint8_t*>(const_cast<void*>(mEntitiesStartAddressInMemory));
 
-		chunkSlotAt0.LoadChunk(entityStartAddressInBytes, resourceManager);
+		chunkSlotAt0.LoadChunk(
+			entityStartAddressInBytes, 
+			resourceManager, 
+			sceneBlueprint
+		);
 
 		return true;
 	}

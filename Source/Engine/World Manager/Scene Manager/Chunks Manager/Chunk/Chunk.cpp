@@ -2,7 +2,7 @@
 
 #include "../../Entity/Entity.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	Chunk::Chunk() :
 		mID(-1), // will wrap around to max uint16_t
@@ -12,63 +12,67 @@ namespace Engine {
 
 	Chunk::~Chunk() {}
 
-	bool Chunk::Initialize(uint16_t chunkID, Vector3& center) {
+	bool Chunk::Initialize(uint16_t chunkID, Vector3& center, uint32_t chunkEntityStartIndex) {
 		mID = chunkID;
 		mCenter = center;
 		mTotalNumberOfEntities = 0;
-
-		// +1 because player is always ID 0
-		// todo: find a better way to do this
-		mNextEntityID = mID * Chunk::MAX_ENTITIES_IN_A_CHUNK + 1;
+		mNextEntityID = chunkEntityStartIndex;
 
 		return true;
 	}
 
-	bool Chunk::Load(uint8_t* entityStartAddressInBytes, EngineResources::ResourceManager& resourceManager) {
-		// calculate the offset
-		uint32_t offsetForThisChunk = mID * (Chunk::MAX_ENTITIES_IN_A_CHUNK * sizeof(Entity));
+	bool Chunk::Load(
+		uint8_t* entityStartAddressInBytes,
+		EngineResources::ResourceManager& resourceManager,
+		SceneBlueprint& sceneBlueprint
+	) {
+		// offset in bytes for this Entity
+		uint32_t offsetForThisEntity = mNextEntityID * sizeof(Entity);
 
-		// -1 because player index starts at 1
-		// and within this chunk we want a 0 - based indexing
-		// todo: gotta find a better way to do this
-		uint32_t offsetForThisEntity = offsetForThisChunk + ((mNextEntityID - 1) * sizeof(Entity));
-
-		// get address of this entity
+		// get address of first entity
 		uint8_t* targetEntityAddress = entityStartAddressInBytes + offsetForThisEntity;
 
-		// get pointer to the terrain mesh
-		const Mesh* terrain0x0Mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+		for (uint32_t i = 0; i < sceneBlueprint.EntityCount; ++i) {
+			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
+			if (entityBlueprint.EntityType == EntityType::PLAYER) {
+				// skip all Player entities
+				continue;
+			}
+			bool didUpdate = false;
+			const Mesh* mesh = nullptr;
+			Entity& entity = *reinterpret_cast<Entity*>(targetEntityAddress);
 
-		// generate the terrain
-		Entity& terrain = *reinterpret_cast<Entity*>(targetEntityAddress);
-		terrain.SetIsActive(true);
-		terrain.SetID(mNextEntityID);
-		terrain.GetPhysicsBody().Center = Vector3(0.f, 0.f, 0.f);
-		terrain.SetScale(Vector3(1.f));
-		terrain.SetMesh(terrain0x0Mesh);
-		terrain.SetMaterialType(EngineResources::MaterialType::TERRAIN);
-		terrain.SetTextureID(EngineResources::TextureID::INVALID);
-		terrain.SetIsDirty(true);
+			switch (entityBlueprint.EntityType) {
+			case EntityType::TERRAIN: 
+				// get pointer to the terrain mesh
+				mesh = resourceManager.GetMesh(MeshID::Terrain0x0);
+				break;
+			case EntityType::WALL: 
+				// get pointer to the terrain mesh
+				mesh = resourceManager.GetMesh(MeshID::Cube);
+				break;
+			default: break;
+			}
 
-		if (!Insert(mNextEntityID)) { return false; }
+			if (mesh != nullptr) {
+				entity.SetIsActive(true);
+				entity.SetID(mNextEntityID);
+				entity.GetPhysicsBody().Center = entityBlueprint.Center;
+				entity.SetScale(entityBlueprint.Scale);
+				entity.SetMesh(mesh);
+				entity.SetMaterialType(entityBlueprint.MaterialType);
+				entity.SetTextureID(entityBlueprint.TextureID);
+				entity.SetIsDirty(true);
 
-		// generate the wall
-		// go to next Entity by walking the Stride(Entity)
-		targetEntityAddress += sizeof(Entity);
+				if (!Insert(mNextEntityID)) { return false; }
+				didUpdate = true;
+			}
 
-		// get pointer to the cube mesh
-		const Mesh* cubeMesh = resourceManager.GetMesh(MeshID::Cube);
-		Entity& wall = *reinterpret_cast<Entity*>(targetEntityAddress);
-		wall.SetIsActive(true);
-		wall.SetID(mNextEntityID);
-		wall.GetPhysicsBody().Center = Vector3(0.f, 4.1f, 3.f);
-		wall.SetScale(Vector3(1.5f, 2.f, .2f));
-		wall.SetMesh(cubeMesh);
-		wall.SetMaterialType(EngineResources::MaterialType::WALL);
-		wall.SetTextureID(EngineResources::TextureID::INVALID);
-		wall.SetIsDirty(true);
-
-		if (!Insert(mNextEntityID)) { return false; }
+			if (didUpdate) {
+				// go to next Entity by walking the Stride(Entity)
+				targetEntityAddress += sizeof(Entity);
+			}
+		}
 
 		return true;
 	}

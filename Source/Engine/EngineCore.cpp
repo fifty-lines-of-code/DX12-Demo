@@ -17,7 +17,7 @@ namespace Engine {
 		mIsInitialized(false),
 		mAnimationSpeed(.375f), // todo: move this out to somewhere else
 		mRenderer(EngineRenderer::DX12Renderer::DX12Renderer()),
-		mWorldManager(WorldManager()),
+		mWorldManager(EngineWorld::WorldManager()),
 		mCamera(Camera()),
 		mInputSystem(XboxInputSystem()),
 		mIsDebugBuild(false)
@@ -140,9 +140,10 @@ namespace Engine {
 
 		// draw our 3D objects
 		auto& entities = mWorldManager.GetEntities();
+		const uint32_t entityCount = mWorldManager.GetEntityCount();
 
 		EngineRenderer::DX12Renderer::DX12PipelinePassExecuteContext context;
-		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS> itemsExecuteContext = {};
+		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext = {};
 		context.NumberOfItems = (uint32_t)entities.size();
 
 		for (uint32_t i = 0; i < entities.size(); ++i) {
@@ -150,9 +151,11 @@ namespace Engine {
 
 			auto& entity = entities[i];
 
+			// set ID
 			itemsExecuteContext[i].ID = entity.GetID();
-			auto* mesh = entity.GetMesh();
 
+			// set Mesh
+			auto* mesh = entity.GetMesh();
 			itemsExecuteContext[i].IndexCount = (uint32_t)mesh->GetIndices().size();
 			itemsExecuteContext[i].MeshID = (uint32_t)mesh->GetMeshID();
 		}
