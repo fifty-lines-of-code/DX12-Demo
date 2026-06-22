@@ -20,10 +20,6 @@ namespace Engine::EngineAudio {
         mAudioManager.StartBackgroundLoop(track);
     }
 
-    void AudioSystem::PlayOneShot(SoundSFX sfx) {
-        mAudioManager.PlayOneShot(sfx);
-    }
-
     void AudioSystem::StopBackgroundLoop() {
         mAudioManager.StopBackgroundLoop();
     }

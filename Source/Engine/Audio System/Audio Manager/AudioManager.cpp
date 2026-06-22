@@ -128,7 +128,6 @@ namespace Engine::EngineAudio {
         }
 
         return IsPlayingSound(mBGLibrary[idx]);
-
     }
 
     bool AudioManager::IsPlayingSoundSFX(SoundSFX sfx) const {
@@ -138,7 +137,6 @@ namespace Engine::EngineAudio {
         }
 
         return IsPlayingSound(mSFXLibrary[idx]);
-
     }
 
     bool AudioManager::IsPlayingSound(const AudioBufferAsset& asset) const {
@@ -146,31 +144,24 @@ namespace Engine::EngineAudio {
         // Tell XAudio2 to populate the state structure
         asset.sourceVoice->GetState(&state);
 
-        // If BuffersQueued is greater than 0, the one-shot is still processing
+        // If BuffersQueued is greater than 0, the sound is still processing
         return (state.BuffersQueued > 0);
     }
 
     void AudioManager::DuckBackgroundAudioIfSFXPlaying(float deltaTime) {
-        if (!mIsSFXActive) {
+        if (!mIsSFXActive || !IsPlayingSoundSFX(mActiveSFXType)) {
+            mIsSFXActive = false;
             // Default idle state: ensure background music is resting at full volume
             if (mCurrentLoopVoice) {
-                mCurrentLoopVoice->SetVolume(0.8f);
+                mCurrentLoopVoice->SetVolume(AudioManagerHelper::MAX_VOLUME);
             }
             return;
         }
 
-        // Verify the sound is actually still playing
-        if (!IsPlayingSoundSFX(mActiveSFXType)) {
-            mIsSFXActive = false;
-            if (mCurrentLoopVoice) {
-                mCurrentLoopVoice->SetVolume(0.8f);
-            }
-            return;
-        }
-
+        // update the elapsed time
         mSFXElapsedTime += deltaTime;
 
-        const auto& sfxAsset = mSFXLibrary[static_cast<size_t>(mActiveSFXType)];
+        const auto& sfxAsset = mSFXLibrary[(uint8_t)mActiveSFXType];
         float totalDuration = sfxAsset.totalDurationSeconds;
 
         float targetSFXVol;
@@ -191,7 +182,7 @@ namespace Engine::EngineAudio {
                 alpha
             );
         }
-        // the outrov(TRANSITION_WINDOW) ramp
+        // the outro (TRANSITION_WINDOW) ramp
         else if (mSFXElapsedTime >= (totalDuration - AudioManagerHelper::TRANSITION_WINDOW)) {
             float timeIntoOutro = mSFXElapsedTime - (totalDuration - AudioManagerHelper::TRANSITION_WINDOW);
             float alpha = timeIntoOutro / AudioManagerHelper::TRANSITION_WINDOW;

@@ -20,7 +20,6 @@ namespace Engine::EngineAudio {
         );
 
         void StartBackgroundLoop(SoundBG track);
-        void PlayOneShot(SoundSFX sfx);
         void StopBackgroundLoop();
 
     private:

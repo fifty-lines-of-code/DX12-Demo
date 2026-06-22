@@ -31,21 +31,22 @@ Features to implement:
 27. ~~Implement drawing of a Debug System on top of the geometry~~
 28. ~~Press D to show/hide Debug System overlay~~
 29. ~~Blur the Geometry when we show Debug System and write debug system on top of blurred image~~
-30. Player "breathing" animation when idle
-31. Walking animation
-32. Running animation
-33. Smoothly interpolate from breathing into movement
-34. Rolling animation in the direction of controls - infinite direction dictated by controls
-35. PS controller support
-36. FromSoft style lockon
-37. Main menu
-38. Pause Screen
-39. Frustum Culling
-40. Dynamic loading and unloading of data as player moves/crosses a boundary
-41. integrate dynamic height map into dynamic chunks loader
-42. implement waterfall in the heightmap
-43. render waterfall
-44. Load fbx models - use ue5 models
-45. 
-46. 
+30. ~~Implement a basic Audio System to play background and one off sounds~~
+31. ~~Implement a basic ducking algorithm to duck background sound when one off is playing, with a ramp up/down of (x) milliseconds~~
+32. Player "breathing" animation when idle
+33. Walking animation
+34. Running animation
+35. Smoothly interpolate from breathing into movement
+36. Rolling animation in the direction of controls - infinite direction dictated by controls
+37. PS controller support
+38. FromSoft style lockon
+39. Main menu
+40. Pause Screen
+41. Frustum Culling
+42. Dynamic loading and unloading of data as player moves/crosses a boundary
+43. integrate dynamic height map into dynamic chunks loader
+44. implement waterfall in the heightmap
+45. render waterfall
+46. Load fbx models - use ue5 models
+47. 
 

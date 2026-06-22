@@ -24,7 +24,7 @@ namespace Engine::EngineAudio {
         AudioManager();
         ~AudioManager();
 
-        // Prevent copies to safeguard raw pointer tracking pointers
+        // Prevent copies
         AudioManager(const AudioManager&) = delete;
         AudioManager& operator=(const AudioManager&) = delete;
 

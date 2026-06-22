@@ -19,8 +19,8 @@ namespace Engine::EngineAudio {
         );
 
     private:
-        // 32 MB Pool tracked via standard 32-bit unsigned integers
-        static constexpr uint32_t AUDIO_ARENA_SIZE_BYTES = 1024 * 1024 * 32;
+        // 64 MB Pool
+        static constexpr uint32_t AUDIO_ARENA_SIZE_BYTES = 1024 * 1024 * 64;
 
         uint8_t mMemoryArena[AUDIO_ARENA_SIZE_BYTES] = { 0 };
         uint32_t mArenaOffset = 0;

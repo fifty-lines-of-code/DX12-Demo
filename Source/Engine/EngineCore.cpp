@@ -15,11 +15,7 @@ namespace Engine {
 		mhAppInst(hInstance),
 		mMainWndCaption(caption),
 		mIsInitialized(false),
-		mAnimationSpeed(.375f), // todo: move this out to somewhere else
-		mRenderer(EngineRenderer::DX12Renderer::DX12Renderer()),
-		mWorldManager(EngineWorld::WorldManager()),
-		mCamera(Camera()),
-		mInputSystem(XboxInputSystem()),
+		mAnimationSpeed(.375f),
 		mIsDebugBuild(false)
 	{
 #ifdef _DEBUG

@@ -42,7 +42,9 @@ namespace Engine {
 		std::wstring mMainWndCaption;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerMaterial;
-		HINSTANCE mhAppInst = nullptr; // application instance handle
+		// application instance handle
+		HINSTANCE mhAppInst = nullptr;
+		// main window handle
 		HWND mhMainWnd = nullptr;
 		uint32_t mNumberOfDirtyFramesDebugSystem = NumberOfFrameResources;
 		static const int NumberOfFrameResources = 3;
