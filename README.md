@@ -267,10 +267,14 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 ### 🎥 Videos
 
-- Terrain traversal system (heightmap + triangle interpolation)  
-- AABB wall collision demonstration  
-- Full engine gameplay + rendering demo  
-- Camera movement + scene navigation  
+#### Full Engine Demo (Terrain traversal, Collision, Camera, Movement)
+[Full Engine](Docs/Videos/Full-Engine-Demo.mp4)
+
+#### Debug UI + Blur
+[Debug UI_Blur](Debug-UI-And-Blur-Demo.mp4)
+
+#### Audio Ducking
+[Audio Ducking](Audio-Ducking-Demo.mp4)
 
 ---
 
