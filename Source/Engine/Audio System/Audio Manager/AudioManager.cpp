@@ -1,18 +1,14 @@
 #include "AudioManager.h"
 
-#include "AudioManagerHelper.h"
-#include <fstream>
 #include <filesystem>
-#include <iostream>
+#include "../../../Helper/Logger.h"
 
 namespace Engine::EngineAudio {
-    
+
     AudioManager::AudioManager() :
-        mCurrentlyPlayingBGAudio(SoundBG::INVALID) 
+        mCurrentlyPlayingBGAudio(SoundBG::INVALID)
     {
-        // Spin up low-level API engine instance
-        HRESULT hr = XAudio2Create(&mXAudioEngine, 0, XAUDIO2_DEFAULT_PROCESSOR);
-        if (SUCCEEDED(hr)) {
+        if (SUCCEEDED(XAudio2Create(&mXAudioEngine, 0, XAUDIO2_DEFAULT_PROCESSOR))) {
             mXAudioEngine->CreateMasteringVoice(&mMasteringVoice);
         }
     }
@@ -20,60 +16,41 @@ namespace Engine::EngineAudio {
     AudioManager::~AudioManager() {
         StopBackgroundLoop();
 
-        // Clean up allocated raw audio bytes
         for (auto& track : mBGLibrary) {
-            if (track.sourceVoice) {
-                track.sourceVoice->DestroyVoice();
-            }
-            delete[] track.rawPCMBytes;
+            if (track.sourceVoice) track.sourceVoice->DestroyVoice();
         }
-        for (auto& sfx : mSFXLibrary) {
-            if (sfx.sourceVoice) {
-                sfx.sourceVoice->DestroyVoice();
-            }
-            delete[] sfx.rawPCMBytes;
+        for (auto& sfx : mSFXLibrary) { 
+            if (sfx.sourceVoice) sfx.sourceVoice->DestroyVoice(); 
         }
 
         if (mMasteringVoice) {
             mMasteringVoice->DestroyVoice();
         }
+
         if (mXAudioEngine) {
             mXAudioEngine->Release();
         }
     }
 
     bool AudioManager::Initialize() {
-        if (!mXAudioEngine) { return false; }
+        if (!mXAudioEngine) return false;
 
         const std::filesystem::path audioDir = L"Source/Resources/Audio";
-        mBGLibrary[(uint8_t)SoundBG::BOSSFIGHT].filePath = audioDir / L"Background/bg-1.wav";
-        mSFXLibrary[(uint8_t)SoundSFX::LIGHT_ATTACK].filePath = audioDir / L"SFX/light_attack.wav";
 
-        // TODO: spin up background thread for loading of bg and sfx audio
-        // and load per level
+        // 1. Assign target resource file locations
+        mBGLibrary[static_cast<size_t>(SoundBG::BOSSFIGHT)].filePath = audioDir / L"Background/bg-1.wav";
+        mSFXLibrary[static_cast<size_t>(SoundSFX::LIGHT_ATTACK)].filePath = audioDir / L"SFX/light_attack.wav";
 
-        // Process BG assets loading
-        for (auto& track : mBGLibrary) {
-            if (!AudioManagerHelper::LoadWavFileRaw(track.filePath, track)) {
-                return false;
-            }
-            HRESULT hr = mXAudioEngine->CreateSourceVoice(
-                &track.sourceVoice,
-                &track.waveFormat
-            );
-            track.isLoaded = SUCCEEDED(hr);
+        // 2. Offload background tracks array loading to the arena
+        if (!mMemoryArena.LoadAssets(mBGLibrary.data(), mBGLibrary.size(), mXAudioEngine)) {
+            // we only fail here if we ran into arena overflow
+            return false;
         }
 
-        // Process SFX assets loading
-        for (auto& sfx : mSFXLibrary) {
-            if (!AudioManagerHelper::LoadWavFileRaw(sfx.filePath, sfx)) {
-                return false;
-            }
-            HRESULT hr = mXAudioEngine->CreateSourceVoice(
-                &sfx.sourceVoice,
-                &sfx.waveFormat
-            );
-            sfx.isLoaded = SUCCEEDED(hr);
+        // 3. Offload SFX tracks array loading to the arena
+        if (!mMemoryArena.LoadAssets(mSFXLibrary.data(), mSFXLibrary.size(), mXAudioEngine)) {
+            // we only fail here if we ran into arena overflow
+            return false;
         }
 
         return true;
@@ -84,24 +61,29 @@ namespace Engine::EngineAudio {
     }
 
     void AudioManager::StartBackgroundLoop(SoundBG track) {
-        if (mCurrentlyPlayingBGAudio == track) { return; }
+        if (mCurrentlyPlayingBGAudio == track ||
+            track == SoundBG::INVALID) 
+        { return; }
 
         StopBackgroundLoop();
 
-        uint8_t index = (uint8_t)track;
-        if (index < mBGLibrary.size() && mBGLibrary[index].isLoaded) {
-            AudioBufferAsset& asset = mBGLibrary[index];
+        size_t idx = static_cast<size_t>(track);
 
+        if (idx < mBGLibrary.size() && mBGLibrary[idx].isLoaded) {
+            auto& target = mBGLibrary[idx];
             XAUDIO2_BUFFER buffer = {};
-            buffer.AudioBytes = static_cast<UINT32>(asset.dataSize);
-            buffer.pAudioData = asset.rawPCMBytes; // Raw Pointer
-            buffer.LoopCount = XAUDIO2_LOOP_INFINITE; // Infinite loop flag
+            buffer.AudioBytes = static_cast<UINT32>(target.dataSize);
+            buffer.pAudioData = target.rawPCMBytes;
+            buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
             buffer.Flags = XAUDIO2_END_OF_STREAM;
 
-            mCurrentLoopVoice = asset.sourceVoice;
+            mCurrentLoopVoice = target.sourceVoice;
             mCurrentLoopVoice->SubmitSourceBuffer(&buffer);
             mCurrentLoopVoice->Start(0);
             mCurrentlyPlayingBGAudio = track;
+        }
+        else {
+            mCurrentlyPlayingBGAudio = SoundBG::INVALID;
         }
     }
 
@@ -114,16 +96,15 @@ namespace Engine::EngineAudio {
     }
 
     void AudioManager::PlayOneShot(SoundSFX sfx) {
-        size_t index = static_cast<size_t>(sfx);
-        if (index < mSFXLibrary.size() && mSFXLibrary[index].isLoaded) {
-            auto& target = mSFXLibrary[index];
+        size_t idx = static_cast<size_t>(sfx);
 
+        if (idx < mSFXLibrary.size() && mSFXLibrary[idx].isLoaded) {
+            auto& target = mSFXLibrary[idx];
             XAUDIO2_BUFFER buffer = {};
             buffer.AudioBytes = static_cast<UINT32>(target.dataSize);
-            buffer.pAudioData = target.rawPCMBytes; // Raw Pointer
-            buffer.Flags = XAUDIO2_END_OF_STREAM; // just once
+            buffer.pAudioData = target.rawPCMBytes;
+            buffer.Flags = XAUDIO2_END_OF_STREAM;
 
-            // One-shots must flush old buffers in case it is hit rapidly 
             target.sourceVoice->Stop(0);
             target.sourceVoice->FlushSourceBuffers();
             target.sourceVoice->SubmitSourceBuffer(&buffer);

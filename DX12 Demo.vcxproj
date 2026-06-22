@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h" />
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.h" />
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioBufferAsset.h" />
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManager.h" />
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h" />
@@ -213,6 +214,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
+    <ClCompile Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.cpp" />
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\AudioManager.cpp" />
     <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp" />
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />

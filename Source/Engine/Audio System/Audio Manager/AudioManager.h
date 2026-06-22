@@ -1,8 +1,9 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
 #include <array>
 #include "AudioBufferAsset.h"
+#include "Audio Memory Arena/AudioMemoryArena.h"
+#include <memory>
 #include <xaudio2.h>
 
 namespace Engine::EngineAudio {
@@ -35,6 +36,7 @@ namespace Engine::EngineAudio {
         void PlayOneShot(SoundSFX sfx);
 
     private:
+        AudioMemoryArena mMemoryArena;
         // our bg and sfx audio buffers
         std::array<AudioBufferAsset, (uint8_t)SoundBG::COUNT> mBGLibrary;
         std::array<AudioBufferAsset, (uint8_t)SoundSFX::COUNT> mSFXLibrary;

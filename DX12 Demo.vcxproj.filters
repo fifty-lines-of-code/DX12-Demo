@@ -301,6 +301,12 @@
     <Filter Include="Source Files\Engine\Audio System\Audio Manager">
       <UniqueIdentifier>{75225537-caae-4270-af30-bb6698007513}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Audio System\Audio Manager\Audio Memory Arena">
+      <UniqueIdentifier>{553a4fc4-8bcd-4d9d-bdb1-7776de05b640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Audio System\Audio Manager\Audio Memory Arena">
+      <UniqueIdentifier>{dd4ff7ee-afcd-454d-8a94-0ad7e6156b25}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -540,6 +546,9 @@
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h">
       <Filter>Header Files\Engine\Audio System\Audio Manager</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.h">
+      <Filter>Header Files\Engine\Audio System\Audio Manager\Audio Memory Arena</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -664,6 +673,9 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp">
       <Filter>Source Files\Engine\Audio System</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.cpp">
+      <Filter>Source Files\Engine\Audio System\Audio Manager\Audio Memory Arena</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
