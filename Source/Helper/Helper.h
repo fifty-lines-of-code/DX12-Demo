@@ -2,8 +2,9 @@
 
 #define WIN32_LEAN_AND_MEAN 
 
-#include <windows.h>
+#include <algorithm>
 #include <string>
+#include <windows.h>
 
 #ifndef ThrowException
 #define ThrowException(hr__)                                          \
@@ -41,6 +42,11 @@ public:
         std::wstring heapBuffer(len, L'\0');
         MultiByteToWideChar(CP_ACP, 0, s.c_str(), sLength, &heapBuffer[0], len);
         return heapBuffer;
+    }
+
+    static float Lerp(float start, float end, float alpha) {
+        alpha = std::clamp(alpha, 0.0f, 1.0f);
+        return start + alpha * (end - start);
     }
 };
 

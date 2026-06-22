@@ -1,11 +1,15 @@
 #include "AudioManager.h"
 
+#include "AudioManagerHelper.h"
 #include <filesystem>
+#include "../../../Helper/Helper.h"
 #include "../../../Helper/Logger.h"
 
 namespace Engine::EngineAudio {
 
-    AudioManager::AudioManager() {
+    AudioManager::AudioManager() :
+        mActiveSFXType(SoundSFX::INVALID)
+    {
         if (SUCCEEDED(XAudio2Create(&mXAudioEngine, 0, XAUDIO2_DEFAULT_PROCESSOR))) {
             mXAudioEngine->CreateMasteringVoice(&mMasteringVoice);
         }
@@ -55,7 +59,7 @@ namespace Engine::EngineAudio {
     }
 
     void AudioManager::Update(float deltaTime) {
-        // todo:
+        DuckBackgroundAudioIfSFXPlaying(deltaTime);
     }
 
     void AudioManager::StartBackgroundLoop(SoundBG track) {
@@ -103,8 +107,17 @@ namespace Engine::EngineAudio {
 
             target.sourceVoice->Stop(0);
             target.sourceVoice->FlushSourceBuffers();
+
+            // Start SFX completely silent (Update will ramp it up)
+            target.sourceVoice->SetVolume(0.0f);
+
             target.sourceVoice->SubmitSourceBuffer(&buffer);
             target.sourceVoice->Start(0);
+
+            // Arm the tracking system
+            mIsSFXActive = true;
+            mActiveSFXType = sfx;
+            mSFXElapsedTime = 0.0f;
         }
     }
 
@@ -135,5 +148,75 @@ namespace Engine::EngineAudio {
 
         // If BuffersQueued is greater than 0, the one-shot is still processing
         return (state.BuffersQueued > 0);
+    }
+
+    void AudioManager::DuckBackgroundAudioIfSFXPlaying(float deltaTime) {
+        if (!mIsSFXActive) {
+            // Default idle state: ensure background music is resting at full volume
+            if (mCurrentLoopVoice) {
+                mCurrentLoopVoice->SetVolume(0.8f);
+            }
+            return;
+        }
+
+        // Verify the sound is actually still playing
+        if (!IsPlayingSoundSFX(mActiveSFXType)) {
+            mIsSFXActive = false;
+            if (mCurrentLoopVoice) {
+                mCurrentLoopVoice->SetVolume(0.8f);
+            }
+            return;
+        }
+
+        mSFXElapsedTime += deltaTime;
+
+        const auto& sfxAsset = mSFXLibrary[static_cast<size_t>(mActiveSFXType)];
+        float totalDuration = sfxAsset.totalDurationSeconds;
+
+        float targetSFXVol;
+        float targetBGVol;
+
+        // the intro (TRANSITION_WINDOW) ramp
+        if (mSFXElapsedTime <= AudioManagerHelper::TRANSITION_WINDOW) {
+            float alpha = mSFXElapsedTime / AudioManagerHelper::TRANSITION_WINDOW;
+
+            targetSFXVol = Helper::Lerp(
+                AudioManagerHelper::MIN_VOLUME,
+                AudioManagerHelper::MAX_VOLUME,
+                alpha
+            );
+            targetBGVol = Helper::Lerp(
+                AudioManagerHelper::MAX_VOLUME,
+                AudioManagerHelper::BG_AUDIO_DUCKED_VOLUME,
+                alpha
+            );
+        }
+        // the outrov(TRANSITION_WINDOW) ramp
+        else if (mSFXElapsedTime >= (totalDuration - AudioManagerHelper::TRANSITION_WINDOW)) {
+            float timeIntoOutro = mSFXElapsedTime - (totalDuration - AudioManagerHelper::TRANSITION_WINDOW);
+            float alpha = timeIntoOutro / AudioManagerHelper::TRANSITION_WINDOW;
+
+            targetSFXVol = Helper::Lerp(
+                AudioManagerHelper::MAX_VOLUME,
+                AudioManagerHelper::MIN_VOLUME,
+                alpha
+            );
+
+            targetBGVol = Helper::Lerp(
+                AudioManagerHelper::BG_AUDIO_DUCKED_VOLUME,
+                AudioManagerHelper::MAX_VOLUME,
+                alpha
+            );
+        }
+        // sustained playback within the playback window
+        else {
+            targetSFXVol = AudioManagerHelper::MAX_VOLUME;
+            targetBGVol = AudioManagerHelper::BG_AUDIO_DUCKED_VOLUME;
+        }
+
+        sfxAsset.sourceVoice->SetVolume(targetSFXVol);
+        if (mCurrentLoopVoice) {
+            mCurrentLoopVoice->SetVolume(targetBGVol);
+        }
     }
 }

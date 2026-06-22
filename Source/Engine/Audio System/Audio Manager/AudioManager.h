@@ -3,7 +3,6 @@
 #include <array>
 #include "AudioBufferAsset.h"
 #include "Audio Memory Arena/AudioMemoryArena.h"
-#include <memory>
 #include <xaudio2.h>
 
 namespace Engine::EngineAudio {
@@ -48,9 +47,15 @@ namespace Engine::EngineAudio {
         // Track state management
         IXAudio2SourceVoice* mCurrentLoopVoice = nullptr;
 
+        bool mIsSFXActive = false;
+        SoundSFX mActiveSFXType;
+        float mSFXElapsedTime = 0.0f;
+        
+
     private:
         bool IsPlayingSoundBG(SoundBG bg) const;
         bool IsPlayingSoundSFX(SoundSFX sfx) const;
         bool IsPlayingSound(const AudioBufferAsset& asset) const;
+        void DuckBackgroundAudioIfSFXPlaying(float deltaTime);
     };
 }

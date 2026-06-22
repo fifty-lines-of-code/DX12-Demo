@@ -17,6 +17,8 @@ namespace Engine::EngineAudio {
 
         // Playback hardware abstraction handle
         IXAudio2SourceVoice* sourceVoice = nullptr;
+        // total duration
+        float totalDurationSeconds = 0.0f;
 
         bool isLoaded = false;
     };

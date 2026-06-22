@@ -69,11 +69,16 @@ namespace Engine::EngineAudio {
 
                 if (outAsset.rawPCMBytes == nullptr) {
                     file.close();
-                    return false; // HARD ALLOCATION FAILURE (Arena overflow)
+                    // Arena overflow
+                    return false; 
                 }
 
                 file.read(reinterpret_cast<char*>(outAsset.rawPCMBytes), chunkSize);
                 foundData = true;
+
+                if (outAsset.waveFormat.nAvgBytesPerSec > 0) {
+                    outAsset.totalDurationSeconds = static_cast<float>(outAsset.dataSize) / static_cast<float>(outAsset.waveFormat.nAvgBytesPerSec);
+                }
                 break;
             }
             else {
