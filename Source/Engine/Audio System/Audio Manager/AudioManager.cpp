@@ -5,9 +5,7 @@
 
 namespace Engine::EngineAudio {
 
-    AudioManager::AudioManager() :
-        mCurrentlyPlayingBGAudio(SoundBG::INVALID)
-    {
+    AudioManager::AudioManager() {
         if (SUCCEEDED(XAudio2Create(&mXAudioEngine, 0, XAUDIO2_DEFAULT_PROCESSOR))) {
             mXAudioEngine->CreateMasteringVoice(&mMasteringVoice);
         }
@@ -61,8 +59,8 @@ namespace Engine::EngineAudio {
     }
 
     void AudioManager::StartBackgroundLoop(SoundBG track) {
-        if (mCurrentlyPlayingBGAudio == track ||
-            track == SoundBG::INVALID) 
+        if (IsPlayingSoundBG(track) ||
+            track == SoundBG::INVALID)
         { return; }
 
         StopBackgroundLoop();
@@ -80,10 +78,6 @@ namespace Engine::EngineAudio {
             mCurrentLoopVoice = target.sourceVoice;
             mCurrentLoopVoice->SubmitSourceBuffer(&buffer);
             mCurrentLoopVoice->Start(0);
-            mCurrentlyPlayingBGAudio = track;
-        }
-        else {
-            mCurrentlyPlayingBGAudio = SoundBG::INVALID;
         }
     }
 
@@ -96,6 +90,8 @@ namespace Engine::EngineAudio {
     }
 
     void AudioManager::PlayOneShot(SoundSFX sfx) {
+        if (IsPlayingSoundSFX(sfx)) { return; }
+
         size_t idx = static_cast<size_t>(sfx);
 
         if (idx < mSFXLibrary.size() && mSFXLibrary[idx].isLoaded) {
@@ -110,5 +106,34 @@ namespace Engine::EngineAudio {
             target.sourceVoice->SubmitSourceBuffer(&buffer);
             target.sourceVoice->Start(0);
         }
+    }
+
+    bool AudioManager::IsPlayingSoundBG(SoundBG bg) const {
+        size_t idx = static_cast<size_t>(bg);
+        if (idx >= mBGLibrary.size() || !mBGLibrary[idx].isLoaded) {
+            return false;
+        }
+
+        return IsPlayingSound(mBGLibrary[idx]);
+
+    }
+
+    bool AudioManager::IsPlayingSoundSFX(SoundSFX sfx) const {
+        size_t idx = static_cast<size_t>(sfx);
+        if (idx >= mSFXLibrary.size() || !mSFXLibrary[idx].isLoaded) {
+            return false;
+        }
+
+        return IsPlayingSound(mSFXLibrary[idx]);
+
+    }
+
+    bool AudioManager::IsPlayingSound(const AudioBufferAsset& asset) const {
+        XAUDIO2_VOICE_STATE state;
+        // Tell XAudio2 to populate the state structure
+        asset.sourceVoice->GetState(&state);
+
+        // If BuffersQueued is greater than 0, the one-shot is still processing
+        return (state.BuffersQueued > 0);
     }
 }

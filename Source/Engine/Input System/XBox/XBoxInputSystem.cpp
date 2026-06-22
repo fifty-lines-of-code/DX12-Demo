@@ -67,22 +67,22 @@ GameButtonState XboxInputSystem::GetButtonState(GameButton button) const {
     uint32_t mapping = GetControllerMappingFor(button);
     const XboxInputState& inputState = mInputStatePool[mRenderIndex];
 
-    uint32_t buttonStateRawThisFrame = inputState.CurrentState.Gamepad.wButtons & mapping;
-    uint32_t buttonStateRawPreviousFrame = inputState.PreviousState.Gamepad.wButtons & mapping;
+    bool isDownThisFrame = (inputState.CurrentState.Gamepad.wButtons & mapping) != 0;
+    bool isDownLastFrame = (inputState.PreviousState.Gamepad.wButtons & mapping) != 0;
 
-    if (buttonStateRawThisFrame == 0 && buttonStateRawPreviousFrame == 0) {
-        return GameButtonState::Unpressed;
-    }
-
-    if (buttonStateRawThisFrame != 0 && buttonStateRawPreviousFrame == 0) {
+    if (isDownThisFrame && !isDownLastFrame) {
         return GameButtonState::Just_Pressed;
     }
 
-    if (buttonStateRawThisFrame != 0 && buttonStateRawPreviousFrame != 0) {
+    if (isDownThisFrame && isDownLastFrame) {
         return GameButtonState::Held;
     }
 
-    return GameButtonState::Just_Released;
+    if (!isDownThisFrame && isDownLastFrame) {
+        return GameButtonState::Just_Released;
+    }
+
+    return GameButtonState::Unpressed;
 }
 
 float XboxInputSystem::GetLeftTrigger() const {
@@ -194,6 +194,12 @@ uint32_t XboxInputSystem::GetControllerMappingFor(GameButton button) const {
     switch (button) {
     case GameButton::ActionEast:
         return XINPUT_GAMEPAD_B;
+
+    case GameButton::BumperLeft:
+        return XINPUT_GAMEPAD_LEFT_SHOULDER;
+
+    case GameButton::BumperRight:
+        return XINPUT_GAMEPAD_RIGHT_SHOULDER;
     }
 
     // todo:

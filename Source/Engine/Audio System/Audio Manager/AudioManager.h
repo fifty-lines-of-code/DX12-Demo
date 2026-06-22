@@ -48,6 +48,9 @@ namespace Engine::EngineAudio {
         // Track state management
         IXAudio2SourceVoice* mCurrentLoopVoice = nullptr;
 
-        SoundBG mCurrentlyPlayingBGAudio;
+    private:
+        bool IsPlayingSoundBG(SoundBG bg) const;
+        bool IsPlayingSoundSFX(SoundSFX sfx) const;
+        bool IsPlayingSound(const AudioBufferAsset& asset) const;
     };
 }

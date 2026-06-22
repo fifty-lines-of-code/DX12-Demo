@@ -111,11 +111,11 @@ namespace Engine {
 	void EngineCore::Update(float deltaTime) {
 		// todo: 
 
-		// update the audio system
-		mAudioSystem.Update(deltaTime);
-
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
+
+		// update the audio system
+		mAudioSystem.Update(mInputSystem, deltaTime);
 
 		// update the world manager
 		mWorldManager.Update(
