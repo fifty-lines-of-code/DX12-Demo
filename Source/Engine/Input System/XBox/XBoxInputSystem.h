@@ -30,21 +30,21 @@ public:
     virtual ~XboxInputSystem() override;
 
     // Core Frame Update
-    virtual void Update() override;
-    virtual bool IsConnected() const override;
+    void Update() override;
+    bool IsConnected() const override;
 
     // Left Analog Stick Queries
-    virtual float GetLeftStickX() const override;
-    virtual float GetLeftStickY() const override;
+    float GetLeftStickX() const override;
+    float GetLeftStickY() const override;
 
     // Right Analog Stick Queries
-    virtual float GetRightStickX() const override;
-    virtual float GetRightStickY() const override;
+    float GetRightStickX() const override;
+    float GetRightStickY() const override;
 
-    virtual GameButtonState GetButtonState(GameButton button) const override;
+    GameButtonState GetButtonState(GameButton button) const override;
 
-    virtual float GetLeftTrigger() const override;
-    virtual float GetRightTrigger() const override;
+    float GetLeftTrigger() const override;
+    float GetRightTrigger() const override;
 
 private:
     static const uint16_t Number_Of_Buffers = 3;

@@ -12,11 +12,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
+        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr)) {
+            return -1;
+        }
+
+        // create the demo
         auto theDemo = std::make_unique<DX12Demo>(hInstance);
         if (!theDemo->Initialize())
             return 0;
 
-        return theDemo->Run();
+        // run the demo
+        theDemo->Run();
+
+        // clean up COM
+        CoUninitialize();
+
+        // return
+        return 0;
     }
     catch (DxException& e)
     {

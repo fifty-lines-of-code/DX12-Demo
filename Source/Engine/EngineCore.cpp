@@ -15,11 +15,7 @@ namespace Engine {
 		mhAppInst(hInstance),
 		mMainWndCaption(caption),
 		mIsInitialized(false),
-		mAnimationSpeed(.375f), // todo: move this out to somewhere else
-		mRenderer(EngineRenderer::DX12Renderer::DX12Renderer()),
-		mWorldManager(EngineWorld::WorldManager()),
-		mCamera(Camera()),
-		mInputSystem(XboxInputSystem()),
+		mAnimationSpeed(.375f),
 		mIsDebugBuild(false)
 	{
 #ifdef _DEBUG
@@ -39,6 +35,8 @@ namespace Engine {
 		if (!mWorldManager.Initialize()) { return false; }
 
 		if (!InitializeCamera(mWorldManager.GetPlayerCenter())) { return false; }
+
+		if (!mAudioSystem.Initialize()) { return false; }
 
 		// set all entities to dity so they are updated
 		mNumberOfDirtyFramesPerEntity.resize(mWorldManager.GetEntityCount());
@@ -64,6 +62,9 @@ namespace Engine {
 		LoadGeometry();
 
 		mRenderer.FinishInitialize();
+
+		// start the background audio
+		mAudioSystem.StartBackgroundLoop(EngineAudio::SoundBG::BOSSFIGHT);
 
 		mIsInitialized = true;
 
@@ -108,6 +109,9 @@ namespace Engine {
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
+
+		// update the audio system
+		mAudioSystem.Update(mInputSystem, deltaTime);
 
 		// update the world manager
 		mWorldManager.Update(
