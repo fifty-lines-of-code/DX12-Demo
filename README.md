@@ -252,6 +252,25 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 ## 📸 Media
 
+### 🎥 Videos
+
+#### Full Engine Demo GIF (Terrain traversal, Collision, Camera, Movement)
+![Full Engine](Docs/Images/Full-Engine-Demo.gif)
+
+#### Full Engine Demo Video (Terrain traversal, Collision, Camera, Movement)
+[Full Engine](Docs/Videos/Full-Engine-Demo.mp4)
+
+#### Debug UI + Blur GIF
+![Debug UI_Blur](Docs/Images/Debug-UI-And-Blur-Demo.gif)
+
+#### Debug UI + Blur Video
+[Debug UI_Blur](Docs/Videos/Debug-UI-And-Blur-Demo.mp4)
+
+#### Audio Ducking Video
+[Audio Ducking](Audio-Ducking-Demo.mp4)
+
+---
+
 ### 🖼️ Screenshots
 
 #### Debug UI  
@@ -262,19 +281,6 @@ Additional learning comes from iterative engine development, GPU debugging, and 
 
 #### Blur Effect  
 ![Blur Demo](Docs/Images/Blur-Demo.png)
-
----
-
-### 🎥 Videos
-
-#### Full Engine Demo (Terrain traversal, Collision, Camera, Movement)
-[Full Engine](Docs/Videos/Full-Engine-Demo.mp4)
-
-#### Debug UI + Blur
-[Debug UI_Blur](Debug-UI-And-Blur-Demo.mp4)
-
-#### Audio Ducking
-[Audio Ducking](Audio-Ducking-Demo.mp4)
 
 ---
 
