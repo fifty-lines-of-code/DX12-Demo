@@ -286,6 +286,21 @@
     <Filter Include="Source Files\Engine\Audio System">
       <UniqueIdentifier>{d0dc2ec8-bf09-4fed-b812-1f0761070fc9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Audio">
+      <UniqueIdentifier>{841d78df-3e97-4c9c-bcc1-6b1d4930687c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Audio\Background">
+      <UniqueIdentifier>{783b0740-f1d0-491b-a1c6-d348d12f2bea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Audio\SFX">
+      <UniqueIdentifier>{6f23b955-0fc6-48be-9c80-544d1cd54185}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Audio System\Audio Manager">
+      <UniqueIdentifier>{eca88705-33e6-4793-ab41-e9f20cffe5ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Audio System\Audio Manager">
+      <UniqueIdentifier>{75225537-caae-4270-af30-bb6698007513}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -513,8 +528,17 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Audio System\AudioManager.h">
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManager.h">
+      <Filter>Header Files\Engine\Audio System\Audio Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Audio System\AudioSystem.h">
       <Filter>Header Files\Engine\Audio System</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioBufferAsset.h">
+      <Filter>Header Files\Engine\Audio System\Audio Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h">
+      <Filter>Header Files\Engine\Audio System\Audio Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -635,7 +659,10 @@
     <ClCompile Include="Source\Engine\World Manager\Scene\SceneFactory.cpp">
       <Filter>Source Files\Engine\World Manager\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Audio System\AudioManager.cpp">
+    <ClCompile Include="Source\Engine\Audio System\Audio Manager\AudioManager.cpp">
+      <Filter>Source Files\Engine\Audio System\Audio Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp">
       <Filter>Source Files\Engine\Audio System</Filter>
     </ClCompile>
   </ItemGroup>
@@ -685,5 +712,13 @@
       <Filter>Resource Files\Shaders\Opaque Render System</Filter>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Source\Resources\Audio\Background\bg-1.wav">
+      <Filter>Resource Files\Audio\Background</Filter>
+    </Media>
+    <Media Include="Source\Resources\Audio\SFX\light_attack.wav">
+      <Filter>Resource Files\Audio\SFX</Filter>
+    </Media>
   </ItemGroup>
 </Project>

@@ -1,0 +1,51 @@
+#pragma once
+
+#define _USE_MATH_DEFINES
+#include <array>
+#include "AudioBufferAsset.h"
+#include <xaudio2.h>
+
+namespace Engine::EngineAudio {
+
+    enum class SoundBG : uint8_t {
+        BOSSFIGHT = 0,
+        COUNT,
+        INVALID
+    };
+
+    enum class SoundSFX : uint8_t {
+        LIGHT_ATTACK = 0,
+        COUNT,
+        INVALID
+    };
+
+    class AudioManager {
+    public:
+        AudioManager();
+        ~AudioManager();
+
+        // Prevent copies to safeguard raw pointer tracking pointers
+        AudioManager(const AudioManager&) = delete;
+        AudioManager& operator=(const AudioManager&) = delete;
+
+        bool Initialize();
+        void Update(float deltaTime);
+        void StartBackgroundLoop(SoundBG track);
+        void StopBackgroundLoop();
+        void PlayOneShot(SoundSFX sfx);
+
+    private:
+        // our bg and sfx audio buffers
+        std::array<AudioBufferAsset, (uint8_t)SoundBG::COUNT> mBGLibrary;
+        std::array<AudioBufferAsset, (uint8_t)SoundSFX::COUNT> mSFXLibrary;
+
+        // Low-level Native XAudio2 Engine Interfaces
+        IXAudio2* mXAudioEngine = nullptr;
+        IXAudio2MasteringVoice* mMasteringVoice = nullptr;
+
+        // Track state management
+        IXAudio2SourceVoice* mCurrentLoopVoice = nullptr;
+
+        SoundBG mCurrentlyPlayingBGAudio;
+    };
+}

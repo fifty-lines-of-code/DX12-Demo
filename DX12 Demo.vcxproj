@@ -132,7 +132,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\DX12Demo.h" />
-    <ClInclude Include="Source\Engine\Audio System\AudioManager.h" />
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioBufferAsset.h" />
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManager.h" />
+    <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h" />
+    <ClInclude Include="Source\Engine\Audio System\AudioSystem.h" />
     <ClInclude Include="Source\Engine\Camera\Camera.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugLimits.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugSystem.h" />
@@ -210,7 +213,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp" />
-    <ClCompile Include="Source\Engine\Audio System\AudioManager.cpp" />
+    <ClCompile Include="Source\Engine\Audio System\Audio Manager\AudioManager.cpp" />
+    <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp" />
     <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
     <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
@@ -284,6 +288,10 @@
     <None Include="Source\Resources\Shaders\Blur\blur_cs.hlsl">
       <FileType>Document</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Source\Resources\Audio\Background\bg-1.wav" />
+    <Media Include="Source\Resources\Audio\SFX\light_attack.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -40,6 +40,8 @@ namespace Engine {
 
 		if (!InitializeCamera(mWorldManager.GetPlayerCenter())) { return false; }
 
+		if (!mAudioSystem.Initialize()) { return false; }
+
 		// set all entities to dity so they are updated
 		mNumberOfDirtyFramesPerEntity.resize(mWorldManager.GetEntityCount());
 		mNumberOfDirtyFramesPerEntity.assign(
@@ -64,6 +66,9 @@ namespace Engine {
 		LoadGeometry();
 
 		mRenderer.FinishInitialize();
+
+		// start the background audio
+		mAudioSystem.StartBackgroundLoop(EngineAudio::SoundBG::BOSSFIGHT);
 
 		mIsInitialized = true;
 
@@ -105,6 +110,9 @@ namespace Engine {
 
 	void EngineCore::Update(float deltaTime) {
 		// todo: 
+
+		// update the audio system
+		mAudioSystem.Update(deltaTime);
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);

@@ -12,11 +12,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
+        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        if (FAILED(hr)) {
+            // Handle failure if COM completely fails to spin up
+            return -1;
+        }
         auto theDemo = std::make_unique<DX12Demo>(hInstance);
         if (!theDemo->Initialize())
             return 0;
 
-        return theDemo->Run();
+        theDemo->Run();
+        CoUninitialize();
+        return 0;
     }
     catch (DxException& e)
     {
