@@ -45,7 +45,7 @@ namespace Engine::EngineWorld {
 
 	private:
 		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshes;
-		// todo: extract blow into flat arrays of max size
+		// todo: extract below into flat arrays of max size
 		// instead of vectors
 		std::vector<Vertex> mVertices;
 		std::vector<uint16_t> mIndices;

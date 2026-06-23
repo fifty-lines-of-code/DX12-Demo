@@ -37,7 +37,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
         DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mOpaquePerPassCB;
         DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemConstants> mOpaqueRenderItemCB;
         DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemPerSubMeshConstants> mOpaqueRenderItemPerSubMeshCB;
-
         DX12ConstantBuffersUploadBuffer<DX12PerMaterialConstants> mPerMaterialCB;
         DX12ConstantBuffersUploadBuffer<DX12DebugSystemPerPassConstants> mDebugSystemPerPassCB;
         DX12StructuredUploadBuffer<DX12DebugSystemPerCharacterData> mDebugSystemPerCharacterCB;

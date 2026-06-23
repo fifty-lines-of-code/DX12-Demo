@@ -489,7 +489,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ENGINE_ASSERT(mSwapChain, L"Swap Chain should NOT be nullptr here");
 		ENGINE_ASSERT(
 			mInitAndResizeCommandAllocator,
-			L"Init and Resize Cmd Allocator should NOT be nulltpr"
+			L"Init and Resize Cmd Allocator should NOT be nullptr"
 		);
 
 		// flush all preivous commands

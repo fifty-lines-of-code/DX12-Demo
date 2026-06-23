@@ -116,6 +116,8 @@ namespace Engine::EngineWorld {
 	) noexcept 
 	{
 		ENGINE_ASSERT(mMesh != nullptr, L"Mesh should NOT be nullptr here");
+		if (mMesh == nullptr) { return; }
+
 		ENGINE_ASSERT(
 			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
 			L"SubMesh Index is Incorrect, Bad things will happen!"

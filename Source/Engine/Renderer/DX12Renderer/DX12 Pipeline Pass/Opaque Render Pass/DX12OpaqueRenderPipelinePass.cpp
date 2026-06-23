@@ -78,7 +78,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			args.CbvSrvUavDescriptorSize
 		);
 		mCommandList->SetGraphicsRootDescriptorTable(
-			mMaterialsCBIndex, // TODO: extract these out into constants
+			mMaterialsCBIndex,
 			materialsCbvHandle
 		);
 
