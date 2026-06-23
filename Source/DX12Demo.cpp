@@ -2,7 +2,7 @@
 
 #include "DX12Demo.h"
 
-#include <cassert>
+#include "Helper/Helper.h"
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -17,7 +17,7 @@ DX12Demo::DX12Demo(HINSTANCE hInstance) :
     mhAppInst(hInstance),
     mGame(mhAppInst, mClientWidth, mClientHeight, mMainWndCaption)
 {
-    assert(mDemo == nullptr);
+    ENGINE_ASSERT(mDemo == nullptr, L"Demo should be nullptr");
     mDemo = this;
 }
 

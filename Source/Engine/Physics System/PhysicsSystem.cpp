@@ -5,7 +5,7 @@
 namespace Engine::EnginePhysics {
 
 	void PhysicsSystem::ResolveEntityMovement(
-		Entity& entity, 
+		EngineWorld::Entity& entity, 
 		const std::vector<PhysicsEntity>& candidates,
 		float terrainGroundY,
 		CollisionResult& collisionResult

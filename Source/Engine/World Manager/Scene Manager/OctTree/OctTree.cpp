@@ -2,6 +2,7 @@
 
 #include "../Entity/Entity.h"
 #include "../../../Math/GeometryHelper.h"
+#include "../../../../Helper/Helper.h"
 
 namespace Engine {
 
@@ -74,7 +75,10 @@ namespace Engine {
 				// theoretically index should always be valid,
 				// as we've checked it's a leaf node already but this is to be safe
 				// maybe the code should be strong enough can this assert isn't necessary
-				assert(childIndex < OctTree::TOTAL_NUMBER_OF_NODES && "Out of OctTree allNodes bounds");
+				ENGINE_ASSERT(
+					childIndex < OctTree::TOTAL_NUMBER_OF_NODES,
+					L"Out of OctTree allNodes bounds"
+				);
 
 				OctTreeNode& child = allNodes[childIndex];
 				// now check if the entity can be inserted into any of the child nodes

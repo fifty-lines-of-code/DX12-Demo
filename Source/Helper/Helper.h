@@ -23,6 +23,15 @@
 } 
 #endif
 
+#if defined (_DEBUG)
+#define ENGINE_ASSERT(expression, message) \
+        if (!(expression)) { \
+            assert(expression && #message); \
+        }
+#else
+#define ENGINE_ASSERT(expression, message)
+#endif
+
 class Helper {
 public:
     static std::wstring StringToWideString(const std::string& s) {

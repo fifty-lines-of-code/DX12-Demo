@@ -39,7 +39,7 @@ namespace Engine::EngineWorld {
 		EngineResources::TextureArray& GetTextures() noexcept;
 		const Vector3& GetPlayerCenter() const;
 		Entity& GetPlayerEntity();
-		void GetMeshesToLoad(std::vector<const Mesh*>& meshes);
+		const EngineResources::MeshArray& GetMeshesToLoad() const noexcept;
 
 	private:
 		SceneManager mSceneManager;

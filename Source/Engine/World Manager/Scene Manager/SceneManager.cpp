@@ -187,13 +187,8 @@ namespace Engine::EngineWorld {
 
 #pragma region Private
 
-	void SceneManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
-		auto& meshesArray = mResourceManager.GetMeshes();
-		meshes.reserve(meshesArray.size());
-
-		for (const Mesh& mesh : meshesArray) {
-			meshes.push_back(&mesh);
-		}
+	const EngineResources::MeshArray& SceneManager::GetMeshesToLoad() const noexcept {
+		return mResourceManager.GetMeshes();
 	}
 
 	Entity& SceneManager::GetPlayerEntity() {
@@ -207,16 +202,26 @@ namespace Engine::EngineWorld {
 		// currently player is always at index 0
 		// TODO: find a better way to do this
 		const EntityBlueprint& playerBlueprint = blueprint.EntityBlueprints[PLAYER_INDEX];
+		playerEntity.SetIsDirty(true);
 		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
+		playerEntity.SetEntityType(playerBlueprint.EntityType);
 		playerEntity.GetPhysicsBody().Center = playerBlueprint.Center;
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
-		playerEntity.SetMaterialType(playerBlueprint.MaterialType);
-		playerEntity.SetTextureID(playerBlueprint.TextureID);
-		playerEntity.SetIsDirty(true);
-		const Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
+		// set mesh
+		Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
 		playerEntity.SetMesh(cubeMesh);
+
+		// update all submeshes
+		for (int i = 0; i < playerBlueprint.ActiveSubMeshCount; ++i) {
+			const EntitySubMeshBlueprint& subMeshBlueprint = playerBlueprint.EntitySubMeshBlueprints[i];
+			playerEntity.SetSubMeshMaterialAndTexture(
+				i,
+				subMeshBlueprint.MaterialType,
+				subMeshBlueprint.TextureID
+			);
+		}
 
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
 

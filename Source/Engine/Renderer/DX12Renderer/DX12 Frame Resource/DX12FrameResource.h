@@ -18,6 +18,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
             ID3D12Device* device,
             UINT perPassCbCount,
             UINT numberOfEntities,
+            UINT maxSubMeshesPerEntity,
             UINT numberOfMaterials,
             UINT debugSystemPerPassCBCount,
             UINT debugSystemMaxCharacters
@@ -35,6 +36,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         // So each frame needs their own cbuffers.
         DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mOpaquePerPassCB;
         DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemConstants> mOpaqueRenderItemCB;
+        DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemPerSubMeshConstants> mOpaqueRenderItemPerSubMeshCB;
         DX12ConstantBuffersUploadBuffer<DX12PerMaterialConstants> mPerMaterialCB;
         DX12ConstantBuffersUploadBuffer<DX12DebugSystemPerPassConstants> mDebugSystemPerPassCB;
         DX12StructuredUploadBuffer<DX12DebugSystemPerCharacterData> mDebugSystemPerCharacterCB;

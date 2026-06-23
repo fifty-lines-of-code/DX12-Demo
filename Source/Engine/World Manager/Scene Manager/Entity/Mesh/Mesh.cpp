@@ -1,11 +1,14 @@
 #include "Mesh.h"
 
-namespace Engine {
+#include "../../../../../Helper/Logger.h"
+
+namespace Engine::EngineWorld {
 
 	Mesh::Mesh() :
 		mMeshID(MeshID::Count),
 		mVbByteSize(0),
-		mIbByteSize(0)
+		mIbByteSize(0),
+		mActiveSubMeshCount(0)
 	{}
 
 	Mesh::~Mesh() {}
@@ -13,11 +16,16 @@ namespace Engine {
 	void Mesh::Load(
 		MeshID id,
 		std::vector<Vertex> vertices, 
-		std::vector<uint16_t> indices
-	) {
+		std::vector<uint16_t> indices,
+		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> submeshes,
+		uint8_t activeSubMeshCount
+	) noexcept
+	{
 		mMeshID = id;
 		mVertices = vertices;
 		mIndices = indices;
+		mSubMeshes = submeshes;
+		mActiveSubMeshCount = activeSubMeshCount;
 
 		mVbByteSize = (uint32_t)vertices.size() * sizeof(Vertex);
 		mIbByteSize = (uint32_t)indices.size() * sizeof(uint16_t);
@@ -25,23 +33,36 @@ namespace Engine {
 		CalculateLocalMinAndMax();
 	}
 
-	const std::vector<Vertex>& Mesh::GetVertices() const {
+	const std::vector<Vertex>& Mesh::GetVertices() const noexcept {
 		return mVertices;
 	}
 
-	const std::vector<uint16_t>& Mesh::GetIndices() const {
+	const std::vector<uint16_t>& Mesh::GetIndices() const noexcept  {
 		return mIndices;
 	}
 
-	MeshID Mesh::GetMeshID() const { return mMeshID; }
+	MeshID Mesh::GetMeshID() const noexcept  { return mMeshID; }
 
-	UINT Mesh::GetVbByteSize() const { return mVbByteSize; }
+	UINT Mesh::GetVbByteSize() const noexcept { return mVbByteSize; }
 
-	UINT Mesh::GetIbByteSize() const { return mIbByteSize; }
+	UINT Mesh::GetIbByteSize() const noexcept  { return mIbByteSize; }
 
-	const Vector3& Mesh::GetLocalMin() const { return mLocalMin; }
+	const Vector3& Mesh::GetLocalMin() const noexcept { return mLocalMin; }
 
-	const Vector3& Mesh::GetLocalMax() const { return mLocalMax; }
+	const Vector3& Mesh::GetLocalMax() const noexcept { return mLocalMax; }
+
+	uint8_t Mesh::GetActiveSubMeshCount() const noexcept { return mActiveSubMeshCount; }
+
+	const SubMesh& Mesh::GetSubMeshAtIndex(uint8_t index) const noexcept {
+		if (index >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH) {
+			Logger::ERR(L"SubMesh index is incorrect, expect errors!");
+			return mSubMeshes[0];
+		}
+
+		return mSubMeshes[index];
+	}
+
+#pragma region Private
 
 	void Mesh::CalculateLocalMinAndMax() {
 		if (mVertices.size() < 1) { return; }
@@ -68,4 +89,6 @@ namespace Engine {
 		mLocalMin = min;
 		mLocalMax = max;
 	}
+
+#pragma endregion
 }

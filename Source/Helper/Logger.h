@@ -27,5 +27,4 @@ public:
 private:
 	inline static const std::wstring DEBUG = L"DEBUG";
 	inline static const std::wstring _ERROR = L"_ERROR: ";
-
 };

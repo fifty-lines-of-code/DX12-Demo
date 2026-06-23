@@ -1,16 +1,22 @@
 #pragma once
 
-#include "../../../Math/Geometry.h"
+#include <array>
 #include "../../../Math/BasisVectors.h"
-#include "PerPassAndPerEntityConstantBufferData.h"
 #include "EntityType.h"
+#include "../../../Math/Geometry.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
+#include "PerPassAndPerEntityConstantBufferData.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	class Mesh;
+
+	struct EntitySubMeshMaterialData {
+		uint32_t MaterialID = 0;
+		uint32_t TextureID = 0;
+	};
 
 	class Entity {
 	public:
@@ -30,12 +36,18 @@ namespace Engine {
 		void SetIsStatic(bool isStatic);
 		bool GetIsStatic() const;
 
-		void SetMesh(const Mesh* mesh);
+		void SetMesh(Mesh* mesh);
 		const Mesh* GetMesh() const;
 
 		void Update(float stickX, float stickY, float deltaTime, float speed);
 
-		void CopyToDestinationConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
+		void CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
+
+		void CopyToDestinationSubMeshConstantBufferData(
+			uint8_t subMeshIndex,
+			EntitySubMeshConstantBufferData& destinationBufferData
+		);
+
 		EnginePhysics::PhysicsBody& GetPhysicsBody();
 		const AABB& GetAABB() const;
 
@@ -47,23 +59,23 @@ namespace Engine {
 
 		void SetScale(Vector3 scale);
 
-		void SetMaterialType(EngineResources::MaterialType type);
-
-		EngineResources::TextureID GetTextureID() const;
-		void SetTextureID(EngineResources::TextureID tID);
-
 		bool GetIsTerrainOrFloor() const noexcept;
 		
 		void SetEntityType(EntityType entityType) noexcept;
 		EntityType GetEntityType() const noexcept;
 
+		void SetSubMeshMaterialAndTexture(
+			uint8_t subMeshIndex,
+			EngineResources::MaterialType material,
+			EngineResources::TextureID texture
+		) noexcept;
+
 	private:
+		Mesh* mMesh;
 		EnginePhysics::PhysicsBody mPhysicsBody;
-		const Mesh* mMesh;
+		std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshMaterialData;
 		uint32_t mID;
 		EntityType mEntityType;
-		EngineResources::TextureID mTextureID;
-		EngineResources::MaterialType mMaterialType;
 		bool mIsStatic;
 		bool mIsDirty;
 		bool mIsActive;

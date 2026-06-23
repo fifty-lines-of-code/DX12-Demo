@@ -29,10 +29,10 @@ namespace Engine::EngineWorld {
 			uint32_t index,
 			Vector3 center, 
 			Vector3 scale, 
-			EntityType entityType, 
-			EngineResources::MaterialType materialType, 
-			EngineResources::TextureID textureID,
-			Engine::MeshID meshID
+			EntityType entityType,
+			Engine::EngineWorld::MeshID meshID,
+			std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
+			uint8_t activeSubMeshCount
 		);
 	};
 }

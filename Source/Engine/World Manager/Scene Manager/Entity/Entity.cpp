@@ -3,8 +3,9 @@
 #include <cmath>
 #include <DirectXMath.h>
 #include "Mesh/Mesh.h"
+#include "../../../../Helper/Logger.h"
 
-namespace Engine {
+namespace Engine::EngineWorld {
 
 	Entity::Entity() : 
 		Entity(-1, Vector3(), Vector3(), true, false)
@@ -20,8 +21,6 @@ namespace Engine {
 		mMesh(nullptr),
 		mID(Id),
 		mEntityType(EntityType::INVALID),
-		mMaterialType(EngineResources::MaterialType::INVALID),
-		mTextureID(EngineResources::TextureID::INVALID),
 		mIsStatic(isStatic),
 		mIsDirty(true),
 		mIsActive(false)
@@ -38,7 +37,7 @@ namespace Engine {
 	bool Entity::GetIsStatic() const { return mIsStatic; }
 
 	//TODO: store the mesh ID instead of a pointer indirection for efficiency
-	void Entity::SetMesh(const Mesh* mesh) {
+	void Entity::SetMesh(Mesh* mesh) {
 		mMesh = mesh;
 
 		mPhysicsBody.LocalAABB.Min = mesh->GetLocalMin();
@@ -48,13 +47,13 @@ namespace Engine {
 	}
 
 	// thus this returns an ID
-	const Engine::Mesh* Entity::GetMesh() const { return mMesh; }
+	const Mesh* Entity::GetMesh() const { return mMesh; }
 
 	void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 		if (mIsDirty) { mPhysicsBody.UpdateProductionTransforms(); }
 	}
 
-	void Entity::CopyToDestinationConstantBufferDataTransposed(EntityConstantBufferData& bufferData) {
+	void Entity::CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData) {
 		// store world transpose
 		DirectX::XMMATRIX worldTranspose = DirectX::XMMatrixTranspose(
 			DirectX::XMLoadFloat4x4(&mPhysicsBody.WorldMatrix.AsXMFLOAT4X4())
@@ -63,14 +62,25 @@ namespace Engine {
 			&bufferData.World.AsXMFLOAT4X4(),
 			worldTranspose
 		);
+	}
+	
+	void Entity::CopyToDestinationSubMeshConstantBufferData(
+		uint8_t subMeshIndex,
+		EntitySubMeshConstantBufferData& destinationBufferData
+	) {
+		ENGINE_ASSERT(
+			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			L"SubMesh Index is Incorrect, Bad things will happen!"
+		);
 
-		// store Material ID
-		uint16_t materialTypeUintval = (uint16_t)mMaterialType;
-		bool isValid = materialTypeUintval < (uint16_t)EngineResources::MaterialType::COUNT;
-		bufferData.MaterialID = isValid ? materialTypeUintval : 0;
+		uint8_t index = subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH 
+			? subMeshIndex : 0;
+
+		// store Material ID;
+		destinationBufferData.MaterialID = mSubMeshMaterialData[index].MaterialID;
 
 		// store Texture ID
-		bufferData.TextureID = (uint32_t)mTextureID;
+		destinationBufferData.TextureID = mSubMeshMaterialData[index].TextureID;
 	}
 
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }
@@ -87,14 +97,6 @@ namespace Engine {
 
 	void Entity::SetScale(Vector3 scale) { mPhysicsBody.Scale = scale; }
 
-	void Entity::SetMaterialType(EngineResources::MaterialType type) { 
-		mMaterialType = type; 
-	}
-
-	EngineResources::TextureID Entity::GetTextureID() const { return mTextureID; }
-
-	void Entity::SetTextureID(EngineResources::TextureID tID) { mTextureID = tID; }
-
 	bool Entity::GetIsTerrainOrFloor() const noexcept { 
 		return 
 			mEntityType == EntityType::TERRAIN ||
@@ -106,4 +108,25 @@ namespace Engine {
 	}
 
 	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
+
+	void Entity::SetSubMeshMaterialAndTexture(
+		uint8_t subMeshIndex,
+		EngineResources::MaterialType material,
+		EngineResources::TextureID texture
+	) noexcept 
+	{
+		ENGINE_ASSERT(mMesh != nullptr, L"Mesh should NOT be nullptr here");
+		if (mMesh == nullptr) { return; }
+
+		ENGINE_ASSERT(
+			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			L"SubMesh Index is Incorrect, Bad things will happen!"
+		);
+
+		uint8_t index =
+			subMeshIndex >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH ?
+			0 : subMeshIndex;
+		mSubMeshMaterialData[index].MaterialID = (uint8_t)material;
+		mSubMeshMaterialData[index].TextureID = (uint8_t)texture;
+	}
 }

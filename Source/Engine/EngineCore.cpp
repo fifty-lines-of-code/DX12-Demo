@@ -57,7 +57,7 @@ namespace Engine {
 
 		// then setup the pipeline
 		// which internally sets up the descriptors of the textures
-		if (!SetupPipeline()) { return false; }
+		if (!SetupPipelines()) { return false; }
 
 		LoadGeometry();
 
@@ -71,9 +71,12 @@ namespace Engine {
 		return true;
 	}
 
-	bool EngineCore::SetupPipeline() {
-		bool result = mRenderer.SetupRenderPipeline(
+	bool EngineCore::SetupPipelines() {
+
+		// opaque render pipeline
+		bool result = mRenderer.SetupOpaqueRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
+			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
 			EngineConfig::EngineConfig::MAX_TEXTURES,
@@ -84,6 +87,7 @@ namespace Engine {
 
 		if (!result) { return false; }
 
+		// debug pipeline
 		result = mRenderer.SetupDebugPipeline(
 			DebugSystem::DebugLimits::MAX_CHARACTERS,
 			(uint32_t)EngineResources::TextureID::FONT
@@ -91,6 +95,7 @@ namespace Engine {
 
 		if (!result) { return false; }
 
+		// blur pipeline
 		return mRenderer.SetupBlurPipeline();
 	}
 
@@ -143,35 +148,13 @@ namespace Engine {
 		// instead of manually having to execute passes like so below
 
 		// draw our 3D objects
-		auto& entities = mWorldManager.GetEntities();
-		const uint32_t entityCount = mWorldManager.GetEntityCount();
-
-		EngineRenderer::DX12Renderer::DX12PipelinePassExecuteContext context;
-		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext = {};
-		context.NumberOfItems = (uint32_t)entities.size();
-
-		for (uint32_t i = 0; i < entities.size(); ++i) {
-			if (i >= EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
-
-			auto& entity = entities[i];
-
-			// set ID
-			itemsExecuteContext[i].ID = entity.GetID();
-
-			// set Mesh
-			auto* mesh = entity.GetMesh();
-			itemsExecuteContext[i].IndexCount = (uint32_t)mesh->GetIndices().size();
-			itemsExecuteContext[i].MeshID = (uint32_t)mesh->GetMeshID();
-		}
-		context.RenderItems = itemsExecuteContext.data();
-		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
-		context.PipelinePass = EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
-		mRenderer.Execute(context);
+		DrawOpaqueRenderPass();
 
 		// draw our debug system
 		uint32_t noCharsToDraw = DebugSystem::DebugSystem::GetInstance().GetTotalNumberOfCharacersToDraw();
 
 		if (mIsDebugBuild && drawDebugLayer && noCharsToDraw > 0) {
+			EngineRenderer::DX12Renderer::DX12PipelinePassExecuteContext context;
 			context.NumberOfItems = noCharsToDraw;
 			context.PipelinePass = EngineRenderer::RendererPipelinePass::DEBUG_SYSTEM_PASS;
 			mRenderer.Execute(context);
@@ -180,7 +163,7 @@ namespace Engine {
 		// tell renderer to wrap up this frame
 		mRenderer.EndFrame();
 
-		// clear the cache for next frame
+		// clear the debug cache for next frame
 		DebugSystem::DebugSystem::GetInstance().ClearFrameCache();
 	}
 
@@ -198,17 +181,16 @@ namespace Engine {
 	}
 
 	void EngineCore::LoadGeometry() {
-		std::vector<const Mesh*> meshesToLoad;
-		mWorldManager.GetMeshesToLoad(meshesToLoad);
+		const EngineResources::MeshArray& meshesToLoad = mWorldManager.GetMeshesToLoad();
 
-		for (const Mesh* mesh : meshesToLoad) {
+		for (const EngineWorld::Mesh& mesh : meshesToLoad) {
 			mRenderer.LoadGeometry(
-				(uint32_t)mesh->GetMeshID(),
+				(uint32_t)mesh.GetMeshID(),
 				sizeof(Vertex),
-				mesh->GetVbByteSize(),
-				(void*)mesh->GetVertices().data(),
-				mesh->GetIbByteSize(),
-				(void*)mesh->GetIndices().data()
+				mesh.GetVbByteSize(),
+				(void*)mesh.GetVertices().data(),
+				mesh.GetIbByteSize(),
+				(void*)mesh.GetIndices().data()
 			);
 		}
 	}
@@ -245,7 +227,7 @@ namespace Engine {
 	}
 
 	void EngineCore::UpdatePerPassConstantBuffers() const {
-		PerPassConstantBufferData perPassCB;
+		EngineWorld::PerPassConstantBufferData perPassCB;
 
 		// DirectXMath uses row-major alignment in CPU memory, but 
 		// HLSL defaults to column-major storage for matrix packing. 
@@ -271,14 +253,14 @@ namespace Engine {
 
 		mRenderer.UpdateOpaqueRenderItemsPerPassCb(
 			&perPassCB,
-			sizeof(PerPassConstantBufferData)
+			sizeof(EngineWorld::PerPassConstantBufferData)
 		);
 	}
 
 	void EngineCore::UpdatePerEntityConstantBuffers() {
-		EntityConstantBufferData bufferData;
+		EngineWorld::EntityConstantBufferData bufferData;
 
-		for (auto& entity : mWorldManager.GetEntities()) {
+		for (EngineWorld::Entity& entity : mWorldManager.GetEntities()) {
 			uint32_t id = entity.GetID();
 
 			if (entity.GetIsDirty()) {
@@ -287,12 +269,32 @@ namespace Engine {
 			}
 
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
-				entity.CopyToDestinationConstantBufferDataTransposed(bufferData);
+				entity.CopyToDestinationEntityConstantBufferDataTransposed(bufferData);
 
+				// update per entity data
 				mRenderer.UpdateOpaqueRenderItemCb(
 					id,
 					&bufferData,
 					mWorldManager.GetConstantBufferDataByteSizeOfEachEntity()
+				);
+
+				const EngineWorld::Mesh* mesh = entity.GetMesh();
+				std::array<EngineWorld::EntitySubMeshConstantBufferData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshData;
+
+				// update per mesh data
+				for (uint8_t i = 0; i < mesh->GetActiveSubMeshCount(); ++i) {
+					entity.CopyToDestinationSubMeshConstantBufferData(
+						i,
+						subMeshData[i]
+					);
+				}
+
+				// fire off sub mesh data per entity
+				mRenderer.UpdateOpaqueRenderItemSubMeshCb(
+					id,
+					EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+					&subMeshData,
+					sizeof(EngineWorld::EntitySubMeshConstantBufferData)
 				);
 				mNumberOfDirtyFramesPerEntity[id]--;
 			}
@@ -341,5 +343,55 @@ namespace Engine {
 
 			mRenderer.UpdateDebugSystemStructuredBuffer(numberOfGlyphsToDraw, &vertices);
 		}
+	}
+
+	void EngineCore::DrawOpaqueRenderPass() {
+		auto& entities = mWorldManager.GetEntities();
+		const uint32_t entityCount = mWorldManager.GetEntityCount();
+
+		// excute context of all render items
+		std::array<EngineRenderer::DX12Renderer::DX12OpaqueRenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext;
+
+		// opaque pipeline pass execute context
+		EngineRenderer::DX12Renderer::DX12OpaquePipelinePassExecuteContext context;
+
+		// load up the context
+		context.NumberOfItems = (uint32_t)entities.size();
+		context.NumOfSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
+		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
+		context.PipelinePass = EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
+
+		for (uint32_t i = 0; i < entities.size(); ++i) {
+			if (i >= EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
+
+			auto& entity = entities[i];
+
+			// set ID
+			itemsExecuteContext[i].ID = entity.GetID();
+
+			// set Mesh ID
+			auto* mesh = entity.GetMesh();
+			itemsExecuteContext[i].MeshID = (uint32_t)mesh->GetMeshID();
+
+			// set submesh count
+			uint8_t subMeshCount = mesh->GetActiveSubMeshCount();
+			itemsExecuteContext[i].SubMeshCount = mesh->GetActiveSubMeshCount();
+
+			// update per entity sub mesh data
+			for (uint8_t j = 0; j < subMeshCount; ++j) {
+				EngineRenderer::DX12Renderer::DX12OpaqueRenderItemPerSubMeshExecuteContext subMeshExecuteContext;
+				const EngineWorld::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
+
+				subMeshExecuteContext.ID = j;
+				subMeshExecuteContext.IndexCount = subMeshAtJ.IndexCount;
+				subMeshExecuteContext.StartIndexLocation = subMeshAtJ.StartIndexLocation;
+				subMeshExecuteContext.BaseVertexLocation = subMeshAtJ.BaseVertexLocation;
+				itemsExecuteContext[i].SubMeshExecuteContext.push_back(subMeshExecuteContext);
+			}
+		}
+		context.RenderItems = itemsExecuteContext.data();
+
+		// execute the opaque render
+		mRenderer.Execute(context);
 	}
 }

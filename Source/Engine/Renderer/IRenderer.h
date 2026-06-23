@@ -59,6 +59,12 @@ namespace Engine::EngineRenderer {
 			const void* data, 
 			uint32_t perRenderItemCbSize
 		) = 0;
+		virtual void UpdateOpaqueRenderItemSubMeshCb(
+			uint32_t renderItemIndex,
+			uint32_t maxNumberSubMeshes,
+			const void* data,
+			uint32_t renderItemPerSubMeshCbSize
+		) = 0;
 		virtual void UpdatePerMaterialCb(
 			uint32_t materialIndex,
 			const void* data, 

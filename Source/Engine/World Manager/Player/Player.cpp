@@ -10,7 +10,7 @@ Player::Player() : mPlayerAnimator() {}
 
 Player::~Player() { mEntity = nullptr; }
 
-void Player::SetEntity(Engine::Entity& entity) { mEntity = &entity; }
+void Player::SetEntity(Engine::EngineWorld::Entity& entity) { mEntity = &entity; }
 
 void Player::Update(
 	float deltaTime, 

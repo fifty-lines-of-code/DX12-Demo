@@ -22,7 +22,7 @@ namespace Engine::EnginePhysics {
 		~PhysicsSystem() = default;
 
 		void ResolveEntityMovement(
-			Entity& entity,
+			EngineWorld::Entity& entity,
 			const std::vector<PhysicsEntity>& candidates,
 			float terrainGroundY,
 			CollisionResult& collisionResult

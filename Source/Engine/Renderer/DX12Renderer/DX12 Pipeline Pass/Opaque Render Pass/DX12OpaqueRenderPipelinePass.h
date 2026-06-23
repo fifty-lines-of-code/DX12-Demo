@@ -21,19 +21,30 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		const DX12Texture* TexturesData;
 	};
 
-	struct DX12OpaqueRenderPipelinePerItemExecuteArgs {
+	struct DX12OpaqueRenderPipelinePerItemPerSubMeshArgs {
 		uint32_t ID;
 		uint32_t IndexCount;
+		uint32_t StartIndexLocation;
+		uint32_t BaseVertexLocation;
+	};
+
+	struct DX12OpaqueRenderPipelinePerItemExecuteArgs {
+		uint32_t ID;
 		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
+		uint8_t SubMeshCount;
+		std::vector< DX12OpaqueRenderPipelinePerItemPerSubMeshArgs> SubMeshExecuteArgs;
 	};
 
 	struct DX12OpaqueRenderPipelineExecuteArgs : public DX12PipelinePassExecuteArgs {
-		const DX12OpaqueRenderPipelinePerItemExecuteArgs* PipelineItemsExecuteArgs;
+		DX12OpaqueRenderPipelinePerItemExecuteArgs* PipelineItemsExecuteArgs;
 		uint32_t NumberOfItems;
+		uint8_t NumberOfSubMeshesPerItem;
 		D3D12_GPU_VIRTUAL_ADDRESS PerPassCBResourceAddress;
-		uint32_t AlignedSizeOfPerElementCb;
+		uint32_t AlignedSizeOfPerRenderItemCb;
 		D3D12_GPU_VIRTUAL_ADDRESS PerRenderItemCBResourceAddress;
+		uint32_t AlignedSizeOfPerRenderItemSubMeshCb;
+		D3D12_GPU_VIRTUAL_ADDRESS PerRenderItemSubMeshCBResourceAddress;
 		uint32_t NumberOfMaterials;
 	};
 
@@ -53,6 +64,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 		uint32_t mTexturesCbHeapOffset = 0;
+		uint8_t mPerObjectCBIndex = 0;
+		uint8_t mPerObjectPerSubMeshCBIndex = 1;
+		uint8_t mObjectsPerPassCBIndex = 2;
+		uint8_t mMaterialsCBIndex = 3;
+		uint8_t mTexturesCBIndex = 4;
 
 	private:
 		void Execute(
