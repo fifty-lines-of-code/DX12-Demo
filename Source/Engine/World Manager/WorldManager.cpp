@@ -169,8 +169,8 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetPlayerEntity();
 	}
 
-	void WorldManager::GetMeshesToLoad(std::vector<const Mesh*>& meshes) {
-		mSceneManager.GetMeshesToLoad(meshes);
+	const EngineResources::MeshArray& WorldManager::GetMeshesToLoad() const noexcept {
+		return mSceneManager.GetMeshesToLoad();
 	}
 
 #pragma endregion

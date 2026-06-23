@@ -10,7 +10,7 @@
 
 namespace Engine::EngineResources {
 
-	using MeshArray = std::array<Mesh, (uint32_t)MeshID::Count>;
+	using MeshArray = std::array<EngineWorld::Mesh, (uint32_t)EngineWorld::MeshID::Count>;
 
 	class ResourceManager {
 	public:
@@ -19,7 +19,7 @@ namespace Engine::EngineResources {
 
 		bool Initialize();
 		uint32_t GetMaterialCount() const noexcept;
-		const Mesh* GetMesh(MeshID id);
+		EngineWorld::Mesh* GetMesh(EngineWorld::MeshID id);
 		const MeshArray& GetMeshes() const;
 		MaterialArray& GetMaterials() noexcept;
 		TextureArray& GetTextures() noexcept;
@@ -37,12 +37,12 @@ namespace Engine::EngineResources {
 		TerrainLOD mCurrentTerrainLOD = TerrainLOD::HIGH;
 
 	private:
-		static void CreateCubeMesh(Mesh* mesh);
+		static void CreateCubeMesh(EngineWorld::Mesh* mesh);
 		void CreateTerrian(
-			Mesh* mesh,
+			EngineWorld::Mesh* mesh,
 			float centerX,
 			float centerZ,
-			MeshID meshID
+			EngineWorld::MeshID meshID
 		);
 		bool GetIsLoaded(size_t index);
 		void SetIsLoaded(size_t index);

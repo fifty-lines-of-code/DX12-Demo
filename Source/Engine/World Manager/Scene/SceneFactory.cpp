@@ -3,6 +3,7 @@
 #include "../../../Helper/Logger.h"
 
 namespace Engine::EngineWorld {
+
 	void SceneFactory::LoadScene(
 		Scene scene,
 		SceneBlueprint& sceneBlueprint,
@@ -11,22 +12,15 @@ namespace Engine::EngineWorld {
 		Reset();
 
 		switch (scene) {
+		case Scene::HEIGHTMAP:
+			isLoaded = LoadHeightMapScene(sceneBlueprint);
+			break;
 		case Scene::FLAT_PLAIN:
 			// todo;
-			isLoaded = false;
-			break;
-		case Scene::MIRROR_DEMO:
+			[[fallthrough]];
+		case Scene::SINGLE_MIRROR:
 			// todo;
-			isLoaded = false;
-			break;
-		case Scene::HEIGHTMAP:
-			if (!LoadHeightMapScene(sceneBlueprint)) {
-				isLoaded = false;
-			}
-			else {
-				isLoaded = true;
-			}
-			break;
+			[[fallthrough]];
 		default:
 			isLoaded = false;
 		}
@@ -39,16 +33,23 @@ namespace Engine::EngineWorld {
 	}
 
 	bool SceneFactory::LoadHeightMapScene(SceneBlueprint& blueprint) {
-		bool result;
+		bool result = false;
+
+		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints;
+
 		// Player entity
+		EntitySubMeshBlueprint& subMeshBlueprint0 = subMeshBlueprints[0];
+		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::PLAYER;
+		subMeshBlueprint0.TextureID = EngineResources::TextureID::WOOD_CRATE;
+
 		result = UpdateBlueprint(
 			0, // raw array index
 			Vector3(-10.f, 0.875f, -10.5f), // center
 			Vector3(.75f, .75f, .75f), // scale
 			EntityType::PLAYER, // entitytype
-			EngineResources::MaterialType::PLAYER, // mat type
-			EngineResources::TextureID::WOOD_CRATE, // tex type
-			MeshID::Cube // mesh id
+			MeshID::Cube, // mesh id,
+			subMeshBlueprints, // submesh blueprints,
+			1 // active submesh count
 		);
 
 		if (!result) { return false; }
@@ -57,14 +58,17 @@ namespace Engine::EngineWorld {
 		mCount++;
 
 		// Terrain
+		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::TERRAIN;
+		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
+
 		result = UpdateBlueprint(
 			1, // raw array index
 			Vector3(0.f, 0.f, 0.f),
 			Vector3(Vector3(1.f)),
 			EntityType::TERRAIN,
-			EngineResources::MaterialType::TERRAIN,
-			EngineResources::TextureID::INVALID,
-			MeshID::Terrain0x0
+			MeshID::Terrain0x0,
+			subMeshBlueprints,
+			1
 		);
 
 		if (!result) { return false; }
@@ -72,14 +76,15 @@ namespace Engine::EngineWorld {
 		mCount++;
 
 		// Wall
+		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::WALL;
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 4.1f, -1.f), // center
 			Vector3(Vector3(1.5f, 2.f, .2f)),
 			EntityType::WALL,
-			EngineResources::MaterialType::WALL,
-			EngineResources::TextureID::INVALID,
-			MeshID::Cube
+			MeshID::Cube,
+			subMeshBlueprints,
+			1
 		);
 
 		if (!result) { return false; }
@@ -106,9 +111,9 @@ namespace Engine::EngineWorld {
 		Vector3 center,
 		Vector3 scale,
 		EntityType entityType,
-		EngineResources::MaterialType materialType,
-		EngineResources::TextureID textureID,
-		MeshID meshID
+		MeshID meshID,
+		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
+		uint8_t activeSubMeshCount
 	) {
 		if (index >= EngineConfig::EngineConfig::MAX_ENTITIES) {
 			Logger::ERR(L"Cannot load more Entities");
@@ -119,9 +124,9 @@ namespace Engine::EngineWorld {
 		blueprintAtIndex.Center = center;
 		blueprintAtIndex.Scale = scale;
 		blueprintAtIndex.EntityType = entityType;
-		blueprintAtIndex.MaterialType = materialType;
-		blueprintAtIndex.TextureID = textureID;
 		blueprintAtIndex.MeshID = meshID;
+		blueprintAtIndex.EntitySubMeshBlueprints = subMeshBlueprints;
+		blueprintAtIndex.ActiveSubMeshCount = activeSubMeshCount;
 
 		return true;
 	}

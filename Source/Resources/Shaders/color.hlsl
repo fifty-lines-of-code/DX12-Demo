@@ -35,15 +35,13 @@ struct cbMaterial {
     float4x4 MatTransform;
 };
 
-struct VertexIn
-{
+struct VertexIn {
     float3 PosL    : POSITION;
     float3 NormalL : NORMAL;
     float2 TexC    : TEXCOORD;
 };
 
-struct VertexOut
-{
+struct VertexOut {
     float4 PosH    : SV_POSITION;
     float3 PosW    : POSITION;
     float3 NormalW : NORMAL;
@@ -51,15 +49,17 @@ struct VertexOut
 };
 
 // buffers passed in per vertex and pixel
-cbuffer cbPerObject : register(b0)
-{
+cbuffer cbPerObject : register(b0) {
     float4x4 World;
-    uint MaterialIndex;
-    uint TextureIndex;
 };
 
-cbuffer cbPerPass: register(b1) 
-{
+cbuffer cbPerSubMesh : register(b1) {
+    uint MaterialIndex;
+    uint TextureIndex;
+    uint2 SubMeshPad0;
+};
+
+cbuffer cbPerPass: register(b2) {
     float4x4 ViewProjTranspose;
     float4 AmbientLight;
     float3 EyePosW;
@@ -67,7 +67,7 @@ cbuffer cbPerPass: register(b1)
     Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
 };
 
-ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b2);
+ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
 
 Texture2D gTextures[NUM_TEXTURES] : register(t0);
 

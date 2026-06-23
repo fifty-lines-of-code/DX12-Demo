@@ -52,8 +52,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void Shutdown() override;
 		bool LoadTexture(std::wstring& filename, uint32_t id) override;
 
-		bool SetupRenderPipeline(
+		bool SetupOpaqueRenderPipeline(
 			uint32_t numberOfEntities,
+			uint8_t maxSubMeshesPerEntity,
 			uint32_t numberOfMaterials,
 			uint32_t numberOfTextures,
 			uint32_t sizeOfPerMaterialCBV,
@@ -170,13 +171,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		void CreateFrameResources(
 			uint32_t numberOfEntities,
+			uint8_t maxSubMeshsesPerEntity,
 			uint32_t numberOfMaterials,
 			uint32_t debugSystemPerPassCBCount,
 			uint32_t debugSystemMaxCharacters
 		);
 
 		bool DrawOpaqueRenderItems(
-			const DX12PipelinePassExecuteContext& context
+			const DX12OpaquePipelinePassExecuteContext& context
 		);
 		bool DrawDebugSystem(uint32_t numberOfCharacters);
 		bool DrawBlurPass();

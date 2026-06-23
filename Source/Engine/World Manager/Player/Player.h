@@ -16,7 +16,7 @@ public:
 	Player();
 	~Player();
 
-	void SetEntity(Engine::Entity& entity);
+	void SetEntity(Engine::EngineWorld::Entity& entity);
 	void Update(
 		float deltaTime,
 		const IInputSystem* const inputSystem, 
@@ -25,10 +25,12 @@ public:
 
 	const Engine::Vector3& GetCenter() const;
 	Engine::AABB CalculatePotentialFootprintAABB() const;
-	void PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisioNResult);
+	void PostPhysicsUpdate(
+		const Engine::EnginePhysics::CollisionResult&
+	);
 
 private:
-	Engine::Entity* mEntity = nullptr;
+	Engine::EngineWorld::Entity* mEntity = nullptr;
 	PlayerLogic mPlayerLogic;
 	PlayerAnimator mPlayerAnimator;
 

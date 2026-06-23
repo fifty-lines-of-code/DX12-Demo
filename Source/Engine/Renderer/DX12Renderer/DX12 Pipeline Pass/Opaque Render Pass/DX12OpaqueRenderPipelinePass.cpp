@@ -62,28 +62,42 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		// per pass cb
-		mCommandList->SetGraphicsRootConstantBufferView(1, args.PerPassCBResourceAddress);
+		mCommandList->SetGraphicsRootConstantBufferView(
+			1,
+			args.PerPassCBResourceAddress
+		);
 
 		// materials cb
 		auto materialsCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
 			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 		);
 		int globalMaterialHeapOffset = (args.NumberOfMaterials * args.CurrentFrameIndex);
+
 		materialsCbvHandle.Offset(
-			globalMaterialHeapOffset, args.CbvSrvUavDescriptorSize
+			globalMaterialHeapOffset, 
+			args.CbvSrvUavDescriptorSize
 		);
-		mCommandList->SetGraphicsRootDescriptorTable(2, materialsCbvHandle);
+		mCommandList->SetGraphicsRootDescriptorTable(
+			2, // TODO: extract these out into constants
+			materialsCbvHandle
+		);
 
 		// textures
 		auto texturesCbHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
 			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 		);
-		texturesCbHandle.Offset(mTexturesCbHeapOffset, args.CbvSrvUavDescriptorSize);
-		mCommandList->SetGraphicsRootDescriptorTable(3, texturesCbHandle);
+		texturesCbHandle.Offset(
+			mTexturesCbHeapOffset, 
+			args.CbvSrvUavDescriptorSize
+		);
+		mCommandList->SetGraphicsRootDescriptorTable(
+			3,
+			texturesCbHandle
+		);
 
 		// now draw each item
 		for (uint32_t i = 0; i < args.NumberOfItems; ++i) {
-			const DX12OpaqueRenderPipelinePerItemExecuteArgs itemContext = args.PipelineItemsExecuteArgs[i];
+			const DX12OpaqueRenderPipelinePerItemExecuteArgs& itemContext = args.PipelineItemsExecuteArgs[i];
 
 			// set vertex buffer
 			mCommandList->IASetVertexBuffers(
@@ -102,15 +116,41 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 			// Offset to the CBV in the CBV heap for this object and for this frame resource.
 			D3D12_GPU_VIRTUAL_ADDRESS currentEntityAddress =
-				args.PerRenderItemCBResourceAddress + (itemContext.ID * args.AlignedSizeOfPerElementCb);
+				args.PerRenderItemCBResourceAddress + 
+				(itemContext.ID * args.AlignedSizeOfPerRenderItemCb);
 
 			mCommandList->SetGraphicsRootConstantBufferView(0, currentEntityAddress);
 
-			// draw call
-			mCommandList->DrawIndexedInstanced(
-				itemContext.IndexCount,
-				1, 0, 0, 0
-			);
+			// calculate submesh CB address
+			D3D12_GPU_VIRTUAL_ADDRESS subMeshBaseAddress =
+				args.PerRenderItemSubMeshCBResourceAddress +
+				(itemContext.ID * args.NumberOfSubMeshesPerItem * args.AlignedSizeOfPerRenderItemSubMeshCb);
+
+			// now draw per sub mesh
+			for (int j = 0; j < itemContext.SubMeshCount; ++j) {
+				const DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshContext =
+					itemContext.SubMeshExecuteArgs[j];
+ 
+				// get this submeshes address
+				D3D12_GPU_VIRTUAL_ADDRESS subMeshAddress =
+					subMeshBaseAddress +
+					(subMeshContext.ID * args.AlignedSizeOfPerRenderItemSubMeshCb);
+
+				// bind it
+				mCommandList->SetGraphicsRootConstantBufferView(
+					1,
+					subMeshAddress
+				);
+
+				// draw call
+				mCommandList->DrawIndexedInstanced(
+					subMeshContext.IndexCount,
+					1, // no of instances
+					subMeshContext.StartIndexLocation,
+					subMeshContext.BaseVertexLocation,
+					0 // start instance location
+				);
+			}
 		}
 
 		// don't close the command list, the aggregator will close it.
@@ -123,7 +163,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mTexturesCbHeapOffset = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
 
 		// Compute the global total of descriptors across all frames
-		// (1 per pass + N entities + M materials) * Total Frames + No Textures
+		// (M materials) * Total Frames + No Textures
 		UINT numberOfDescriptors = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES + args.NumberOfTextures;
 
 		// Describe the CBV descriptor heap
@@ -231,22 +271,27 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// Materials and Textures array
 
 		// we have 4 parameters for this root signature
-		CD3DX12_ROOT_PARAMETER slotRootParameter[4];
+		CD3DX12_ROOT_PARAMETER slotRootParameter[5];
 
 		// Create a two CBVs inlined into the Root Signature
 		// per object cb
 		slotRootParameter[0].InitAsConstantBufferView(0);
-		// per pass cb
+		// per submesh cb
 		slotRootParameter[1].InitAsConstantBufferView(1);
+		// per pass cb
+		slotRootParameter[2].InitAsConstantBufferView(2);
 
 		// create two descriptor tables for Materials and Textures
 		// per material cb
 		CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, args.NumberOfMaterials, 2); //(b2)
+		
+		//(b3)
+		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, args.NumberOfMaterials, 3); 
 
 		// textures buffer
 		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
-		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, args.NumberOfTextures, 0);
+		// (t0)
+		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, args.NumberOfTextures, 0); 
 		slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable1);
 		slotRootParameter[3].InitAsDescriptorTable(
 			1, 

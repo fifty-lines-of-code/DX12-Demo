@@ -8,12 +8,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
         ID3D12Device* device, 
         UINT perPassCbCount, 
         UINT numberOfEntities,
-        UINT numberOfMaterials, 
+        UINT maxSubMeshesPerEntity,
+        UINT numberOfMaterials,
         UINT debugSystemPerPassCBCount, 
         UINT debugSystemMaxCharacters
     ) :
         mOpaquePerPassCB(device, perPassCbCount, true),
         mOpaqueRenderItemCB(device, numberOfEntities, true),
+        mOpaqueRenderItemPerSubMeshCB(device, numberOfEntities * maxSubMeshesPerEntity, true),
         mPerMaterialCB(device, numberOfMaterials, true),
         mDebugSystemPerPassCB(device, debugSystemPerPassCBCount, true),
         mDebugSystemPerCharacterCB(device, debugSystemMaxCharacters)

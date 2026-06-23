@@ -6,10 +6,15 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
+    // opaque render items
     struct DX12OpaqueRenderItemConstants {
         DirectX::XMFLOAT4X4 World = DX12RendererHelper::Identity4X4();
+    };
+
+    struct DX12OpaqueRenderItemPerSubMeshConstants {
         uint32_t MaterialID = 0;
         uint32_t TextureID = 0;
+        uint32_t Padding[2] = { 0, 0 };
     };
 
     struct DX12LightData {
@@ -29,6 +34,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         DX12LightData Lights[16];
     };
 
+    // per material constants
     struct DX12PerMaterialConstants {
         DirectX::XMFLOAT4 DiffuseAlbedo;
         DirectX::XMFLOAT3 FresnelR0;
@@ -36,6 +42,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         DirectX::XMFLOAT4X4 MatTransform;
     };
 
+    // debug system constants
     struct DX12DebugSystemPerPassConstants {
         float WindowWidth;
         float WindowHeight;
@@ -53,6 +60,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         uint32_t Padding0;
     };
 
+    // blur compute constants
     struct DX12BlurComputeConstants {
         DirectX::XMFLOAT2 ScreenSize = { 1.f, 1.f };
         DirectX::XMFLOAT2 BlurDirection = { 1.f, 0.f };

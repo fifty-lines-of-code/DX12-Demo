@@ -23,23 +23,23 @@ namespace Engine::EngineResources {
 		return mMaterialsManager.GetMaterialCount();
 	}
 
-	const Mesh* ResourceManager::GetMesh(MeshID id) {
-		if (id >= MeshID::Count) {
+	EngineWorld::Mesh* ResourceManager::GetMesh(EngineWorld::MeshID id) {
+		if (id >= EngineWorld::MeshID::Count) {
 			return nullptr;
 		}
 
 		size_t index = size_t(id);
-		Mesh* mesh = nullptr;
+		EngineWorld::Mesh* mesh = nullptr;
 
 		if (!GetIsLoaded(index)) {
 			mesh = &mMeshes[index];
 
 			switch (id) {
-			case MeshID::Cube:
+			case EngineWorld::MeshID::Cube:
 				CreateCubeMesh(mesh);
 				break;
 
-			case MeshID::Terrain0x0:
+			case EngineWorld::MeshID::Terrain0x0:
 				CreateTerrian(
 					mesh,
 					0.f, 
@@ -75,7 +75,7 @@ namespace Engine::EngineResources {
 
 #pragma region Private
 
-	void ResourceManager::CreateCubeMesh(Mesh* mesh) {
+	void ResourceManager::CreateCubeMesh(EngineWorld::Mesh* mesh) {
 		std::vector<Vertex> vertices;
 		std::vector<uint16_t> indices;
 
@@ -140,14 +140,27 @@ namespace Engine::EngineResources {
 			indices.push_back(baseVertex + 3);
 		}
 
-		mesh->Load(MeshID::Cube, vertices, indices);
+		std::array<EngineWorld::SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshes;
+		EngineWorld::SubMesh& subMesh0 = subMeshes[0];
+
+		subMesh0.IndexCount = (uint32_t)indices.size();
+		subMesh0.StartIndexLocation = 0;
+		subMesh0.BaseVertexLocation = 0;
+
+		mesh->Load(
+			EngineWorld::MeshID::Cube,
+			vertices,
+			indices,
+			subMeshes,
+			1 // only 1 active submesh
+		);
 	}
 
 	void ResourceManager::CreateTerrian(
-		Mesh* mesh,
+		EngineWorld::Mesh* mesh,
 		float centerX,
 		float centerZ,
-		MeshID meshID
+		EngineWorld::MeshID meshID
 	) {
 		std::vector<Engine::Vertex> vertices;
 
@@ -167,7 +180,21 @@ namespace Engine::EngineResources {
 			vertices,
 			indices
 		);
-		mesh->Load(meshID, vertices, indices);
+
+		std::array<EngineWorld::SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshes;
+		EngineWorld::SubMesh& subMesh0 = subMeshes[0];
+
+		subMesh0.IndexCount = (uint32_t)indexCount;
+		subMesh0.StartIndexLocation = 0;
+		subMesh0.BaseVertexLocation = 0;
+
+		mesh->Load(
+			meshID, 
+			vertices, 
+			indices, 
+			subMeshes,
+			1 // only 1 active submesh
+		);
 	}
 
 	bool ResourceManager::GetIsLoaded(size_t index) {

@@ -40,7 +40,7 @@ namespace Engine::EngineWorld {
 				continue;
 			}
 			bool didUpdate = false;
-			const Mesh* mesh = nullptr;
+			Mesh* mesh = nullptr;
 			Entity& entity = *reinterpret_cast<Entity*>(targetEntityAddress);
 
 			switch (entityBlueprint.EntityType) {
@@ -57,15 +57,23 @@ namespace Engine::EngineWorld {
 			}
 
 			if (mesh != nullptr) {
+				entity.SetIsDirty(true);
 				entity.SetIsActive(true);
 				entity.SetID(mNextEntityID);
 				entity.SetEntityType(entityBlueprint.EntityType);
 				entity.GetPhysicsBody().Center = entityBlueprint.Center;
 				entity.SetScale(entityBlueprint.Scale);
+				// set mesh
 				entity.SetMesh(mesh);
-				entity.SetMaterialType(entityBlueprint.MaterialType);
-				entity.SetTextureID(entityBlueprint.TextureID);
-				entity.SetIsDirty(true);
+				// update all submeshes
+				for (int i = 0; i < entityBlueprint.ActiveSubMeshCount; i++) {
+					const EntitySubMeshBlueprint& subMeshBlueprint = entityBlueprint.EntitySubMeshBlueprints[i];
+					entity.SetSubMeshMaterialAndTexture(
+						i,
+						subMeshBlueprint.MaterialType,
+						subMeshBlueprint.TextureID
+					);
+				}
 
 				if (!Insert(mNextEntityID)) { return false; }
 				didUpdate = true;

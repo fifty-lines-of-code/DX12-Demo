@@ -10,19 +10,24 @@ namespace Engine::EngineWorld {
 
 	enum class Scene : uint32_t {
 		FLAT_PLAIN,
-		MIRROR_DEMO,
+		SINGLE_MIRROR,
 		HEIGHTMAP,
 		COUNT,
 		INVALID
+	};
+
+	struct EntitySubMeshBlueprint {
+		EngineResources::MaterialType MaterialType;
+		EngineResources::TextureID TextureID;
 	};
 
 	struct EntityBlueprint {
 		Vector3 Center;
 		Vector3 Scale;
 		EntityType EntityType;
-		EngineResources::MaterialType MaterialType;
-		EngineResources::TextureID TextureID;
 		MeshID MeshID;
+		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> EntitySubMeshBlueprints;
+		uint8_t ActiveSubMeshCount;
 	};
 
 	struct SceneBlueprint {

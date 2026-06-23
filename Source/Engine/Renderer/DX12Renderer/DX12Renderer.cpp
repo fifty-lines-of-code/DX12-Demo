@@ -299,7 +299,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::Execute(const IPipelinePassExecuteContext& context) {
-		const DX12PipelinePassExecuteContext& ppContext = static_cast<const DX12PipelinePassExecuteContext&>(context);
+		const DX12OpaquePipelinePassExecuteContext& ppContext = static_cast<const DX12OpaquePipelinePassExecuteContext&>(context);
 
 		switch (context.GetPipelinePassType()) {
 		case RendererPipelinePass::OPAQUE_RENDER_PASS:
@@ -316,10 +316,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-	bool DX12Renderer::DrawOpaqueRenderItems(const DX12PipelinePassExecuteContext& context) {
+	bool DX12Renderer::DrawOpaqueRenderItems(
+		const DX12OpaquePipelinePassExecuteContext& context
+	) {
 		// todo: add this to some sort of a ring buffer so memory can be reused
 		std::array<DX12OpaqueRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
 
+		// fill in the execute args from execute context per render item
 		for (uint32_t i = 0; i < context.NumberOfItems; ++i) {
 			if (i >= DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
 
@@ -329,9 +332,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			if (resource == nullptr) { continue; }
 
 			PerItemExecuteArgs[i].ID = renderItem.ID;
-			PerItemExecuteArgs[i].IndexCount = renderItem.IndexCount;
 			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
 			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
+			PerItemExecuteArgs[i].SubMeshCount = renderItem.SubMeshCount;
+
+			// load up data per sub mesh per render item
+			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
+				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
+
+				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshArgs = PerItemExecuteArgs[i].SubMeshExecuteArgs[j];
+
+				subMeshArgs.ID = j;
+				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
+				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
+				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
+			}
 		}
 
 		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
@@ -351,9 +366,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			},
 			PerItemExecuteArgs.data(),
 			context.NumberOfItems,
-			mFrameResources[mCurrentFrameResourceIndex]->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
-			mFrameResources[mCurrentFrameResourceIndex]->mOpaqueRenderItemCB.ElementByteSize(),
-			mFrameResources[mCurrentFrameResourceIndex]->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
+			context.NumOfSubMeshesPerItem,
+			mCurrentFrameResource->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.Resource()->GetGPUVirtualAddress(),
 			context.NumberOfMaterials
 		};
 
@@ -383,7 +401,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				mScreenViewport,
 				mScissorRect
 			},
-			mFrameResources[mCurrentFrameResourceIndex]->mDebugSystemPerPassCB.Resource(),
+			mCurrentFrameResource->mDebugSystemPerPassCB.Resource(),
 			numberOfCharacters
 		};
 
@@ -852,8 +870,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	}
 
-	bool DX12Renderer::SetupRenderPipeline(
+	bool DX12Renderer::SetupOpaqueRenderPipeline(
 		uint32_t numberOfEntities, 
+		uint8_t maxSubMeshesPerEntity,
 		uint32_t numberOfMaterials,
 		uint32_t numberOfTextures,
 		uint32_t sizeOfPerMaterialCb,
@@ -862,6 +881,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	) {
 		CreateFrameResources(
 			numberOfEntities,
+			maxSubMeshesPerEntity,
 			numberOfMaterials,
 			debugSystemPerPassCBCount,
 			debugSystemMaxCharacters
@@ -898,6 +918,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	void DX12Renderer::CreateFrameResources(
 		uint32_t numberOfEntities,
+		uint8_t maxSubMeshesPerEntity,
 		uint32_t numberOfMaterials,
 		uint32_t debugSystemPerPassCBCount,
 		uint32_t debugSystemMaxCharacters
@@ -908,6 +929,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 					mDX12Device.Get(),
 					1,
 					numberOfEntities,
+					maxSubMeshesPerEntity,
 					numberOfMaterials,
 					debugSystemPerPassCBCount,
 					debugSystemMaxCharacters

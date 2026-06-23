@@ -72,8 +72,9 @@ namespace Engine {
 	}
 
 	bool EngineCore::SetupPipeline() {
-		bool result = mRenderer.SetupRenderPipeline(
+		bool result = mRenderer.SetupOpaqueRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
+			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
 			mWorldManager.GetMaterialCount(),
 			EngineConfig::EngineConfig::MAX_TEXTURES,
@@ -146,8 +147,8 @@ namespace Engine {
 		auto& entities = mWorldManager.GetEntities();
 		const uint32_t entityCount = mWorldManager.GetEntityCount();
 
-		EngineRenderer::DX12Renderer::DX12PipelinePassExecuteContext context;
-		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext = {};
+		EngineRenderer::DX12Renderer::DX12OpaquePipelinePassExecuteContext context;
+		std::array<EngineRenderer::DX12Renderer::DX12OpaqueRenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext = {};
 		context.NumberOfItems = (uint32_t)entities.size();
 
 		for (uint32_t i = 0; i < entities.size(); ++i) {
@@ -198,17 +199,16 @@ namespace Engine {
 	}
 
 	void EngineCore::LoadGeometry() {
-		std::vector<const Mesh*> meshesToLoad;
-		mWorldManager.GetMeshesToLoad(meshesToLoad);
+		const EngineResources::MeshArray& meshesToLoad = mWorldManager.GetMeshesToLoad();
 
-		for (const Mesh* mesh : meshesToLoad) {
+		for (const EngineWorld::Mesh& mesh : meshesToLoad) {
 			mRenderer.LoadGeometry(
-				(uint32_t)mesh->GetMeshID(),
+				(uint32_t)mesh.GetMeshID(),
 				sizeof(Vertex),
-				mesh->GetVbByteSize(),
-				(void*)mesh->GetVertices().data(),
-				mesh->GetIbByteSize(),
-				(void*)mesh->GetIndices().data()
+				mesh.GetVbByteSize(),
+				(void*)mesh.GetVertices().data(),
+				mesh.GetIbByteSize(),
+				(void*)mesh.GetIndices().data()
 			);
 		}
 	}
@@ -287,7 +287,7 @@ namespace Engine {
 			}
 
 			if (mNumberOfDirtyFramesPerEntity[id] > 0) {
-				entity.CopyToDestinationConstantBufferDataTransposed(bufferData);
+				entity.CopyToDestinationEntityConstantBufferDataTransposed(bufferData);
 
 				mRenderer.UpdateOpaqueRenderItemCb(
 					id,
