@@ -205,6 +205,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetIsDirty(true);
 		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
+		playerEntity.SetEntityType(playerBlueprint.EntityType);
 		playerEntity.GetPhysicsBody().Center = playerBlueprint.Center;
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
@@ -213,7 +214,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetMesh(cubeMesh);
 
 		// update all submeshes
-		for (int i = 0; i < playerBlueprint.ActiveSubMeshCount; i++) {
+		for (int i = 0; i < playerBlueprint.ActiveSubMeshCount; ++i) {
 			const EntitySubMeshBlueprint& subMeshBlueprint = playerBlueprint.EntitySubMeshBlueprints[i];
 			playerEntity.SetSubMeshMaterialAndTexture(
 				i,

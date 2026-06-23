@@ -77,6 +77,7 @@ namespace Engine::EngineWorld {
 
 		// Wall
 		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::WALL;
+		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 4.1f, -1.f), // center

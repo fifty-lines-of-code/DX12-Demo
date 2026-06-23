@@ -64,6 +64,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 		uint32_t mTexturesCbHeapOffset = 0;
+		uint8_t mPerObjectCBIndex = 0;
+		uint8_t mPerObjectPerSubMeshCBIndex = 1;
+		uint8_t mObjectsPerPassCBIndex = 2;
+		uint8_t mMaterialsCBIndex = 3;
+		uint8_t mTexturesCBIndex = 4;
 
 	private:
 		void Execute(

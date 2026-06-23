@@ -62,22 +62,6 @@ namespace Engine::EngineWorld {
 		return mSubMeshes[index];
 	}
 
-	void Mesh::UpdateSubMeshAtIndex(
-		uint8_t subMeshIndex,
-		uint32_t materialID,
-		uint32_t textureID
-	) noexcept
-	{
-		if (subMeshIndex >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH) {
-			Logger::ERR(L"SubMesh index is incorrect, expect errors!"); 
-			return;
-		}
-
-		SubMesh& subMesh = mSubMeshes[subMeshIndex];
-		subMesh.MaterialID = materialID;
-		subMesh.TextureID = textureID;
-	}
-
 #pragma region Private
 
 	void Mesh::CalculateLocalMinAndMax() {

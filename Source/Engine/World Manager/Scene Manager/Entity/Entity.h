@@ -1,16 +1,22 @@
 #pragma once
 
-#include "../../../Math/Geometry.h"
+#include <array>
 #include "../../../Math/BasisVectors.h"
-#include "PerPassAndPerEntityConstantBufferData.h"
 #include "EntityType.h"
+#include "../../../Math/Geometry.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
+#include "PerPassAndPerEntityConstantBufferData.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
 
 namespace Engine::EngineWorld {
 
 	class Mesh;
+
+	struct EntitySubMeshMaterialData {
+		uint32_t MaterialID = 0;
+		uint32_t TextureID = 0;
+	};
 
 	class Entity {
 	public:
@@ -37,8 +43,8 @@ namespace Engine::EngineWorld {
 
 		void CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
 
-		void CopyToDestinationSubMeshConstantBufferDataTransposed(
-			uint8_t subMeshId,
+		void CopyToDestinationSubMeshConstantBufferData(
+			uint8_t subMeshIndex,
 			EntitySubMeshConstantBufferData& destinationBufferData
 		);
 
@@ -65,8 +71,9 @@ namespace Engine::EngineWorld {
 		) noexcept;
 
 	private:
-		EnginePhysics::PhysicsBody mPhysicsBody;
 		Mesh* mMesh;
+		EnginePhysics::PhysicsBody mPhysicsBody;
+		std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshMaterialData;
 		uint32_t mID;
 		EntityType mEntityType;
 		bool mIsStatic;

@@ -51,7 +51,7 @@ namespace Engine {
 		std::array<uint8_t, 1089> heightValues{};
 
 		if (!LoadHeightmapToArray("Source/Resources/Heightmaps/Chunk0x0-4.png", heightValues)) {
-			assert(false && "Terrain texture asset could not be processed.");
+			ENGINE_ASSERT(false, "Terrain texture asset could not be processed.");
 		}
 
 		// 1. Determine our vertex subdivision factor based on LOD
@@ -184,7 +184,7 @@ namespace Engine {
 			return false;
 		}
 
-		assert(static_cast<size_t>(width * height) == 1089 && "Image dimensions do not match the expected vertex grid size!");
+		ENGINE_ASSERT((width * height) == 1089, "Image dimensions do not match the expected vertex grid size!");
 
 		std::copy(rawData, rawData + 1089, outPixelArray.begin());
 		stbi_image_free(rawData);

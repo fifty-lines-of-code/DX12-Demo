@@ -3,6 +3,7 @@
 #include <cmath>
 #include <DirectXMath.h>
 #include "Mesh/Mesh.h"
+#include "../../../../Helper/Logger.h"
 
 namespace Engine::EngineWorld {
 
@@ -63,18 +64,23 @@ namespace Engine::EngineWorld {
 		);
 	}
 	
-	void Entity::CopyToDestinationSubMeshConstantBufferDataTransposed(
-		uint8_t subMeshId,
+	void Entity::CopyToDestinationSubMeshConstantBufferData(
+		uint8_t subMeshIndex,
 		EntitySubMeshConstantBufferData& destinationBufferData
 	) {
-		const SubMesh& subMesh = mMesh->GetSubMeshAtIndex(subMeshId);
+		ENGINE_ASSERT(
+			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			L"SubMesh Index is Incorrect, Bad things will happen!"
+		);
 
-		// store Material ID
-		bool isValid = subMesh.MaterialID < (uint16_t)EngineResources::MaterialType::COUNT;
-		destinationBufferData.MaterialID = isValid ? subMesh.MaterialID : 0;
+		uint8_t index = subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH 
+			? subMeshIndex : 0;
+
+		// store Material ID;
+		destinationBufferData.MaterialID = mSubMeshMaterialData[index].MaterialID;
 
 		// store Texture ID
-		destinationBufferData.TextureID = subMesh.TextureID;
+		destinationBufferData.TextureID = mSubMeshMaterialData[index].TextureID;
 	}
 
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }
@@ -109,16 +115,16 @@ namespace Engine::EngineWorld {
 		EngineResources::TextureID texture
 	) noexcept 
 	{
-		if (mMesh == nullptr) { return; }
+		ENGINE_ASSERT(mMesh != nullptr, L"Mesh should NOT be nullptr here");
+		ENGINE_ASSERT(
+			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			L"SubMesh Index is Incorrect, Bad things will happen!"
+		);
 
-		uint32_t materialID = (uint32_t)material >= 
-			(uint32_t)EngineResources::MaterialType::COUNT ?
-			0 : (uint32_t)material;
-
-		uint32_t textureID = (uint32_t)texture >= 
-			(uint32_t)EngineResources::TextureID::COUNT ?
-			0 : (uint32_t)texture;
-
-		mMesh->UpdateSubMeshAtIndex(subMeshIndex, materialID, textureID);
+		uint8_t index =
+			subMeshIndex >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH ?
+			0 : subMeshIndex;
+		mSubMeshMaterialData[index].MaterialID = (uint8_t)material;
+		mSubMeshMaterialData[index].TextureID = (uint8_t)texture;
 	}
 }

@@ -90,6 +90,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t perRenderItemCbSize
 		) override;
 
+		void UpdateOpaqueRenderItemSubMeshCb(
+			uint32_t renderItemIndex,
+			uint32_t maxNumberSubMeshes,
+			const void* data,
+			uint32_t renderItemPerSubMeshCbSize
+		) override;
+
 		void UpdatePerMaterialCb(
 			uint32_t materialIndex,
 			const void* data,

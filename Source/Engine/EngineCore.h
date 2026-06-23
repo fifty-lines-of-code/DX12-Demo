@@ -24,7 +24,7 @@ namespace Engine {
 		~EngineCore();
 
 		bool Initialize(HWND mainWnd, UINT fullscreenWidth, UINT fullscreenHeight);
-		bool SetupPipeline();
+		bool SetupPipelines();
 
 		void UpdateInputSystemAndCamera(float deltaTime);
 		void Update(float deltaTime);
@@ -61,5 +61,6 @@ namespace Engine {
 		void UpdatePerEntityConstantBuffers();
 		void UpdatePerMaterialConstantBuffers();
 		void UpdateDebugSystemConstantBuffers();
+		void DrawOpaqueRenderPass();
 	};
 }

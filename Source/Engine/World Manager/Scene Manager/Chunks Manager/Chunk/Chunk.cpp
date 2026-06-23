@@ -66,7 +66,7 @@ namespace Engine::EngineWorld {
 				// set mesh
 				entity.SetMesh(mesh);
 				// update all submeshes
-				for (int i = 0; i < entityBlueprint.ActiveSubMeshCount; i++) {
+				for (int i = 0; i < entityBlueprint.ActiveSubMeshCount; ++i) {
 					const EntitySubMeshBlueprint& subMeshBlueprint = entityBlueprint.EntitySubMeshBlueprints[i];
 					entity.SetSubMeshMaterialAndTexture(
 						i,

@@ -18,8 +18,6 @@ namespace Engine::EngineWorld {
 		uint32_t IndexCount = 0;
 		uint32_t StartIndexLocation = 0;
 		uint32_t BaseVertexLocation = 0;
-		uint32_t MaterialID = 0;
-		uint32_t TextureID = 0;
 	};
 
 	class Mesh {
@@ -44,11 +42,6 @@ namespace Engine::EngineWorld {
 		const Vector3& GetLocalMax() const noexcept;
 		uint8_t GetActiveSubMeshCount() const noexcept;
 		const SubMesh& GetSubMeshAtIndex(uint8_t index) const noexcept;
-		void UpdateSubMeshAtIndex(
-			uint8_t subMeshIndex,
-			uint32_t materialID,
-			uint32_t textureID
-		) noexcept;
 
 	private:
 		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshes;

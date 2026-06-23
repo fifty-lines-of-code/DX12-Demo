@@ -63,7 +63,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// per pass cb
 		mCommandList->SetGraphicsRootConstantBufferView(
-			1,
+			mObjectsPerPassCBIndex,
 			args.PerPassCBResourceAddress
 		);
 
@@ -78,7 +78,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			args.CbvSrvUavDescriptorSize
 		);
 		mCommandList->SetGraphicsRootDescriptorTable(
-			2, // TODO: extract these out into constants
+			mMaterialsCBIndex, // TODO: extract these out into constants
 			materialsCbvHandle
 		);
 
@@ -91,7 +91,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			args.CbvSrvUavDescriptorSize
 		);
 		mCommandList->SetGraphicsRootDescriptorTable(
-			3,
+			mTexturesCBIndex,
 			texturesCbHandle
 		);
 
@@ -119,7 +119,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				args.PerRenderItemCBResourceAddress + 
 				(itemContext.ID * args.AlignedSizeOfPerRenderItemCb);
 
-			mCommandList->SetGraphicsRootConstantBufferView(0, currentEntityAddress);
+			mCommandList->SetGraphicsRootConstantBufferView(
+				mPerObjectCBIndex, 
+				currentEntityAddress
+			);
 
 			// calculate submesh CB address
 			D3D12_GPU_VIRTUAL_ADDRESS subMeshBaseAddress =
@@ -138,7 +141,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 				// bind it
 				mCommandList->SetGraphicsRootConstantBufferView(
-					1,
+					mPerObjectPerSubMeshCBIndex,
 					subMeshAddress
 				);
 
@@ -275,25 +278,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// Create a two CBVs inlined into the Root Signature
 		// per object cb
-		slotRootParameter[0].InitAsConstantBufferView(0);
+		slotRootParameter[mPerObjectCBIndex].InitAsConstantBufferView(0);
 		// per submesh cb
-		slotRootParameter[1].InitAsConstantBufferView(1);
+		slotRootParameter[mPerObjectPerSubMeshCBIndex].InitAsConstantBufferView(1);
 		// per pass cb
-		slotRootParameter[2].InitAsConstantBufferView(2);
+		slotRootParameter[mObjectsPerPassCBIndex].InitAsConstantBufferView(2);
 
 		// create two descriptor tables for Materials and Textures
 		// per material cb
 		CD3DX12_DESCRIPTOR_RANGE cbvTable1;
-		
 		//(b3)
 		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, args.NumberOfMaterials, 3); 
+		slotRootParameter[mMaterialsCBIndex].InitAsDescriptorTable(1, &cbvTable1);
 
 		// textures buffer
 		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
 		// (t0)
 		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, args.NumberOfTextures, 0); 
-		slotRootParameter[2].InitAsDescriptorTable(1, &cbvTable1);
-		slotRootParameter[3].InitAsDescriptorTable(
+		slotRootParameter[mTexturesCBIndex].InitAsDescriptorTable(
 			1, 
 			&cbvTable2,
 			D3D12_SHADER_VISIBILITY_PIXEL

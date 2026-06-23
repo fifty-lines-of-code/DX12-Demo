@@ -1,6 +1,7 @@
 #include "ResourceManager.h"
 
 #include <DirectXColors.h>
+#include "../../../../Helper/Helper.h"
 
 namespace Engine::EngineResources {
 
@@ -198,21 +199,21 @@ namespace Engine::EngineResources {
 	}
 
 	bool ResourceManager::GetIsLoaded(size_t index) {
-		assert(index >= 0 && index < 64);
+		ENGINE_ASSERT((index >= 0 && index < 64), "Index is out of bounds!");
 
 		uint64_t mask = 1ULL << index;
 		return (mLoadedBitMask & mask) != 0;
 	}
 
 	void ResourceManager::SetIsLoaded(size_t index) {
-		assert(index >= 0 && index < 64);
+		ENGINE_ASSERT(index >= 0 && index < 64, "Index is out of bounds!");
 
 		uint64_t mask = 1ULL << index;
 		mLoadedBitMask |= mask;
 	}
 
 	void ResourceManager::SetIsUnloaded(size_t index) {
-		assert(index >= 0 && index < 64);
+		ENGINE_ASSERT(index >= 0 && index < 64, "Index is out of bounds!");
 
 		uint64_t mask = 1ULL << index;
 		uint64_t maskNegate = ~mask;

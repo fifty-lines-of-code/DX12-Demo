@@ -76,10 +76,27 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
         void CopyData(int elementIndex, const void* data)
         {
+            uint8_t* destAddress = mCpuVirtualAddressHoldingGpuAddress +
+                (elementIndex * mElementByteSize);
+
             memcpy(
-                &mCpuVirtualAddressHoldingGpuAddress[elementIndex * mElementByteSize],
+                destAddress,
                 data,
                 sizeof(T)
+            );
+        }
+
+        void CopyStrideOfData(
+            uint32_t startingByteOffset,
+            uint32_t dataByteSize,
+            const void* data
+        ) {
+            uint8_t* destAddress = mCpuVirtualAddressHoldingGpuAddress + startingByteOffset;
+
+            memcpy(
+                destAddress,
+                data,
+                dataByteSize
             );
         }
 

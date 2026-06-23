@@ -19,17 +19,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t ID;
 		uint32_t MeshID;
 		uint8_t SubMeshCount;
-		const std::vector< DX12OpaqueRenderItemPerSubMeshExecuteContext> SubMeshExecuteContext;
+		std::vector< DX12OpaqueRenderItemPerSubMeshExecuteContext> SubMeshExecuteContext;
 	};
 
-	struct DX12OpaquePipelinePassExecuteContext : public IPipelinePassExecuteContext {
+	struct DX12PipelinePassExecuteContext : public IPipelinePassExecuteContext {
 		uint32_t NumberOfItems;
-		uint8_t NumOfSubMeshesPerItem;
-		uint32_t NumberOfMaterials;
-		const DX12OpaqueRenderItemExecuteContext* RenderItems;
 		RendererPipelinePass PipelinePass;
+
 		RendererPipelinePass GetPipelinePassType() const override {
 			return PipelinePass;
 		}
+	};
+
+	struct DX12OpaquePipelinePassExecuteContext : public DX12PipelinePassExecuteContext {
+		uint8_t NumOfSubMeshesPerItem;
+		uint32_t NumberOfMaterials;
+		const DX12OpaqueRenderItemExecuteContext* RenderItems;
 	};
 }

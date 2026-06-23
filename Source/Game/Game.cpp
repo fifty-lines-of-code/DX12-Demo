@@ -3,6 +3,7 @@
 #include "../Engine/Camera/Camera.h"
 #include "../Engine/Debug System/DebugSystem.h"
 #include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
+#include "../Helper/Helper.h"
 
 Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
 	mhMainWnd(nullptr),
@@ -87,7 +88,7 @@ void Game::CalculateFullscreenDimensions() {
 void Game::SetFullscreen() {
 
 	// make sure we have a main handle
-	assert(mhMainWnd != nullptr);
+	ENGINE_ASSERT(mhMainWnd != nullptr, L"Main Window Handle should NOT be nullptr");
 
 	// strip all borders, captions, resize styles
 	SetWindowLongPtr(mhMainWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);

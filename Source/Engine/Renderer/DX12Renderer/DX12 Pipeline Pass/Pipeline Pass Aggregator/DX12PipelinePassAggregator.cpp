@@ -1,7 +1,5 @@
 #include "DX12PipelinePassAggregator.h"
 
-#include <cassert>
-
 namespace Engine::EngineRenderer::DX12Renderer {
 	
 	void DX12PipelinePassAggregator::InsertPass(IDX12PipelinePass* pass) {

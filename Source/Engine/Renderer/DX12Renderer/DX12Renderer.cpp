@@ -145,7 +145,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		m4xMsaaQuality = msQualityLevels.NumQualityLevels;
-		assert(m4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
+		ENGINE_ASSERT(m4xMsaaQuality > 0, L"Unexpected MSAA quality level.");
 
 	#if defined(DEBUG) || defined(_DEBUG)
 		LogAdapters();
@@ -219,6 +219,25 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t perRenderItemCbSize
 	) {
 		mCurrentFrameResource->mOpaqueRenderItemCB.CopyData(renderItemIndex, data);
+	}
+
+	void DX12Renderer::UpdateOpaqueRenderItemSubMeshCb(
+		uint32_t renderItemIndex,
+		uint32_t maxNumberSubMeshes,
+		const void* data,
+		uint32_t renderItemPerSubMeshCbSize
+	) {
+		// we're updating all 8 submeshes in one go 
+		uint32_t alignedSize = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(renderItemPerSubMeshCbSize);
+
+		uint32_t dataByteSize = alignedSize * maxNumberSubMeshes;
+		uint32_t startingByteOffset = renderItemIndex * dataByteSize;
+
+		mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.CopyStrideOfData(
+			startingByteOffset,
+			dataByteSize,
+			data
+		);
 	}
 
 	void DX12Renderer::UpdatePerMaterialCb(
@@ -335,17 +354,19 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
 			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
 			PerItemExecuteArgs[i].SubMeshCount = renderItem.SubMeshCount;
+			PerItemExecuteArgs[i].SubMeshExecuteArgs.reserve(renderItem.SubMeshCount);
 
 			// load up data per sub mesh per render item
 			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
 				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
 
-				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshArgs = PerItemExecuteArgs[i].SubMeshExecuteArgs[j];
+				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs;
 
 				subMeshArgs.ID = j;
 				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
 				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
 				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
+				PerItemExecuteArgs[i].SubMeshExecuteArgs.push_back(subMeshArgs);
 			}
 		}
 
@@ -465,8 +486,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mWindowDimensions.Height = height;
 
 		// make sure we have a valid swap chain and command allocator
-		assert(mSwapChain);
-		assert(mInitAndResizeCommandAllocator);
+		ENGINE_ASSERT(mSwapChain, L"Swap Chain should NOT be nullptr here");
+		ENGINE_ASSERT(
+			mInitAndResizeCommandAllocator,
+			L"Init and Resize Cmd Allocator should NOT be nulltpr"
+		);
 
 		// flush all preivous commands
 		FlushCommandQueue();
