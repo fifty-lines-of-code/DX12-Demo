@@ -402,9 +402,9 @@ namespace Engine {
 		const EngineRenderer::DX12Renderer::DX12GpuProfilerResults& profilerResults = mRenderer.GetProfilerResults();
 
 		std::string msString = " Ms:";
-		for (uint8_t i = 0; i < profilerResults.passTimes.size(); ++i) {
+		for (uint8_t i = 0; i < profilerResults.PassTimes.size(); ++i) {
 
-			float msValue = profilerResults.passTimes[i];
+			float msValue = profilerResults.PassTimes[i];
 			if (msValue == 0.f) { continue; }
 
 
