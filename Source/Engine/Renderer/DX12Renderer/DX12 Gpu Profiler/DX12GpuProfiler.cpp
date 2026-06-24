@@ -9,9 +9,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
         mMappedReadbackData(nullptr),
         mGpuFrequency(0),
         mOneOverGpuFrequency(0),
-        mFrameIndex(0),
-		mMaxPasses(maxPasses),
-        mPassCounter(0)
+        mCurrentFrameIndex(0),
+		mMaxPasses(maxPasses)
 	{}
 
 	bool DX12GpuProfiler::Initialize(
@@ -27,7 +26,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
         // initially all indexes point to -1 which means
         // no pass has run yet
-        ResetPassIndexes();
+        for (auto& data : mFrameProfilerData) {
+            std::fill(
+                data.PassIndexes.begin(),
+                data.PassIndexes.end(), 
+                INVALID_PASS_INDEX
+            );
+            data.TotalPassesRecorded = 0;
+        }
 
         // get the gpu timestamp frequency
         ThrowIfFailed(commandQueue->GetTimestampFrequency(&mGpuFrequency));
@@ -84,7 +90,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         mReadbackBuffer->SetName(L"Gpu Profiler Readback Buffer.");
 
         // 4. Map the Readback Buffer so the CPU can read it
-        CD3DX12_RANGE readRange(0, 0); // CPU will not write to this buffer
+        CD3DX12_RANGE readRange(0, bufferSize); // CPU will not write to this buffer
         ThrowIfFailed(mReadbackBuffer->Map(
             0, 
             &readRange,
@@ -105,20 +111,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
     }
 
     void DX12GpuProfiler::BeginFrame() {
-        ResetPassIndexes();
-        mPassCounter = 0;
+        ResetPassProfileDataForCurrentFrame();
     }
 
-    void DX12GpuProfiler::BeginPass(ID3D12GraphicsCommandList* cmdList, uint8_t passIndex) {
+    void DX12GpuProfiler::BeginPass(
+        ID3D12GraphicsCommandList* cmdList, 
+        uint8_t passIndex
+    ) {
+        uint8_t passesRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded;
+
         if (passIndex >= DX12RendererConfig::MAX_NUMBER_OF_PASSES ||
-            (mPassCounter + mTimestampsPerPass) >= (mMaxPasses * mTimestampsPerPass)) { return; }
+            (passesRecorded + mTimestampsPerPass) >= (mMaxPasses * mTimestampsPerPass)) { return; }
 
         UINT queryIndex =
-            (mFrameIndex * mMaxPasses * mTimestampsPerPass) +
-            mPassCounter;
+            (mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass) +
+            passesRecorded;
 
-        mPassIndexes[(uint8_t)passIndex] = mPassCounter;
-        mPassCounter += 1;
+        mFrameProfilerData[mCurrentFrameIndex].PassIndexes[(uint8_t)passIndex] = passesRecorded;
+        mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded += 1;
 
         //The actual hardware clock 
         // is read and written when we call EndQuery().
@@ -134,11 +144,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
         // ex: for pass index 0, we write in index 0 and 1
         // then compute the difference in resolvequery
 
-        UINT queryIndex =
-            (mFrameIndex * mMaxPasses * mTimestampsPerPass) +
-            mPassCounter;
+        uint8_t passesRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded;
 
-        mPassCounter += 1;
+        UINT queryIndex =
+            (mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass) +
+            passesRecorded;
+
+        mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded += 1;
   
         cmdList->EndQuery(
             mQueryHeap.Get(),
@@ -148,33 +160,33 @@ namespace Engine::EngineRenderer::DX12Renderer {
     }
 
     void DX12GpuProfiler::ResolveAllQueries(ID3D12GraphicsCommandList* cmdList) {
-        if (mPassCounter == 0) { return; }
+        if (mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded == 0) { return; }
 
-        UINT startIndex = mFrameIndex * mMaxPasses * mTimestampsPerPass;
+        UINT startIndex = mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass;
         UINT64 destinationOffset = startIndex * sizeof(UINT64);
 
         cmdList->ResolveQueryData(
             mQueryHeap.Get(),
             D3D12_QUERY_TYPE_TIMESTAMP,
             startIndex,
-            mPassCounter, // numQueries
+            mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded, // numQueries
             mReadbackBuffer.Get(),
             destinationOffset
         );
     }
 
     void DX12GpuProfiler::SetFrameIndex(uint8_t frameIndex) {
-       mFrameIndex = frameIndex; 
+       mCurrentFrameIndex = frameIndex; 
     }
 
     const DX12GpuProfilerResults& DX12GpuProfiler::GetProfilerResults() {
-        UINT readFrameIndex = (mFrameIndex * mMaxPasses * mTimestampsPerPass);
+        UINT readFrameIndex = (mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass);
 
         for (uint8_t i = 0; i < DX12RendererConfig::MAX_NUMBER_OF_PASSES; ++i) {
-            int8_t passStartIndex = mPassIndexes[i];
+            int8_t passStartIndex = mFrameProfilerData[mCurrentFrameIndex].PassIndexes[i];
 
             if (passStartIndex == INVALID_PASS_INDEX) {
-                mProfilerResults.passTimes[i] = 0.f;
+                mProfilerResults.PassTimes[i] = 0.f;
                 continue;
             }
 
@@ -188,19 +200,17 @@ namespace Engine::EngineRenderer::DX12Renderer {
             // Calculate delta and convert to milliseconds
             UINT64 deltaTicks = endTick - startTick;
             double timeSeconds = static_cast<double>(deltaTicks) * mOneOverGpuFrequency;
-            mProfilerResults.passTimes[i] = timeSeconds * 1000.f;
+            mProfilerResults.PassTimes[i] = (float)timeSeconds * 1000.f;
         }
         return mProfilerResults;
     }
 
 #pragma region Private
 
-    void DX12GpuProfiler::ResetPassIndexes() { 
-        std::fill(
-            mPassIndexes.begin(),
-            mPassIndexes.end(), 
-            INVALID_PASS_INDEX
-        );
+    void DX12GpuProfiler::ResetPassProfileDataForCurrentFrame() { 
+        auto& currentData = mFrameProfilerData[mCurrentFrameIndex];
+        std::fill(currentData.PassIndexes.begin(), currentData.PassIndexes.end(), INVALID_PASS_INDEX);
+        currentData.TotalPassesRecorded = 0;
     }
 
 #pragma endregion

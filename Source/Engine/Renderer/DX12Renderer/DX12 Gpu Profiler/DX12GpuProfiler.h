@@ -9,7 +9,13 @@
 namespace Engine::EngineRenderer::DX12Renderer {
 
 	struct DX12GpuProfilerResults {
-		std::array<float, DX12RendererConfig::MAX_NUMBER_OF_PASSES> passTimes = { 0.f };
+		std::array<float, DX12RendererConfig::MAX_NUMBER_OF_PASSES> PassTimes = { 0.f };
+	};
+
+	struct DX12FrameProfilerData {
+		std::array<int8_t, DX12RendererConfig::MAX_NUMBER_OF_PASSES> PassIndexes;
+
+		uint8_t TotalPassesRecorded = 0;
 	};
 
 	class DX12GpuProfiler {
@@ -41,7 +47,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// it wrote the timestamp to. this allows us to 
 		// call any pass in any order and fetch profiling 
 		// data correctly for each pass
-		std::array<int8_t, DX12RendererConfig::MAX_NUMBER_OF_PASSES> mPassIndexes;
+		std::array<DX12FrameProfilerData, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> mFrameProfilerData;
 		DX12GpuProfilerResults mProfilerResults;
 		// dx12 resources
 		Microsoft::WRL::ComPtr<ID3D12QueryHeap> mQueryHeap;
@@ -50,15 +56,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT64* mMappedReadbackData;
 		UINT64 mGpuFrequency;
 		double mOneOverGpuFrequency;
-		uint8_t mFrameIndex;
+		uint8_t mCurrentFrameIndex;
 		uint8_t mMaxPasses;
 		// 2 because we want to write the tick at start of 
 		// a pass, and end of a pass so we can compute time 
 		// for each pass
 		const uint8_t mTimestampsPerPass = 2;
-		uint8_t mPassCounter;
 
 	private:
-		void ResetPassIndexes();
+		void ResetPassProfileDataForCurrentFrame();
 	};
 }
