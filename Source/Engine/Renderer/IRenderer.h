@@ -8,7 +8,7 @@
 
 namespace Engine::EngineRenderer {
 
-	enum class RendererPipelinePass : uint32_t {
+	enum class RendererPipelinePass : uint8_t {
 		SHADOW_PASS,
 		OPAQUE_RENDER_PASS,
 		DEBUG_SYSTEM_PASS,
@@ -76,5 +76,8 @@ namespace Engine::EngineRenderer {
 		virtual bool DrawDebugSystem(uint32_t numberOfCharacters) = 0;
 		virtual void EndFrame() = 0;
 		virtual void OnResize(UINT width, UINT height) = 0;
+		virtual float QueryPipelinePassPerformance(
+			RendererPipelinePass pipelinPass
+		) = 0;
 	};
 }

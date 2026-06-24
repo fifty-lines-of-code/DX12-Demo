@@ -15,7 +15,9 @@ using namespace DirectX;
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
-	DX12Renderer::DX12Renderer() {}
+	DX12Renderer::DX12Renderer() :
+		mGpuProfiler(DX12GpuProfiler((uint8_t)RendererPipelinePass::COUNT))
+	{}
 
 	DX12Renderer::~DX12Renderer() {
 
@@ -55,6 +57,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// Reset the command list to prep for initialization commands.
 		ThrowIfFailed(mSetupCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
+
+		if (!mGpuProfiler.Initialize(mDX12Device.Get(), mCommandQueue.Get())) { return false; }
 
 		return true;
 	}
@@ -155,7 +159,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::Shutdown() {
-		mCurrentFrameResource = nullptr;
+		mGpuProfiler.ShutDown();
 		for (auto& texture : mTextures) {
 			if (texture.Resource != nullptr) {
 				texture.Resource.Reset();
@@ -175,6 +179,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		for (UINT i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
 			mSwapChainBuffers[i].Reset();
 		}
+		mCurrentFrameResource = nullptr;
 		mDSVDescriptorHeap.Reset();
 		mRTVDescriptorHeap.Reset();
 		mSwapChain.Reset();
@@ -193,7 +198,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// Has the GPU finished processing the commands of the current frame resource?
 		// If not, wait until the GPU has completed commands up to this fence point.
-		if (mCurrentFrameResource->mFenceValue != 0 && mFence->GetCompletedValue() < mCurrentFrameResource->mFenceValue) {
+		if (mCurrentFrameResource->mFenceValue != 0 && 
+			mFence->GetCompletedValue() < mCurrentFrameResource->mFenceValue) {
 			HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 			ThrowIfFailed(
 				mFence->SetEventOnCompletion(
@@ -257,6 +263,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
+		// update the gpu profilers frame index
+		mGpuProfiler.SetFrameIndex(mCurrentFrameResourceIndex);
+
 		auto commandAllocator = mCurrentFrameResource->mCommandAllocator;
 		// Reuse the memory associated with command recording.
 		// We can only reset when the associated command lists have finished execution on the GPU.
@@ -318,18 +327,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::Execute(const IPipelinePassExecuteContext& context) {
-		const DX12OpaquePipelinePassExecuteContext& ppContext = static_cast<const DX12OpaquePipelinePassExecuteContext&>(context);
 
 		switch (context.GetPipelinePassType()) {
-		case RendererPipelinePass::OPAQUE_RENDER_PASS:
+		case RendererPipelinePass::OPAQUE_RENDER_PASS: {
+			const DX12OpaquePipelinePassExecuteContext& ppContext = static_cast<const DX12OpaquePipelinePassExecuteContext&>(context);
 			DrawOpaqueRenderItems(ppContext);
 			break;
+		}
 		case RendererPipelinePass::BLUR_UI_PASS:
 			// todo:
 			break;
-		case RendererPipelinePass::DEBUG_SYSTEM_PASS:
+		case RendererPipelinePass::DEBUG_SYSTEM_PASS: {
+			const DX12PipelinePassExecuteContext& ppContext = static_cast<const DX12PipelinePassExecuteContext&>(context);
 			DrawDebugSystem(ppContext.NumberOfItems);
 			break;
+		}
 		default:
 			Logger::PRINT(L"Warning NOT handling one of the cases of RendererPipelinePass in DX12Renderer");
 		}
@@ -383,11 +395,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				backBufferView,
 				depthStencilView,
 				mScreenViewport,
-				mScissorRect
+				mScissorRect,
+				mGpuProfiler
 			},
 			PerItemExecuteArgs.data(),
 			context.NumberOfItems,
-			context.NumOfSubMeshesPerItem,
+			context.MaxNumSubMeshesPerItem,
 			mCurrentFrameResource->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
 			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
 			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
@@ -420,7 +433,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				backBufferView,
 				depthStencilView,
 				mScreenViewport,
-				mScissorRect
+				mScissorRect,
+				mGpuProfiler
 			},
 			mCurrentFrameResource->mDebugSystemPerPassCB.Resource(),
 			numberOfCharacters
@@ -447,6 +461,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 		ID3D12GraphicsCommandList* lastCommandList = (ID3D12GraphicsCommandList*)result.ActiveLists.back();
 		lastCommandList->ResourceBarrier(1, &barrier);
+
+		// tell the gpu to copy the profiled data over to our readback heap
+		mGpuProfiler.ResolveAllQueries(lastCommandList);
 
 		HRESULT hr = lastCommandList->Close();
 		if (FAILED(hr)) {
@@ -636,6 +653,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mScreenViewport.MaxDepth = 1.0f;
 
 		mScissorRect = { 0, 0, (long)width, (long)height };
+	}
+
+
+	float DX12Renderer::QueryPipelinePassPerformance(
+		RendererPipelinePass pipelinPass
+	) {
+		return mGpuProfiler.GetElapsedTimeMilliseconds((uint8_t)pipelinPass);
 	}
 
 	void DX12Renderer::FlushCommandQueue() {
@@ -948,16 +972,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t debugSystemMaxCharacters
 	) {
 		for (UINT i = 0; i < mNumberOfFrameResources; ++i) {
-			mFrameResources.push_back(
-				std::make_unique<DX12FrameResource>(
-					mDX12Device.Get(),
-					1,
-					numberOfEntities,
-					maxSubMeshesPerEntity,
-					numberOfMaterials,
-					debugSystemPerPassCBCount,
-					debugSystemMaxCharacters
-				)
+			mFrameResources[i] = std::make_unique<DX12FrameResource>(
+				mDX12Device.Get(),
+				1,
+				numberOfEntities,
+				maxSubMeshesPerEntity,
+				numberOfMaterials,
+				debugSystemPerPassCBCount,
+				debugSystemMaxCharacters
 			);
 		}
 	}
@@ -1040,7 +1062,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				backBufferView,
 				depthStencilView,
 				mScreenViewport,
-				mScissorRect
+				mScissorRect,
+				mGpuProfiler
 			},
 			mWindowDimensions.Width,
 			mWindowDimensions.Height

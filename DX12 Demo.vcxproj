@@ -162,6 +162,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12PipelineDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12ResourceDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h" />
@@ -224,6 +225,7 @@
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp" />
@@ -269,7 +271,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Source\Resources\Shaders\color.hlsl">
+    <None Include="Source\Resources\Shaders\opaque_vs_ps.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

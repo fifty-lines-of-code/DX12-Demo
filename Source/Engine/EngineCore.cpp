@@ -112,6 +112,16 @@ namespace Engine {
 	void EngineCore::Update(float deltaTime) {
 		// todo: 
 
+		// draw the time profiling data
+		float timeForPreviousOpaquePassInMilliseconds = mRenderer.QueryPipelinePassPerformance(
+			EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS
+		);
+		std::string opaqueProfilingMs =
+			"OpaquePassMs:" +
+			std::to_string(timeForPreviousOpaquePassInMilliseconds) +
+			"\n";
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
 
@@ -357,7 +367,7 @@ namespace Engine {
 
 		// load up the context
 		context.NumberOfItems = (uint32_t)entities.size();
-		context.NumOfSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
+		context.MaxNumSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
 		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
 		context.PipelinePass = EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
 

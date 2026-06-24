@@ -307,6 +307,12 @@
     <Filter Include="Source Files\Engine\Audio System\Audio Manager\Audio Memory Arena">
       <UniqueIdentifier>{dd4ff7ee-afcd-454d-8a94-0ad7e6156b25}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler">
+      <UniqueIdentifier>{e96f6c3b-bbb2-4090-a0d2-f3478c6cef9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Gpu Profiler">
+      <UniqueIdentifier>{fc60ce21-bae4-4f0f-8b65-589f848a6e6d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -549,6 +555,9 @@
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.h">
       <Filter>Header Files\Engine\Audio System\Audio Manager\Audio Memory Arena</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -677,6 +686,9 @@
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.cpp">
       <Filter>Source Files\Engine\Audio System\Audio Manager\Audio Memory Arena</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Gpu Profiler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -717,13 +729,11 @@
     <None Include="Source\Resources\Shaders\Blur\blur_cs.hlsl">
       <Filter>Resource Files\Shaders\Blur</Filter>
     </None>
-    <None Include="Source\Resources\Shaders\color.hlsl">
-      <Filter>Resource Files\Shaders\Opaque Render System</Filter>
-    </None>
     <None Include="Source\Resources\Shaders\LightingUtil.hlsl">
       <Filter>Resource Files\Shaders\Opaque Render System</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Source\Resources\Shaders\opaque_vs_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="Source\Resources\Audio\Background\bg-1.wav">
