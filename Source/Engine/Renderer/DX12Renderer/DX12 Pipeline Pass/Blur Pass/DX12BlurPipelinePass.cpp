@@ -64,6 +64,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// reset the command list
 		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
+
+		// tell the profiler to start profiling
+		args.GpuProfiler.BeginPass(
+			mCommandList.Get(),
+			(uint8_t)RendererPipelinePass::BLUR_UI_PASS
+		);
+
 		mCommandList->SetComputeRootSignature(mRootSignature.Get());
 
 		// Bind the Blur Descriptor Heap
@@ -214,6 +221,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				)
 		};
 		mCommandList->ResourceBarrier(_countof(cleanupBarriers), cleanupBarriers);
+
+		// tell the profiler to end profiling
+		args.GpuProfiler.BeginPass(
+			mCommandList.Get(),
+			(uint8_t)RendererPipelinePass::BLUR_UI_PASS
+		);
 
 		// do not close the command list here, the aggregator will close it
 	}

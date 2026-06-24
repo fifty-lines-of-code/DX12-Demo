@@ -400,12 +400,23 @@ namespace Engine {
 
 	void EngineCore::LogProfilingData() {
 		const EngineRenderer::DX12Renderer::DX12GpuProfilerResults& profilerResults = mRenderer.GetProfilerResults();
-		uint8_t opaquePassIndex = (uint8_t)EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
 
-		std::string opaqueProfilingMs =
-			"OpaquePassMs:" +
-			std::to_string(profilerResults.passTimes[opaquePassIndex]) +
-			"\n";
-		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+		std::string ms = "Ms:";
+		std::string* passName = nullptr;
+		for (uint8_t i = 0; i < profilerResults.passTimes.size(); ++i) {
+			if (profilerResults.passTimes[i] == 0.f) { continue; }
+
+			passName = mRenderer.RendererPipelinePass_ToString(
+				EngineRenderer::RendererPipelinePass(i)
+			);
+
+			if (passName == nullptr) { continue; }
+
+			std::string opaqueProfilingMs =
+				*passName + ms +
+				std::to_string(profilerResults.passTimes[i]) +
+				"\n";
+			Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+		}
 	}
 }

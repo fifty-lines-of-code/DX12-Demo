@@ -689,6 +689,9 @@
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.cpp">
       <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Gpu Profiler</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\IRenderer.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">

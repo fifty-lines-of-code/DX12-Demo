@@ -232,6 +232,7 @@
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\IRenderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player.cpp" />
