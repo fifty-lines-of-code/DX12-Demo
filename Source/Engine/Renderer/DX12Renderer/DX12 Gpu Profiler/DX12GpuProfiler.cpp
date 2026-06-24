@@ -81,6 +81,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
             IID_PPV_ARGS(&mReadbackBuffer)
         ));
 
+        mReadbackBuffer->SetName(L"Gpu Profiler Readback Buffer.");
+
         // 4. Map the Readback Buffer so the CPU can read it
         CD3DX12_RANGE readRange(0, 0); // CPU will not write to this buffer
         ThrowIfFailed(mReadbackBuffer->Map(
@@ -93,14 +95,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
     void DX12GpuProfiler::ShutDown() {
-        // Unmap the buffer if it was mapped
-        if (mReadbackBuffer && mMappedReadbackData)
-        {
+        if (mReadbackBuffer && mMappedReadbackData) {
             mReadbackBuffer->Unmap(0, nullptr);
             mMappedReadbackData = nullptr;
         }
 
-        // ALWAYS reset the ComPtrs, regardless of mapping state
         mReadbackBuffer.Reset();
         mQueryHeap.Reset();
     }
@@ -152,21 +151,20 @@ namespace Engine::EngineRenderer::DX12Renderer {
         if (mPassCounter == 0) { return; }
 
         UINT startIndex = mFrameIndex * mMaxPasses * mTimestampsPerPass;
-        UINT numQueries = mPassCounter;
         UINT64 destinationOffset = startIndex * sizeof(UINT64);
 
         cmdList->ResolveQueryData(
             mQueryHeap.Get(),
             D3D12_QUERY_TYPE_TIMESTAMP,
             startIndex,
-            numQueries,
+            mPassCounter, // numQueries
             mReadbackBuffer.Get(),
             destinationOffset
         );
     }
 
     void DX12GpuProfiler::SetFrameIndex(uint8_t frameIndex) {
-        mFrameIndex = frameIndex; 
+       mFrameIndex = frameIndex; 
     }
 
     const DX12GpuProfilerResults& DX12GpuProfiler::GetProfilerResults() {

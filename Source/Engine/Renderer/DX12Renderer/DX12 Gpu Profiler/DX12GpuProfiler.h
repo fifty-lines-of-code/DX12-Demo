@@ -9,7 +9,7 @@
 namespace Engine::EngineRenderer::DX12Renderer {
 
 	struct DX12GpuProfilerResults {
-		std::array<float, DX12RendererConfig::MAX_NUMBER_OF_PASSES> passTimes = { 0.0f };
+		std::array<float, DX12RendererConfig::MAX_NUMBER_OF_PASSES> passTimes = { 0.f };
 	};
 
 	class DX12GpuProfiler {
@@ -37,10 +37,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	private:
 		static constexpr int INVALID_PASS_INDEX = -1;
 
-		// we save the index within the heap for each pass that's run
-		// based on the counter var
-		// this way we can execute any pass in any order and read their
-		// profiling data by indexing into the result for each pass
+		// each pass dynamically stores the heap index
+		// it wrote the timestamp to. this allows us to 
+		// call any pass in any order and fetch profiling 
+		// data correctly for each pass
 		std::array<int8_t, DX12RendererConfig::MAX_NUMBER_OF_PASSES> mPassIndexes;
 		DX12GpuProfilerResults mProfilerResults;
 		// dx12 resources
@@ -52,8 +52,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		double mOneOverGpuFrequency;
 		uint8_t mFrameIndex;
 		uint8_t mMaxPasses;
-		// * 2 because we want to write the tick at start of a pass, 
-		// and end of a pass so we can compute time for each pass
+		// 2 because we want to write the tick at start of 
+		// a pass, and end of a pass so we can compute time 
+		// for each pass
 		const uint8_t mTimestampsPerPass = 2;
 		uint8_t mPassCounter;
 
