@@ -62,5 +62,6 @@ namespace Engine {
 		void UpdatePerMaterialConstantBuffers();
 		void UpdateDebugSystemConstantBuffers();
 		void DrawOpaqueRenderPass();
+		void LogProfilingData();
 	};
 }

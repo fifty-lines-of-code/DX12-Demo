@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include "../DX12 Gpu Profiler/DX12GpuProfiler.h"
 #include "../DX12RendererConfig.h"
 #include "../../../../Helper/Helper.h"
 #include "../../../../Helper/Logger.h"
@@ -25,6 +26,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView;
 		D3D12_VIEWPORT& Viewport;
 		D3D12_RECT& ScissorRect;
+		DX12GpuProfiler& GpuProfiler;
 	};
 
 	class IDX12PipelinePass {

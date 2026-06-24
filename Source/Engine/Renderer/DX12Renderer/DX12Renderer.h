@@ -9,6 +9,7 @@
 #include "d3dx12.h"
 #include "DX12 Pipeline Pass/Blur Pass/DX12BlurPipelinePass.h"
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
+#include "DX12 Gpu Profiler/DX12GpuProfiler.h"
 #include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
 #include "DX12 Data Structures/DX12PipelineDataStructures.h"
 #include "DX12 Pipeline Pass/Opaque Render Pass/DX12OpaqueRenderPipelinePass.h"
@@ -115,6 +116,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void EndFrame() override;
 		void OnResize(UINT width, UINT height) override;
 
+		const DX12GpuProfilerResults& GetProfilerResults();
+
 	private:
 		DX12FrameResource* mCurrentFrameResource = nullptr;
 
@@ -134,8 +137,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDSVDescriptorHeap;
 		Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
 		Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
-
-		std::vector<std::unique_ptr<DX12FrameResource>> mFrameResources;
+		std::array<std::unique_ptr<DX12FrameResource>, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> mFrameResources;
 		DX12OpaqueRenderPipelinePass mRenderPipelinePass;
 		DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
 		DX12BlurPipelinePass mBlurPipelinePass;
@@ -145,6 +147,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
 		// All the Textures
 		std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
+
+		DX12GpuProfiler mGpuProfiler;
 
 		WindowDimensions mWindowDimensions;
 		HWND mhMainWnd = nullptr;

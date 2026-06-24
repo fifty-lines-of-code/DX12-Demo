@@ -43,6 +43,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ThrowIfFailed(allocator->Reset());
 
 		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
+
+		// tell the profiler to start profiling
+		args.GpuProfiler.BeginPass(
+			mCommandList.Get(), 
+			(uint8_t)RendererPipelinePass::OPAQUE_RENDER_PASS
+		);
+
+		// set the root signature
 		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 		// set view port and scissor rect
@@ -155,6 +163,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				);
 			}
 		}
+
+		// tell the profiler to end profiling
+		args.GpuProfiler.EndPass(
+			mCommandList.Get(),
+			(uint8_t)RendererPipelinePass::OPAQUE_RENDER_PASS
+		);
 
 		// don't close the command list, the aggregator will close it.
 	}
@@ -344,8 +358,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	bool DX12OpaqueRenderPipelinePass::CreateShadersAndInputLayout() {
-		mVsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
-		mPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
+		mVsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "VS", "vs_5_1");
+		mPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "PS", "ps_5_1");
 
 		mInputLayout =
 		{

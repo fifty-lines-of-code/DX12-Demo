@@ -39,7 +39,17 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		ID3D12CommandAllocator* allocator = mCommandAllocators[args.CurrentFrameIndex].Get();
 		ThrowIfFailed(allocator->Reset());
 
-		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
+		ThrowIfFailed(mCommandList->Reset(
+			allocator, 
+			mPipelineStateObject.Get()
+		));
+
+		// tell the profiler to start profiling
+		args.GpuProfiler.BeginPass(
+			mCommandList.Get(),
+			(uint8_t)RendererPipelinePass::DEBUG_SYSTEM_PASS
+		);
+
 		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 		// set view port and scissor rect
@@ -86,6 +96,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// 5. Fire off the procedural magic
 		mCommandList->DrawInstanced(4, args.NumberOfCharacters, 0, 0);
+
+		// tell the profiler to end profiling
+		args.GpuProfiler.EndPass(
+			mCommandList.Get(),
+			(uint8_t)RendererPipelinePass::DEBUG_SYSTEM_PASS
+		);
 
 		// don't close the command list, the aggregator will close it.
 	}

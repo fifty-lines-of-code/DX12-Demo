@@ -110,7 +110,7 @@ namespace Engine {
 	}
 
 	void EngineCore::Update(float deltaTime) {
-		// todo: 
+		// todo:
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
@@ -129,11 +129,14 @@ namespace Engine {
 		// update the camera with updated player center
 		mCamera.UpdateWithTarget(mWorldManager.GetPlayerCenter());
 
-		// calculate our geometry and related data of Debug System
-		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
-
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();
+
+		// draw the time profiling data once gpu has finished previous frame
+		if (mIsDebugBuild) { LogProfilingData(); }
+
+		// calculate our geometry and related data of Debug System
+		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
 
 		// Update constant buffers.
 		UpdateConstantBuffers();
@@ -357,7 +360,7 @@ namespace Engine {
 
 		// load up the context
 		context.NumberOfItems = (uint32_t)entities.size();
-		context.NumOfSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
+		context.MaxNumSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
 		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
 		context.PipelinePass = EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
 
@@ -393,5 +396,27 @@ namespace Engine {
 
 		// execute the opaque render
 		mRenderer.Execute(context);
+	}
+
+	void EngineCore::LogProfilingData() {
+		const EngineRenderer::DX12Renderer::DX12GpuProfilerResults& profilerResults = mRenderer.GetProfilerResults();
+
+		std::string msString = " Ms:";
+		for (uint8_t i = 0; i < profilerResults.passTimes.size(); ++i) {
+
+			float msValue = profilerResults.passTimes[i];
+			if (msValue == 0.f) { continue; }
+
+
+			const std::string& passName = mRenderer.RendererPipelinePass_ToString(
+				EngineRenderer::RendererPipelinePass(i)
+			);
+
+			std::string opaqueProfilingMs =
+				passName + msString +
+				std::to_string(msValue) +
+				"\n";
+			Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include "../EngineConfig.h"
 #include <string>
@@ -8,7 +9,7 @@
 
 namespace Engine::EngineRenderer {
 
-	enum class RendererPipelinePass : uint32_t {
+	enum class RendererPipelinePass : uint8_t {
 		SHADOW_PASS,
 		OPAQUE_RENDER_PASS,
 		DEBUG_SYSTEM_PASS,
@@ -25,7 +26,7 @@ namespace Engine::EngineRenderer {
 	class IRenderer {
 
 	public:
-		IRenderer() = default;
+		IRenderer();
 		virtual ~IRenderer() {}
 
 		// delete the copy and assignment operators
@@ -76,5 +77,13 @@ namespace Engine::EngineRenderer {
 		virtual bool DrawDebugSystem(uint32_t numberOfCharacters) = 0;
 		virtual void EndFrame() = 0;
 		virtual void OnResize(UINT width, UINT height) = 0;
+
+		const std::string& RendererPipelinePass_ToString(
+			RendererPipelinePass pass
+		);
+
+	protected:
+		std::array<std::string, (uint8_t)RendererPipelinePass::COUNT> mRendererPipelinePassStringValues;
+		inline static const std::string INVALID_PASS_STRING = "INVALID_PASS";
 	};
 }
