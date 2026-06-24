@@ -15,7 +15,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	struct DX12FrameProfilerData {
 		std::array<int8_t, DX12RendererConfig::MAX_NUMBER_OF_PASSES> PassIndexes;
 
-		uint8_t TotalPassesRecorded = 0;
+		uint8_t TotalTimestampsRecorded = 0;
 	};
 
 	class DX12GpuProfiler {

@@ -20,7 +20,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		if (device == nullptr || 
 			commandQueue == nullptr) {
-			Logger::ERR(L"Devie or command queue are nullptr, cannot Initialize Gpu Profiler!");
+			Logger::ERR(L"Device or command queue are nullptr, cannot Initialize Gpu Profiler!");
 			return false; 
 		}
 
@@ -32,7 +32,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
                 data.PassIndexes.end(), 
                 INVALID_PASS_INDEX
             );
-            data.TotalPassesRecorded = 0;
+            data.TotalTimestampsRecorded = 0;
         }
 
         // get the gpu timestamp frequency
@@ -118,17 +118,17 @@ namespace Engine::EngineRenderer::DX12Renderer {
         ID3D12GraphicsCommandList* cmdList, 
         uint8_t passIndex
     ) {
-        uint8_t passesRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded;
+        uint8_t timestampsRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded;
 
         if (passIndex >= DX12RendererConfig::MAX_NUMBER_OF_PASSES ||
-            (passesRecorded + mTimestampsPerPass) >= (mMaxPasses * mTimestampsPerPass)) { return; }
+            (timestampsRecorded + mTimestampsPerPass) >= (mMaxPasses * mTimestampsPerPass)) { return; }
 
         UINT queryIndex =
             (mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass) +
-            passesRecorded;
+            timestampsRecorded;
 
-        mFrameProfilerData[mCurrentFrameIndex].PassIndexes[(uint8_t)passIndex] = passesRecorded;
-        mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded += 1;
+        mFrameProfilerData[mCurrentFrameIndex].PassIndexes[(uint8_t)passIndex] = timestampsRecorded;
+        mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded += 1;
 
         //The actual hardware clock 
         // is read and written when we call EndQuery().
@@ -144,13 +144,16 @@ namespace Engine::EngineRenderer::DX12Renderer {
         // ex: for pass index 0, we write in index 0 and 1
         // then compute the difference in resolvequery
 
-        uint8_t passesRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded;
+        // here we don't check if queryIndex will overflow because 
+        // we've already check in begin pass if we'll be able to write
+        // both, before and after
+        uint8_t timestampsRecorded = mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded;
 
         UINT queryIndex =
             (mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass) +
-            passesRecorded;
+            timestampsRecorded;
 
-        mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded += 1;
+        mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded += 1;
   
         cmdList->EndQuery(
             mQueryHeap.Get(),
@@ -160,7 +163,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
     }
 
     void DX12GpuProfiler::ResolveAllQueries(ID3D12GraphicsCommandList* cmdList) {
-        if (mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded == 0) { return; }
+        if (mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded == 0) { return; }
 
         UINT startIndex = mCurrentFrameIndex * mMaxPasses * mTimestampsPerPass;
         UINT64 destinationOffset = startIndex * sizeof(UINT64);
@@ -169,7 +172,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
             mQueryHeap.Get(),
             D3D12_QUERY_TYPE_TIMESTAMP,
             startIndex,
-            mFrameProfilerData[mCurrentFrameIndex].TotalPassesRecorded, // numQueries
+            mFrameProfilerData[mCurrentFrameIndex].TotalTimestampsRecorded, // numQueries
             mReadbackBuffer.Get(),
             destinationOffset
         );
@@ -210,7 +213,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
     void DX12GpuProfiler::ResetPassProfileDataForCurrentFrame() { 
         auto& currentData = mFrameProfilerData[mCurrentFrameIndex];
         std::fill(currentData.PassIndexes.begin(), currentData.PassIndexes.end(), INVALID_PASS_INDEX);
-        currentData.TotalPassesRecorded = 0;
+        currentData.TotalTimestampsRecorded = 0;
     }
 
 #pragma endregion
