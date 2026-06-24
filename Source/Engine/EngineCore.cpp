@@ -133,7 +133,7 @@ namespace Engine {
 		mRenderer.PrepareForUpdate();
 
 		// draw the time profiling data once gpu has finished previous frame
-		LogProfilingData();
+		if (mIsDebugBuild) { LogProfilingData(); }
 
 		// calculate our geometry and related data of Debug System
 		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
@@ -401,20 +401,20 @@ namespace Engine {
 	void EngineCore::LogProfilingData() {
 		const EngineRenderer::DX12Renderer::DX12GpuProfilerResults& profilerResults = mRenderer.GetProfilerResults();
 
-		std::string ms = "Ms:";
-		std::string* passName = nullptr;
+		std::string msString = " Ms:";
 		for (uint8_t i = 0; i < profilerResults.passTimes.size(); ++i) {
-			if (profilerResults.passTimes[i] == 0.f) { continue; }
 
-			passName = mRenderer.RendererPipelinePass_ToString(
+			float msValue = profilerResults.passTimes[i];
+			if (msValue == 0.f) { continue; }
+
+
+			const std::string& passName = mRenderer.RendererPipelinePass_ToString(
 				EngineRenderer::RendererPipelinePass(i)
 			);
 
-			if (passName == nullptr) { continue; }
-
 			std::string opaqueProfilingMs =
-				*passName + ms +
-				std::to_string(profilerResults.passTimes[i]) +
+				passName + msString +
+				std::to_string(msValue) +
 				"\n";
 			Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
 		}

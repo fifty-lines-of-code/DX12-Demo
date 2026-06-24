@@ -11,9 +11,14 @@ namespace Engine::EngineRenderer {
 		};
 	}
 
-	std::string* IRenderer::RendererPipelinePass_ToString(RendererPipelinePass pass) {
-		if (pass >= RendererPipelinePass::COUNT) { return nullptr; }
+	const std::string& IRenderer::RendererPipelinePass_ToString(
+		RendererPipelinePass pass
+	) {
 
-		return &mRendererPipelinePassStringValues[(uint8_t)pass];
+		if (pass >= RendererPipelinePass::COUNT) {
+			return INVALID_PASS_STRING;
+		}
+
+		return mRendererPipelinePassStringValues[(uint8_t)pass];
 	}
 }

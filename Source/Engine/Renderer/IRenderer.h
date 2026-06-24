@@ -78,9 +78,12 @@ namespace Engine::EngineRenderer {
 		virtual void EndFrame() = 0;
 		virtual void OnResize(UINT width, UINT height) = 0;
 
-		std::string* RendererPipelinePass_ToString(RendererPipelinePass pass);
+		const std::string& RendererPipelinePass_ToString(
+			RendererPipelinePass pass
+		);
 
 	protected:
 		std::array<std::string, (uint8_t)RendererPipelinePass::COUNT> mRendererPipelinePassStringValues;
+		inline static const std::string INVALID_PASS_STRING = "INVALID_PASS";
 	};
 }
