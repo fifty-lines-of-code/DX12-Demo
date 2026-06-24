@@ -110,17 +110,7 @@ namespace Engine {
 	}
 
 	void EngineCore::Update(float deltaTime) {
-		// todo: 
-
-		// draw the time profiling data
-		float timeForPreviousOpaquePassInMilliseconds = mRenderer.QueryPipelinePassPerformance(
-			EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS
-		);
-		std::string opaqueProfilingMs =
-			"OpaquePassMs:" +
-			std::to_string(timeForPreviousOpaquePassInMilliseconds) +
-			"\n";
-		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+		// todo:
 
 		// update the input system first
 		UpdateInputSystemAndCamera(deltaTime);
@@ -139,11 +129,21 @@ namespace Engine {
 		// update the camera with updated player center
 		mCamera.UpdateWithTarget(mWorldManager.GetPlayerCenter());
 
-		// calculate our geometry and related data of Debug System
-		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
-
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();
+
+		// draw the time profiling data once gpu has finished previous frame
+		float timeForPreviousOpaquePassInMilliseconds = mRenderer.QueryPipelinePassPerformance(
+			EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS
+		);
+		std::string opaqueProfilingMs =
+			"OpaquePassMs:" +
+			std::to_string(timeForPreviousOpaquePassInMilliseconds) +
+			"\n";
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+
+		// calculate our geometry and related data of Debug System
+		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
 
 		// Update constant buffers.
 		UpdateConstantBuffers();

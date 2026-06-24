@@ -105,6 +105,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
         mQueryHeap.Reset();
     }
 
+    void DX12GpuProfiler::BeginFrame() {
+        ResetPassIndexes();
+        mPassCounter = 0;
+    }
+
     void DX12GpuProfiler::BeginPass(ID3D12GraphicsCommandList* cmdList, uint8_t passIndex) {
         if (passIndex >= DX12RendererConfig::MAX_NUMBER_OF_PASSES ||
             (mPassCounter + mTimestampsPerPass) >= (mMaxPasses * mTimestampsPerPass)) { return; }
@@ -162,8 +167,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
     void DX12GpuProfiler::SetFrameIndex(uint8_t frameIndex) {
         mFrameIndex = frameIndex; 
-        ResetPassIndexes();
-        mPassCounter = 0;
     }
 
     float DX12GpuProfiler::GetElapsedTimeMilliseconds(uint8_t passIndex) {

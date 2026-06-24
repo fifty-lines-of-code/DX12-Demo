@@ -196,6 +196,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mCurrentFrameResourceIndex = (mCurrentFrameResourceIndex + 1) % mNumberOfFrameResources;
 		mCurrentFrameResource = mFrameResources[mCurrentFrameResourceIndex].get();
 
+		// update the gpu profilers frame index
+		mGpuProfiler.SetFrameIndex(mCurrentFrameResourceIndex);
+
 		// Has the GPU finished processing the commands of the current frame resource?
 		// If not, wait until the GPU has completed commands up to this fence point.
 		if (mCurrentFrameResource->mFenceValue != 0 && 
@@ -263,8 +266,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
-		// update the gpu profilers frame index
-		mGpuProfiler.SetFrameIndex(mCurrentFrameResourceIndex);
+
+		// tell gpu profiler it's a new frame
+		mGpuProfiler.BeginFrame();
 
 		auto commandAllocator = mCurrentFrameResource->mCommandAllocator;
 		// Reuse the memory associated with command recording.

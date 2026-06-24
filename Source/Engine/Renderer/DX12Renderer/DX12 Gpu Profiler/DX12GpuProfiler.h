@@ -20,6 +20,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		bool Initialize(ID3D12Device* device, ID3D12CommandQueue* commandQueue);
 		void ShutDown();
 
+		void BeginFrame();
 		void BeginPass(ID3D12GraphicsCommandList* cmdList, uint8_t passIndex);
 		void EndPass(ID3D12GraphicsCommandList* cmdList, uint8_t passIndex);
 
