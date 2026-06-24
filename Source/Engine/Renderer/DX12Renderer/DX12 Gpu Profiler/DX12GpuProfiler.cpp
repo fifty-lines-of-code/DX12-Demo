@@ -169,26 +169,30 @@ namespace Engine::EngineRenderer::DX12Renderer {
         mFrameIndex = frameIndex; 
     }
 
-    float DX12GpuProfiler::GetElapsedTimeMilliseconds(uint8_t passIndex) {
-        // return 0 if either pass never run last frame
-        // or we have an invalid pass index
-        if (passIndex >= DX12RendererConfig::MAX_NUMBER_OF_PASSES ||
-            mPassIndexes[passIndex] == INVALID_PASS_INDEX)
-        { return 0.f; }
-
+    const DX12GpuProfilerResults& DX12GpuProfiler::GetProfilerResults() {
         UINT readFrameIndex = (mFrameIndex * mMaxPasses * mTimestampsPerPass);
-        UINT startIndex = readFrameIndex + mPassIndexes[passIndex];
-        UINT endIndex = startIndex + 1;
 
-        // Read the two distinct timestamps from the mapped readback memory
-        UINT64 startTick = mMappedReadbackData[startIndex];
-        UINT64 endTick = mMappedReadbackData[endIndex];
+        for (uint8_t i = 0; i < DX12RendererConfig::MAX_NUMBER_OF_PASSES; ++i) {
+            int8_t passStartIndex = mPassIndexes[i];
 
-        // Calculate delta and convert to milliseconds
-        UINT64 deltaTicks = endTick - startTick;
-        double timeSeconds = static_cast<double>(deltaTicks) * mOneOverGpuFrequency;
+            if (passStartIndex == INVALID_PASS_INDEX) {
+                mProfilerResults.passTimes[i] = 0.f;
+                continue;
+            }
 
-        return static_cast<float>(timeSeconds * 1000.0);
+            UINT startIndex = readFrameIndex + passStartIndex;
+            UINT endIndex = startIndex + 1;
+
+            // Read the two distinct timestamps from the mapped readback memory
+            UINT64 startTick = mMappedReadbackData[startIndex];
+            UINT64 endTick = mMappedReadbackData[endIndex];
+
+            // Calculate delta and convert to milliseconds
+            UINT64 deltaTicks = endTick - startTick;
+            double timeSeconds = static_cast<double>(deltaTicks) * mOneOverGpuFrequency;
+            mProfilerResults.passTimes[i] = timeSeconds * 1000.f;
+        }
+        return mProfilerResults;
     }
 
 #pragma region Private

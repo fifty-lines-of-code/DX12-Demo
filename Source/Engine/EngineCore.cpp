@@ -133,14 +133,7 @@ namespace Engine {
 		mRenderer.PrepareForUpdate();
 
 		// draw the time profiling data once gpu has finished previous frame
-		float timeForPreviousOpaquePassInMilliseconds = mRenderer.QueryPipelinePassPerformance(
-			EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS
-		);
-		std::string opaqueProfilingMs =
-			"OpaquePassMs:" +
-			std::to_string(timeForPreviousOpaquePassInMilliseconds) +
-			"\n";
-		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+		LogProfilingData();
 
 		// calculate our geometry and related data of Debug System
 		DebugSystem::DebugSystem::GetInstance().CalculateFramePositions();
@@ -403,5 +396,16 @@ namespace Engine {
 
 		// execute the opaque render
 		mRenderer.Execute(context);
+	}
+
+	void EngineCore::LogProfilingData() {
+		const EngineRenderer::DX12Renderer::DX12GpuProfilerResults& profilerResults = mRenderer.GetProfilerResults();
+		uint8_t opaquePassIndex = (uint8_t)EngineRenderer::RendererPipelinePass::OPAQUE_RENDER_PASS;
+
+		std::string opaqueProfilingMs =
+			"OpaquePassMs:" +
+			std::to_string(profilerResults.passTimes[opaquePassIndex]) +
+			"\n";
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
 	}
 }

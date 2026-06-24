@@ -8,6 +8,10 @@
 
 namespace Engine::EngineRenderer::DX12Renderer {
 
+	struct DX12GpuProfilerResults {
+		std::array<float, DX12RendererConfig::MAX_NUMBER_OF_PASSES> passTimes = { 0.0f };
+	};
+
 	class DX12GpuProfiler {
 	public:
 		DX12GpuProfiler(uint8_t maxPasses);
@@ -27,7 +31,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void ResolveAllQueries(ID3D12GraphicsCommandList* cmdList);
 
 		void SetFrameIndex(uint8_t frameIndex);
-		float GetElapsedTimeMilliseconds(uint8_t passIndex);
+
+		const DX12GpuProfilerResults& GetProfilerResults();
 
 	private:
 		static constexpr int INVALID_PASS_INDEX = -1;
@@ -36,8 +41,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// based on the counter var
 		// this way we can execute any pass in any order and read their
 		// profiling data by indexing into the result for each pass
-		std::array<int, DX12RendererConfig::MAX_NUMBER_OF_PASSES> mPassIndexes;
-
+		std::array<int8_t, DX12RendererConfig::MAX_NUMBER_OF_PASSES> mPassIndexes;
+		DX12GpuProfilerResults mProfilerResults;
 		// dx12 resources
 		Microsoft::WRL::ComPtr<ID3D12QueryHeap> mQueryHeap;
 		Microsoft::WRL::ComPtr<ID3D12Resource>  mReadbackBuffer;

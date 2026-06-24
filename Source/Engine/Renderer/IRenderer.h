@@ -76,8 +76,5 @@ namespace Engine::EngineRenderer {
 		virtual bool DrawDebugSystem(uint32_t numberOfCharacters) = 0;
 		virtual void EndFrame() = 0;
 		virtual void OnResize(UINT width, UINT height) = 0;
-		virtual float QueryPipelinePassPerformance(
-			RendererPipelinePass pipelinPass
-		) = 0;
 	};
 }

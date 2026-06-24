@@ -659,11 +659,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mScissorRect = { 0, 0, (long)width, (long)height };
 	}
 
-
-	float DX12Renderer::QueryPipelinePassPerformance(
-		RendererPipelinePass pipelinPass
-	) {
-		return mGpuProfiler.GetElapsedTimeMilliseconds((uint8_t)pipelinPass);
+	const DX12GpuProfilerResults& DX12Renderer::GetProfilerResults() {
+		return mGpuProfiler.GetProfilerResults();
 	}
 
 	void DX12Renderer::FlushCommandQueue() {

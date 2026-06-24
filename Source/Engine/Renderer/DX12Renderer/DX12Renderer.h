@@ -116,9 +116,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void EndFrame() override;
 		void OnResize(UINT width, UINT height) override;
 
-		float QueryPipelinePassPerformance(
-			RendererPipelinePass pipelinPass
-		) override;
+		const DX12GpuProfilerResults& GetProfilerResults();
 
 	private:
 		DX12FrameResource* mCurrentFrameResource = nullptr;
