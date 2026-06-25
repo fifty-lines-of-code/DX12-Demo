@@ -51,13 +51,13 @@ struct VertexOut {
 // buffers passed in per vertex and pixel
 cbuffer cbPerObject : register(b0) {
     float4x4 World;
-    uint2 Padding[48];
+    uint Padding[12];
 };
 
 cbuffer cbPerSubMesh : register(b1) {
     uint gMaterialIndex;
     uint gTextureIndex;
-    uint2 gSubMeshPad[62];
+    uint gSubMeshPad[15];
 };
 
 cbuffer cbPerPass: register(b2) {
@@ -66,7 +66,7 @@ cbuffer cbPerPass: register(b2) {
     float3 EyePosW;
     float PassPad0;
     Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
-    uint2 PassPad1[40];
+    uint4 PassPad1[40];
 };
 
 ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
