@@ -20,9 +20,15 @@ namespace Engine::EngineResources {
 
 	bool TextureManager::LoadTextures() {
 
+		// todo: find a better way of loading these vs writing by hand
+
 		// load the wood crate texture
 		std::wstring filename = L"Source\\Resources\\Textures\\WoodCrate01.dds";
 		if (!RegisterTexture(filename, (uint32_t)TextureID::WOOD_CRATE)) { return false; }
+
+		// load the check board texture
+		filename = L"Source\\Resources\\Textures\\Checkboard.dds";
+		if (!RegisterTexture(filename, (uint32_t)TextureID::CHECKBOARD)) { return false; }
 
 		// load the font texture
 		filename = L"Source\\Resources\\Fonts\\Font.dds";
@@ -32,7 +38,7 @@ namespace Engine::EngineResources {
 	}
 
 	bool TextureManager::RegisterTexture(std::wstring& fileName, uint32_t id) {
-		if (id < 0 || id >= (uint32_t)TextureID::COUNT) {
+		if (id >= (uint32_t)TextureID::COUNT) {
 			return false;
 		}
 

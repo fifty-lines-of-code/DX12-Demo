@@ -15,9 +15,10 @@ namespace Engine::EngineWorld {
 		case Scene::HEIGHTMAP:
 			isLoaded = LoadHeightMapScene(sceneBlueprint);
 			break;
-		case Scene::FLAT_PLAIN:
+		case Scene::FLAT_PLANE:
 			// todo;
-			[[fallthrough]];
+			ENGINE_ASSERT(false, L" Flat Plane Scene Still needs to be implemented");
+			break;
 		case Scene::SINGLE_MIRROR:
 			isLoaded = LoadSingleMirroScene(sceneBlueprint);
 			break;
@@ -65,7 +66,7 @@ namespace Engine::EngineWorld {
 		result = UpdateBlueprint(
 			1, // raw array index
 			Vector3(0.f, 0.f, 0.f),
-			Vector3(Vector3(1.f)),
+			Vector3(1.f),
 			EntityType::TERRAIN,
 			EngineResources::MeshID::TERRAIN_0x0,
 			subMeshBlueprints,
@@ -76,23 +77,17 @@ namespace Engine::EngineWorld {
 
 		mCount++;
 
-		// Mirror
-		subMeshBlueprint0 = {};
+		// Wall
 		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::WALL;
 		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
-		EntitySubMeshBlueprint& subMeshBlueprint1 = subMeshBlueprints[1];
-		subMeshBlueprint1 = {};
-		subMeshBlueprint1.MaterialType = EngineResources::MaterialType::MIRROR;
-		subMeshBlueprint1.TextureID = EngineResources::TextureID::WOOD_CRATE;
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 4.1f, -1.f), // center
-			Vector3(Vector3(1.5f, 2.f, .2f)),
-			EntityType::MIRROR,
-			EngineResources::MeshID::MIRROR,
+			Vector3(1.5f, 2.f, .2f),
+			EntityType::WALL,
+			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
-			2 // mirror has 2 submeshses
-			// todo: find a better way to know these things
+			1
 		);
 
 		if (!result) { return false; }
@@ -126,7 +121,7 @@ namespace Engine::EngineWorld {
 
 		result = UpdateBlueprint(
 			0, // raw array index
-			Vector3(-10.f, 0.875f, -10.5f), // center
+			Vector3(-10.f, 0.975f, -10.5f), // center
 			Vector3(.75f, .75f, .75f), // scale
 			EntityType::PLAYER, // entitytype
 			EngineResources::MeshID::CUBE, // mesh id,
@@ -140,15 +135,14 @@ namespace Engine::EngineWorld {
 		mCount++;
 
 		// Floor
-		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::TERRAIN;
-		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
-
+		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::WALL;
+		subMeshBlueprint0.TextureID = EngineResources::TextureID::CHECKBOARD;
 		result = UpdateBlueprint(
 			1, // raw array index
-			Vector3(0.f, 0.f, 0.f),
-			Vector3(Vector3(1.f)),
-			EntityType::TERRAIN,
-			EngineResources::MeshID::TERRAIN_0x0,
+			Vector3(0.f),
+			Vector3(32.f, 0.2f, 32.f),
+			EntityType::FLOOR,
+			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
 			1
 		);
@@ -157,17 +151,23 @@ namespace Engine::EngineWorld {
 
 		mCount++;
 
-		// Wall
+		// Mirror
+		subMeshBlueprint0 = {};
 		subMeshBlueprint0.MaterialType = EngineResources::MaterialType::WALL;
 		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
+		EntitySubMeshBlueprint& subMeshBlueprint1 = subMeshBlueprints[1];
+		subMeshBlueprint1 = {};
+		subMeshBlueprint1.MaterialType = EngineResources::MaterialType::MIRROR;
+		subMeshBlueprint1.TextureID = EngineResources::TextureID::CHECKBOARD;
 		result = UpdateBlueprint(
 			2, // raw array index
-			Vector3(0.f, 4.1f, -1.f), // center
-			Vector3(Vector3(1.5f, 2.f, .2f)),
-			EntityType::WALL,
-			EngineResources::MeshID::CUBE,
+			Vector3(0.f, 2.225f, -1.f), // center
+			Vector3(1.5f, 2.f, .2f),
+			EntityType::MIRROR,
+			EngineResources::MeshID::MIRROR,
 			subMeshBlueprints,
-			1
+			2 // mirror has 2 submeshses
+			// todo: find a better way to know these things
 		);
 
 		if (!result) { return false; }
@@ -179,7 +179,7 @@ namespace Engine::EngineWorld {
 		Vector3 direction = { 0.577f, -0.577f, 0.577f };
 
 		// update the blueprint
-		blueprint.Scene = Scene::HEIGHTMAP;
+		blueprint.Scene = Scene::SINGLE_MIRROR;
 		blueprint.EntityBlueprints = mBlueprintBackingMemory.data();
 		blueprint.EntityCount = mCount;
 		blueprint.SizeOfEntityBlueprint = sizeof(EntityBlueprint);

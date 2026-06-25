@@ -139,6 +139,7 @@ namespace Engine::EngineWorld {
 		mOctTree.ClearDynamicEntities();
 	}
 
+	// todo: Move this somewhere else
 	float SceneManager::GetProposedYOfTerrainOrFloor(
 		float entityX, 
 		float entityZ,
@@ -173,11 +174,10 @@ namespace Engine::EngineWorld {
 				);
 			}
 			case EntityType::FLOOR:
-				// add a small delta value (0.05f) so that
+				// add a small delta value (0.025f) so that
 				// object appears just above the floor
 				// TODO: extract this constant somewhere
-
-				return entity.GetPhysicsBody().Scale.y * 0.5f + 0.05f;
+				return entity.GetPhysicsBody().Scale.y + 0.025f;
 			default:
 				// it should never reach here, something has gone wrong
 				return uint16_t(-1);

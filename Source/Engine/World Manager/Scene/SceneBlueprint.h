@@ -9,7 +9,7 @@
 namespace Engine::EngineWorld {
 
 	enum class Scene : uint32_t {
-		FLAT_PLAIN,
+		FLAT_PLANE,
 		SINGLE_MIRROR,
 		HEIGHTMAP,
 		COUNT,
