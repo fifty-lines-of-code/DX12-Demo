@@ -210,7 +210,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
 		// set mesh
-		Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
+		EngineResources::Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
 		playerEntity.SetMesh(cubeMesh);
 
 		// update all submeshes
@@ -244,7 +244,7 @@ namespace Engine::EngineWorld {
 	}
 
 	float SceneManager::CalculateProposedYOfTerrain(
-		const Mesh& terrainMesh,
+		const EngineResources::Mesh& terrainMesh,
 		float entityX,
 		float entityZ,
 		const Vector2& chunkCenterXZ,

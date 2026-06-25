@@ -1,11 +1,11 @@
 #include "Mesh.h"
 
-#include "../../../../../Helper/Logger.h"
+#include "../../../../../../Helper/Logger.h"
 
-namespace Engine::EngineWorld {
+namespace Engine::EngineResources {
 
 	Mesh::Mesh() :
-		mMeshID(MeshID::Count),
+		mMeshID(MeshID::COUNT),
 		mVbByteSize(0),
 		mIbByteSize(0),
 		mActiveSubMeshCount(0)

@@ -5,13 +5,12 @@
 #include "EntityType.h"
 #include "../../../Math/Geometry.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
+#include "../Resource Manager/Mesh Generator/Mesh/Mesh.h"
 #include "PerPassAndPerEntityConstantBufferData.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
 
 namespace Engine::EngineWorld {
-
-	class Mesh;
 
 	struct EntitySubMeshMaterialData {
 		uint32_t MaterialID = 0;
@@ -36,8 +35,8 @@ namespace Engine::EngineWorld {
 		void SetIsStatic(bool isStatic);
 		bool GetIsStatic() const;
 
-		void SetMesh(Mesh* mesh);
-		const Mesh* GetMesh() const;
+		void SetMesh(EngineResources::Mesh* mesh);
+		const EngineResources::Mesh* GetMesh() const;
 
 		void Update(float stickX, float stickY, float deltaTime, float speed);
 
@@ -71,7 +70,7 @@ namespace Engine::EngineWorld {
 		) noexcept;
 
 	private:
-		Mesh* mMesh;
+		EngineResources::Mesh* mMesh;
 		EnginePhysics::PhysicsBody mPhysicsBody;
 		std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshMaterialData;
 		uint32_t mID;

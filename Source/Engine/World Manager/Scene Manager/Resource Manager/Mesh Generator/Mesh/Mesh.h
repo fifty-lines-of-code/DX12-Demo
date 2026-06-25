@@ -1,17 +1,19 @@
 #pragma once
 
 #include <array>
-#include "../../../../EngineConfig.h"
-#include "../../../../Math/Geometry.h"
+#include "../../../../../EngineConfig.h"
+#include "../../../../../Math/Geometry.h"
 #include <vector>
 #include <wrl.h>
 
-namespace Engine::EngineWorld {
+namespace Engine::EngineResources {
 
 	enum class MeshID : uint32_t {
-		Cube = 0,
-		Terrain0x0,
-		Count
+		CUBE = 0,
+		//MIRROR,
+		TERRAIN_0x0,
+		COUNT,
+		INVALID
 	};
 
 	struct SubMesh {

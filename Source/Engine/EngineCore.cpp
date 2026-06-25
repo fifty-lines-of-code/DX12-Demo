@@ -6,7 +6,7 @@
 #include "World Manager/Scene Manager/Entity/Entity.h"
 #include "../Game/Game Timer/GameTimer.h"
 #include "World Manager/Scene Manager/Resource Manager/Materials Manager/Material/Material.h"
-#include "World Manager/Scene Manager/Entity/Mesh/Mesh.h"
+#include "World Manager/Scene Manager/Resource Manager/Mesh Generator/Mesh/Mesh.h"
 #include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 namespace Engine {
@@ -186,7 +186,7 @@ namespace Engine {
 	void EngineCore::LoadGeometry() {
 		const EngineResources::MeshArray& meshesToLoad = mWorldManager.GetMeshesToLoad();
 
-		for (const EngineWorld::Mesh& mesh : meshesToLoad) {
+		for (const EngineResources::Mesh& mesh : meshesToLoad) {
 			mRenderer.LoadGeometry(
 				(uint32_t)mesh.GetMeshID(),
 				sizeof(Vertex),
@@ -281,7 +281,7 @@ namespace Engine {
 					mWorldManager.GetConstantBufferDataByteSizeOfEachEntity()
 				);
 
-				const EngineWorld::Mesh* mesh = entity.GetMesh();
+				const EngineResources::Mesh* mesh = entity.GetMesh();
 				std::array<EngineWorld::EntitySubMeshConstantBufferData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshData;
 
 				// update per mesh data
@@ -383,7 +383,7 @@ namespace Engine {
 			// update per entity sub mesh data
 			for (uint8_t j = 0; j < subMeshCount; ++j) {
 				EngineRenderer::DX12Renderer::DX12OpaqueRenderItemPerSubMeshExecuteContext subMeshExecuteContext;
-				const EngineWorld::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
+				const EngineResources::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
 
 				subMeshExecuteContext.ID = j;
 				subMeshExecuteContext.IndexCount = subMeshAtJ.IndexCount;

@@ -70,9 +70,6 @@
     <Filter Include="Header Files\Engine\World Manager\Scene Manager\Entity">
       <UniqueIdentifier>{ee2a8c6e-63ab-4efe-989c-483c64ac999e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Entity\Mesh">
-      <UniqueIdentifier>{916755c0-a897-4799-a6fc-7727c3e648a7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager">
       <UniqueIdentifier>{7821fa3b-eb40-48f5-9acd-d034136a8267}</UniqueIdentifier>
     </Filter>
@@ -87,9 +84,6 @@
     </Filter>
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\Entity">
       <UniqueIdentifier>{048c1f24-862a-4330-ac79-5cebe39d6a65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Entity\Mesh">
-      <UniqueIdentifier>{0de30c2d-e99b-457f-ab11-6cf1ac097a9a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager">
       <UniqueIdentifier>{aabd4978-14ad-4d63-81fb-899e5a312956}</UniqueIdentifier>
@@ -313,6 +307,18 @@
     <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Gpu Profiler">
       <UniqueIdentifier>{fc60ce21-bae4-4f0f-8b65-589f848a6e6d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator">
+      <UniqueIdentifier>{60615cad-7145-4440-a381-c75a21957f16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh">
+      <UniqueIdentifier>{862f8251-4c6a-42e8-aac7-bb9672280659}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator">
+      <UniqueIdentifier>{7acbb820-65c8-4ee6-9f90-5b23e6715bdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh">
+      <UniqueIdentifier>{660a33ed-d3bf-4fab-92a7-39958753ba01}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -389,9 +395,6 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h">
-      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\World Manager\WorldDimensions.h">
       <Filter>Header Files\Engine\World Manager</Filter>
@@ -558,6 +561,12 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.h">
       <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -598,9 +607,6 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.cpp">
-      <Filter>Source Files\Engine\World Manager\Scene Manager\Entity\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\Entity</Filter>
@@ -692,6 +698,12 @@
     <ClCompile Include="Source\Engine\Renderer\IRenderer.cpp">
       <Filter>Source Files\Engine\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -736,7 +748,9 @@
       <Filter>Resource Files\Shaders\Opaque Render System</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="Source\Resources\Shaders\opaque_vs_ps.hlsl" />
+    <None Include="Source\Resources\Shaders\opaque_vs_ps.hlsl">
+      <Filter>Resource Files\Shaders\Opaque Render System</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Media Include="Source\Resources\Audio\Background\bg-1.wav">

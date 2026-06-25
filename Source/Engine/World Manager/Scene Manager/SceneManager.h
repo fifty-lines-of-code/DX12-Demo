@@ -6,7 +6,7 @@
 #include "Entity/Entity.h"
 #include "Lights/Lights Manager/LightsManager.h"
 #include <memory>
-#include "../Scene Manager/Entity/Mesh/Mesh.h"
+#include "../Scene Manager/Resource Manager/Mesh Generator/Mesh/Mesh.h"
 #include "OctTree/OctTree.h"
 #include "Resource Manager/ResourceManager.h"
 #include "../Scene/SceneBlueprint.h"
@@ -71,7 +71,7 @@ namespace Engine::EngineWorld {
 		bool GeneratePlayerEntity(SceneBlueprint& sceneblueprint);
 		void PrepareForCollisionPass();
 		float CalculateProposedYOfTerrain(
-			const Mesh& terrainMesh,
+			const EngineResources::Mesh& terrainMesh,
 			float entityX,
 			float enityZ,
 			const Vector2& chunkCenterXZ,
