@@ -38,9 +38,10 @@ namespace Engine::EngineResources {
 		TerrainLOD mCurrentTerrainLOD = TerrainLOD::HIGH;
 
 	private:
-		void CreateCubeMesh(Mesh* mesh) const noexcept;
+		void CreateCubeMesh(Mesh& mesh) const noexcept;
+		void CreateMirrorMesh(Mesh& mesh) const noexcept;
 		void CreateTerrian(
-			Mesh* mesh,
+			Mesh& mesh,
 			float centerX,
 			float centerZ,
 			MeshID meshID

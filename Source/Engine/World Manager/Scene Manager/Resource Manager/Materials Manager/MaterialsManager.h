@@ -26,5 +26,6 @@ namespace Engine::EngineResources {
 		void CreatePlayerMaterial();
 		void CreateWallMaterial();
 		void CreateTerrainMaterial();
+		void CreateMirrorMaterial();
 	};
 }

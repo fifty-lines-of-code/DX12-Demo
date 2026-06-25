@@ -187,6 +187,9 @@ namespace Engine {
 		const EngineResources::MeshArray& meshesToLoad = mWorldManager.GetMeshesToLoad();
 
 		for (const EngineResources::Mesh& mesh : meshesToLoad) {
+			// don't load a mesh not ready to be loaded
+			if (!mesh.GetIsReadyToLoad()) { continue; }
+
 			mRenderer.LoadGeometry(
 				(uint32_t)mesh.GetMeshID(),
 				sizeof(Vertex),
@@ -282,7 +285,7 @@ namespace Engine {
 				);
 
 				const EngineResources::Mesh* mesh = entity.GetMesh();
-				std::array<EngineWorld::EntitySubMeshConstantBufferData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshData;
+				std::array<EngineWorld::EntitySubMeshConstantBufferData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshData = {};
 
 				// update per mesh data
 				for (uint8_t i = 0; i < mesh->GetActiveSubMeshCount(); ++i) {
@@ -297,7 +300,7 @@ namespace Engine {
 					id,
 					EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
 					&subMeshData,
-					sizeof(EngineWorld::EntitySubMeshConstantBufferData)
+					mWorldManager.GetConstantBufferDataByteSizeOFEntityPerSubMeshObject()
 				);
 				mNumberOfDirtyFramesPerEntity[id]--;
 			}
@@ -378,7 +381,8 @@ namespace Engine {
 
 			// set submesh count
 			uint8_t subMeshCount = mesh->GetActiveSubMeshCount();
-			itemsExecuteContext[i].SubMeshCount = mesh->GetActiveSubMeshCount();
+			itemsExecuteContext[i].SubMeshCount = subMeshCount;
+			itemsExecuteContext[i].SubMeshExecuteContext.reserve(subMeshCount);
 
 			// update per entity sub mesh data
 			for (uint8_t j = 0; j < subMeshCount; ++j) {

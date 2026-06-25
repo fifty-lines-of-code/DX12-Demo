@@ -18,7 +18,7 @@
 #endif
 
 #ifndef NUM_MATERIALS
-    #define NUM_MATERIALS 3
+    #define NUM_MATERIALS 4
 #endif
 
 #ifndef NUM_TEXTURES
@@ -30,9 +30,9 @@
 // data structures
 struct cbMaterial {
     float4 gDiffuseAlbedo;
-    float3 FresnelR0;
-    float  Roughness;
-    float4x4 MatTransform;
+    float3 gFresnelR0;
+    float  gRoughness;
+    float4x4 gMatTransform;
 };
 
 struct VertexIn {
@@ -51,12 +51,13 @@ struct VertexOut {
 // buffers passed in per vertex and pixel
 cbuffer cbPerObject : register(b0) {
     float4x4 World;
+    uint2 Padding[48];
 };
 
 cbuffer cbPerSubMesh : register(b1) {
-    uint MaterialIndex;
-    uint TextureIndex;
-    uint2 SubMeshPad0;
+    uint gMaterialIndex;
+    uint gTextureIndex;
+    uint2 gSubMeshPad[62];
 };
 
 cbuffer cbPerPass: register(b2) {
@@ -65,6 +66,7 @@ cbuffer cbPerPass: register(b2) {
     float3 EyePosW;
     float PassPad0;
     Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
+    uint2 PassPad1[40];
 };
 
 ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
@@ -103,15 +105,20 @@ VertexOut VS(VertexIn vin)
 float4 PS(VertexOut pin) : SV_Target
 {
     // get material data using material index
-    cbMaterial matData = gMaterials[MaterialIndex];
+    // todo: find a way to remove this if condition
+    int index = 0;
+    if (gMaterialIndex < NUM_MATERIALS) {
+        index = gMaterialIndex;
+    }
+    cbMaterial matData = gMaterials[index];
 
     // calculate diffuse albedo by texture sample * matData.gDiffuseAlbedo 
     // if we have a valid texture id
     // todo: Find another way to find the texture ID without the if
 
     float4 diffuseAlbedo = matData.gDiffuseAlbedo;
-    if (TextureIndex < 2) {
-        diffuseAlbedo = gTextures[TextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * diffuseAlbedo;
+    if (gTextureIndex < 2) {
+        diffuseAlbedo = gTextures[gTextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * diffuseAlbedo;
     }
  
     // Interpolating a normal can unnormalize it, so renormalize it
@@ -124,10 +131,10 @@ float4 PS(VertexOut pin) : SV_Target
     float4 ambient = AmbientLight * diffuseAlbedo;
 
     // Convert material roughness up to shininess for Luna's blinn-phong utility
-    const float shininess = 1.0f - matData.Roughness;
+    const float shininess = 1.0f - matData.gRoughness;
 
     // Map specific unpacked matData members into Luna's lighting engine struct
-    Material mat = { diffuseAlbedo, matData.FresnelR0, shininess };
+    Material mat = { diffuseAlbedo, matData.gFresnelR0, shininess };
     
     // Shadow factor placeholder (1.0f means completely unshadowed)
     float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);

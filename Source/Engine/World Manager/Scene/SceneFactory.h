@@ -25,6 +25,7 @@ namespace Engine::EngineWorld {
 	private:
 		void Reset();
 		bool LoadHeightMapScene(SceneBlueprint& sceneBlueprint);
+		bool LoadSingleMirroScene(SceneBlueprint& sceneBlueprint);
 		bool UpdateBlueprint(
 			uint32_t index,
 			Vector3 center, 

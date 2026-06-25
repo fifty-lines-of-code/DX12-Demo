@@ -107,6 +107,10 @@ namespace Engine::EngineWorld {
 		return sizeof(PerPassConstantBufferData);
 	}
 
+	uint32_t SceneManager::GetConstantBufferDataByteSizeOFEntityPerSubMeshObject() const noexcept {
+		return sizeof(EntitySubMeshConstantBufferData);
+	}
+
 	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept {
 		return sizeof(EngineResources::MaterialData);
 	}

@@ -9,13 +9,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
     // opaque render items
     struct DX12OpaqueRenderItemConstants {
         DirectX::XMFLOAT4X4 World = DX12RendererHelper::Identity4X4();
+        uint32_t Padding[48];
     };
+    static_assert((sizeof(DX12OpaqueRenderItemConstants) % 256) == 0,
+        "Critical: Constant Buffer struct size must be a multiple of 256 bytes.");
 
     struct DX12OpaqueRenderItemPerSubMeshConstants {
         uint32_t MaterialID = 0;
         uint32_t TextureID = 0;
-        uint32_t Padding[2] = { 0, 0 };
+        uint32_t Padding[62] = { 0, 0 };
     };
+    static_assert((sizeof(DX12OpaqueRenderItemPerSubMeshConstants) % 256) == 0,
+        "Critical: Constant Buffer struct size must be a multiple of 256 bytes.");
 
     struct DX12LightData {
         DirectX::XMFLOAT3 Strength;
@@ -32,7 +37,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
         DirectX::XMFLOAT3 EyePosW;
         float PassPad0;
         DX12LightData Lights[16];
+        uint32_t PassPad1[40];
     };
+    static_assert((sizeof(DX12OpaquePerPassConstants) % 256) == 0,
+        "Critical: Constant Buffer struct size must be a multiple of 256 bytes.");
 
     // per material constants
     struct DX12PerMaterialConstants {

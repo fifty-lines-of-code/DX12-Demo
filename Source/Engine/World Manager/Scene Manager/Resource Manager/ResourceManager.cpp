@@ -32,22 +32,26 @@ namespace Engine::EngineResources {
 		Mesh* mesh = nullptr;
 
 		if (!GetIsLoaded(index)) {
-			mesh = &mMeshes[index];
 
 			switch (id) {
 			case MeshID::CUBE:
-				CreateCubeMesh(mesh);
+				CreateCubeMesh(mMeshes[index]);
+				break;
+				
+			case MeshID::MIRROR:
+				CreateMirrorMesh(mMeshes[index]);
 				break;
 
 			case MeshID::TERRAIN_0x0:
 				CreateTerrian(
-					mesh,
+					mMeshes[index],
 					0.f, 
 					0.f,
 					id);
 				break;
 			}
 
+			mesh = &mMeshes[index];
 			SetIsLoaded(index);
 		}
 		else {
@@ -75,7 +79,7 @@ namespace Engine::EngineResources {
 
 #pragma region Private
 
-	void ResourceManager::CreateCubeMesh(Mesh* mesh) const noexcept {
+	void ResourceManager::CreateCubeMesh(Mesh& mesh) const noexcept {
 		std::vector<Vertex> vertices;
 		std::vector<uint16_t> indices;
 		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshes;
@@ -86,7 +90,7 @@ namespace Engine::EngineResources {
 			subMeshes
 		);
 
-		mesh->Load(
+		mesh.Load(
 			MeshID::CUBE,
 			vertices,
 			indices,
@@ -95,8 +99,28 @@ namespace Engine::EngineResources {
 		);
 	}
 
+	void ResourceManager::CreateMirrorMesh(Mesh& mesh) const noexcept {
+		std::vector<Vertex> vertices;
+		std::vector<uint16_t> indices;
+		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshes;
+
+		mMeshGenerator.GenerateMirrorMesh(
+			vertices,
+			indices,
+			subMeshes
+		);
+
+		mesh.Load(
+			MeshID::MIRROR,
+			vertices,
+			indices,
+			subMeshes,
+			2 // 2 active submesh
+		);
+	}
+
 	void ResourceManager::CreateTerrian(
-		Mesh* mesh,
+		Mesh& mesh,
 		float centerX,
 		float centerZ,
 		MeshID meshID
@@ -128,7 +152,7 @@ namespace Engine::EngineResources {
 		subMesh0.StartIndexLocation = 0;
 		subMesh0.BaseVertexLocation = 0;
 
-		mesh->Load(
+		mesh.Load(
 			meshID, 
 			vertices, 
 			indices, 

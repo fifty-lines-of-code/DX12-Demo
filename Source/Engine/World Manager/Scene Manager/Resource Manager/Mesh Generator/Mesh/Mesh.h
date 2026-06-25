@@ -10,7 +10,7 @@ namespace Engine::EngineResources {
 
 	enum class MeshID : uint32_t {
 		CUBE = 0,
-		//MIRROR,
+		MIRROR,
 		TERRAIN_0x0,
 		COUNT,
 		INVALID
@@ -45,6 +45,8 @@ namespace Engine::EngineResources {
 		uint8_t GetActiveSubMeshCount() const noexcept;
 		const SubMesh& GetSubMeshAtIndex(uint8_t index) const noexcept;
 
+		bool GetIsReadyToLoad() const noexcept;
+
 	private:
 		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshes;
 		// todo: extract below into flat arrays of max size
@@ -58,6 +60,7 @@ namespace Engine::EngineResources {
 		uint32_t mVbByteSize;
 		uint32_t mIbByteSize;
 		uint8_t mActiveSubMeshCount;
+		bool mIsReadyToLoad;
 
 	private:
 		void CalculateLocalMinAndMax();

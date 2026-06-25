@@ -9,9 +9,13 @@ namespace Engine::EngineResources {
 		PLAYER,
 		WALL,
 		TERRAIN,
+		MIRROR,
 		COUNT,
 		INVALID
 	};
+	// remember to update the MATERIAL_COUNT inside 
+	// opaque_vs_ps.hlsl when you update this
+	// todo: find a better way to do this
 
 	class Material {
 	public:

@@ -29,6 +29,7 @@ namespace Engine::EngineResources {
 		CreatePlayerMaterial();
 		CreateWallMaterial();
 		CreateTerrainMaterial();
+		CreateMirrorMaterial();
 	}
 
 	void MaterialsManager::CreatePlayerMaterial() {
@@ -99,6 +100,37 @@ namespace Engine::EngineResources {
 		terrianMaterial.SetType(type);
 		terrianMaterial.SetData(terrainMaterialData);
 		terrianMaterial.SetIsDirty(true);
+	}
+
+	void MaterialsManager::CreateMirrorMaterial() {
+		MaterialType type = MaterialType::MIRROR;
+		Material& mirrorMaterial = mMaterials[(uint16_t)type];
+		MaterialData mirrorMaterialData;
+
+		// 1. Diffuse Albedo (Pure Black)
+		// In PBR, perfect conductors (metals/mirrors) absorb all refracted light. 
+		// They have ZERO diffuse reflection. All light is reflected specularly.
+		mirrorMaterialData.DiffuseAlbedo = Vector4(0.01f, 0.01f, 0.01f, 1.0f);
+
+		// 2. Fresnel R0 (Near 1.0 - Silver/Aluminum)
+		// F0 is the base reflectivity when looking straight at the surface.
+		// For a standard silver or aluminum mirror, this is extremely high (~0.95 to 0.99).
+		// We use 0.98f to represent a highly reflective metallic surface.
+		mirrorMaterialData.FresnelR0 = Vector3(0.98f, 0.98f, 0.98f);
+
+		// 3. Roughness (Near 0.0)
+		// A mirror is microscopically smooth. 
+		// We prevent divide by 0 by setting it to 0.02f
+		mirrorMaterialData.Roughness = 0.02f;
+
+		// 4. Metalness (If your struct supports it)
+		// If your MaterialData struct has a Metalness flag, it MUST be 1.0f.
+		// If it doesn't, your shader likely infers metalness by checking if Diffuse is black.
+		// mirrorMaterialData.Metalness = 1.0f; 
+
+		mirrorMaterial.SetType(type);
+		mirrorMaterial.SetData(mirrorMaterialData);
+		mirrorMaterial.SetIsDirty(true);
 	}
 
 #pragma endregion

@@ -39,6 +39,7 @@ namespace Engine::EngineWorld {
 				// skip all Player entities
 				continue;
 			}
+
 			bool didUpdate = false;
 			EngineResources::Mesh* mesh = nullptr;
 			Entity& entity = *reinterpret_cast<Entity*>(targetEntityAddress);
@@ -49,9 +50,15 @@ namespace Engine::EngineWorld {
 				mesh = resourceManager.GetMesh(EngineResources::MeshID::TERRAIN_0x0);
 				mIdOfTerrainOrFloor = mNextEntityID;
 				break;
+			case EntityType::FLOOR:
+				mIdOfTerrainOrFloor = mNextEntityID;
+				[[fallthrough]];
 			case EntityType::WALL: 
 				// get pointer to the terrain mesh
 				mesh = resourceManager.GetMesh(EngineResources::MeshID::CUBE);
+				break;
+			case EntityType::MIRROR:
+				mesh = resourceManager.GetMesh(EngineResources::MeshID::MIRROR);
 				break;
 			default: break;
 			}

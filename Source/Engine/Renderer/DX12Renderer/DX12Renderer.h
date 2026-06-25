@@ -144,6 +144,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		DX12PipelinePassAggregator mPiplinePassAggregator;
 
 		// Per Entity Mesh Resource
+		// TODO: turn into a flat array
+		// where each index has 1-1 relationship with meshID
 		std::unordered_map<uint32_t, std::unique_ptr<DX12MeshResource>> mMeshResourceMap;
 		// All the Textures
 		std::array<DX12Texture, Engine::EngineConfig::EngineConfig::MAX_TEXTURES> mTextures;
