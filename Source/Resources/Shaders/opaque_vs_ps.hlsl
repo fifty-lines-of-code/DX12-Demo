@@ -117,7 +117,7 @@ float4 PS(VertexOut pin) : SV_Target
     // todo: Find another way to find the texture ID without the if
 
     float4 diffuseAlbedo = matData.gDiffuseAlbedo;
-    if (gTextureIndex < 2) {
+    if (gTextureIndex < 3) {
         diffuseAlbedo = gTextures[gTextureIndex].Sample(gsamAnisotropicWrap, pin.TexC) * diffuseAlbedo;
     }
  

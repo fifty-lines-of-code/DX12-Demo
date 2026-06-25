@@ -133,7 +133,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				currentEntityAddress
 			);
 
-			uint32_t entitySubMeshesOffset = itemContext.ID * 8 * 256;
+			uint32_t entitySubMeshesOffset = itemContext.ID * 
+				args.NumberOfSubMeshesPerItem *
+				args.AlignedSizeOfPerRenderItemSubMeshCb;
 
 			// calculate submesh CB address
 			D3D12_GPU_VIRTUAL_ADDRESS subMeshBaseAddress =
@@ -145,7 +147,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				const DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshContext =
 					itemContext.SubMeshExecuteArgs[j];
  
-				uint32_t subMeshOffset = j * 256;
+				uint32_t subMeshOffset = j * args.AlignedSizeOfPerRenderItemSubMeshCb;
 
 				// get this submeshes address
 				D3D12_GPU_VIRTUAL_ADDRESS subMeshAddress =

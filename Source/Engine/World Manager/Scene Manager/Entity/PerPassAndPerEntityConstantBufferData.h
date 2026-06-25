@@ -5,6 +5,12 @@
 
 namespace Engine::EngineWorld {
 
+	// TODO:
+	// find a better way to do the % 256
+	// not to mention we are hardcoding it
+	// 256 is a DirectX12 design
+	// may not be the same for Vulkan, Playstation, etc
+
 	struct EntityConstantBufferData {
 		Matrix4x4 World;
 		uint32_t SubMeshPad[48];
