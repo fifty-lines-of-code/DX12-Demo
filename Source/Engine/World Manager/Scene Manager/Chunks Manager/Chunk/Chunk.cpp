@@ -68,7 +68,7 @@ namespace Engine::EngineWorld {
 				entity.SetIsActive(true);
 				entity.SetID(mNextEntityID);
 				entity.SetEntityType(entityBlueprint.EntityType);
-				entity.GetPhysicsBody().Center = entityBlueprint.Center;
+				entity.SetCenter(entityBlueprint.Center);
 				entity.SetScale(entityBlueprint.Scale);
 				// set mesh
 				entity.SetMesh(mesh);

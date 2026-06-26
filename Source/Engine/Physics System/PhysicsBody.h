@@ -19,22 +19,27 @@ namespace Engine::EnginePhysics {
 		AABB LocalAABB;
 		AABB WorldAABB;
 
-		PhysicsBody(const Engine::Vector3& initCenter, const Engine::Vector3& initScale)
-			: Center(initCenter)
-			, Scale(initScale)
-			, BasisVectors()
+		PhysicsBody(
+			const Engine::Vector3& initCenter,
+			const Engine::Vector3& initScale
+		) : Center(initCenter),
+			Scale(initScale), 
+			BasisVectors()
 		{}
 
 		void UpdateProductionTransforms() {
 			RebuildWorldMatrix(WorldMatrix, Center);
-			GeometryHelper::CalculateAABB(LocalAABB, WorldMatrix, WorldAABB);
+			GeometryHelper::CalculateAABB(
+				LocalAABB,
+				WorldMatrix, WorldAABB
+			);
 		}
 
 	private:
 		void RebuildWorldMatrix(
 			Matrix4x4& world,
 			Vector3& center
-		) {
+		) const {
 			// todo: Use DX methods to build SRT and then W
 			// DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(mScaleX, mScaleY, mScaleZ);
 			Engine::Matrix4x4 scale;
@@ -48,21 +53,21 @@ namespace Engine::EnginePhysics {
 
 			// Set Rotation
 			// Row 0: Right
-			rotation.m[0][0] = BasisVectors.right.x;
-			rotation.m[0][1] = BasisVectors.right.y;
-			rotation.m[0][2] = BasisVectors.right.z;
+			rotation.m[0][0] = BasisVectors.Right.x;
+			rotation.m[0][1] = BasisVectors.Right.y;
+			rotation.m[0][2] = BasisVectors.Right.z;
 			rotation.m[0][3] = 0.f;
 
 			// Row 1: Up
-			rotation.m[1][0] = BasisVectors.up.x;
-			rotation.m[1][1] = BasisVectors.up.y;
-			rotation.m[1][2] = BasisVectors.up.z;
+			rotation.m[1][0] = BasisVectors.Up.x;
+			rotation.m[1][1] = BasisVectors.Up.y;
+			rotation.m[1][2] = BasisVectors.Up.z;
 			rotation.m[1][3] = 0.f;
 
 			// Row 2: Forward
-			rotation.m[2][0] = BasisVectors.forward.x;
-			rotation.m[2][1] = BasisVectors.forward.y;
-			rotation.m[2][2] = BasisVectors.forward.z;
+			rotation.m[2][0] = BasisVectors.Forward.x;
+			rotation.m[2][1] = BasisVectors.Forward.y;
+			rotation.m[2][2] = BasisVectors.Forward.z;
 			rotation.m[2][3] = 0.f;
 
 			// Set Translation

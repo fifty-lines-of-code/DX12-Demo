@@ -57,7 +57,7 @@ void Player::Update(
 	}
 	case PlayerState::BackwardsDashing:
 	{
-		Engine::Vector3 forward = physicsBody.BasisVectors.forward;
+		Engine::Vector3 forward = physicsBody.BasisVectors.Forward;
 		forward.Normalize();
 
 		physicsBody.VelocityIntent.x = -forward.x *  mPlayerLogic.mBackwardsDashVelocity * deltaTime;
@@ -131,13 +131,13 @@ void Player::UpdateBasisVectorsFromVisualRotation() {
 
 	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
 
-	physicsBody.BasisVectors.forward.x = std::sin(currentRotation);
-	physicsBody.BasisVectors.forward.y = 0.0f;
-	physicsBody.BasisVectors.forward.z = std::cos(currentRotation);
+	physicsBody.BasisVectors.Forward.x = std::sin(currentRotation);
+	physicsBody.BasisVectors.Forward.y = 0.0f;
+	physicsBody.BasisVectors.Forward.z = std::cos(currentRotation);
 
-	physicsBody.BasisVectors.right.x = std::cos(currentRotation);
-	physicsBody.BasisVectors.right.y = 0.0f;
-	physicsBody.BasisVectors.right.z = -std::sin(currentRotation);
+	physicsBody.BasisVectors.Right.x = std::cos(currentRotation);
+	physicsBody.BasisVectors.Right.y = 0.0f;
+	physicsBody.BasisVectors.Right.z = -std::sin(currentRotation);
 }
 
 void Player::CalculateMovementVector(
@@ -147,11 +147,11 @@ void Player::CalculateMovementVector(
 	Engine::Vector3& movement
 ) {
 	// 1. Isolate and flatten the camera's forward vector to the 2D ground plane
-	Engine::Vector3 flatCamFwd = { cameraBasisVectors.forward.x, 0.0f, cameraBasisVectors.forward.z };
+	Engine::Vector3 flatCamFwd = { cameraBasisVectors.Forward.x, 0.0f, cameraBasisVectors.Forward.z };
 	flatCamFwd.Normalize();
 
 	// 2. Isolate and flatten the camera's right vector to the 2D ground plane
-	Engine::Vector3 flatCamRight = { cameraBasisVectors.right.x, 0.0f, cameraBasisVectors.right.z };
+	Engine::Vector3 flatCamRight = { cameraBasisVectors.Right.x, 0.0f, cameraBasisVectors.Right.z };
 	flatCamRight.Normalize();
 
 	// 3. Now safely blend horizontal basis vectors by the stick inputs

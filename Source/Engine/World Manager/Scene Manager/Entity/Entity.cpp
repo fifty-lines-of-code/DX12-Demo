@@ -94,6 +94,8 @@ namespace Engine::EngineWorld {
 
 	void Entity::SetIsActive(bool isActive) noexcept { mIsActive = isActive; }
 
+	void Entity::SetCenter(Vector3 center) { mPhysicsBody.Center = center; }
+
 	void Entity::SetScale(Vector3 scale) { mPhysicsBody.Scale = scale; }
 
 	bool Entity::GetIsTerrainOrFloor() const noexcept { 

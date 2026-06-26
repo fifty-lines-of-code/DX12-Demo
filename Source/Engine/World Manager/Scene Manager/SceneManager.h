@@ -12,7 +12,6 @@
 #include "../Scene/SceneBlueprint.h"
 #include <unordered_map>
 
-class Camera;
 class IInputSystem;
 
 namespace Engine::EngineWorld {
@@ -69,7 +68,9 @@ namespace Engine::EngineWorld {
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
 
 	private:
-		bool GeneratePlayerEntity(SceneBlueprint& sceneblueprint);
+		bool GeneratePlayerEntity(
+			SceneBlueprint& sceneblueprint
+		);
 		void PrepareForCollisionPass();
 		float CalculateProposedYOfTerrain(
 			const EngineResources::Mesh& terrainMesh,

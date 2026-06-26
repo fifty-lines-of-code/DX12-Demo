@@ -137,7 +137,10 @@
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManager.h" />
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h" />
     <ClInclude Include="Source\Engine\Audio System\AudioSystem.h" />
-    <ClInclude Include="Source\Engine\Camera\Camera.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\CameraHelper.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\CameraManager.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\Main Camera\MainCamera.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugLimits.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugSystem.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h" />
@@ -176,6 +179,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
     <ClInclude Include="Source\Engine\Renderer\IRenderer.h" />
+    <ClInclude Include="Source\Engine\Simulation\SimulationDataStructures.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player.h" />
@@ -219,7 +223,9 @@
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.cpp" />
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\AudioManager.cpp" />
     <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp" />
-    <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\CameraManager.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\Main Camera\MainCamera.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.cpp" />
     <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />

@@ -1,12 +1,12 @@
 #include "EngineCore.h"
 
-#include "Camera/Camera.h"
 #include "Debug System/DebugSystem.h"
 #include <DirectXMath.h>
 #include "World Manager/Scene Manager/Entity/Entity.h"
 #include "../Game/Game Timer/GameTimer.h"
 #include "World Manager/Scene Manager/Resource Manager/Materials Manager/Material/Material.h"
 #include "World Manager/Scene Manager/Resource Manager/Mesh Generator/Mesh/Mesh.h"
+#include "Simulation/SimulationDataStructures.h"
 #include "../Engine/Input System/XBox/XBoxInputSystem.h"
 
 namespace Engine {
@@ -30,8 +30,6 @@ namespace Engine {
 
 		mhMainWnd = mainHwnd;
 
-		if (!mRenderer.Initialize(mhMainWnd, NumberOfFrameResources, screenWidth, screenHeight)) { return false; }
-
 		if (!mWorldManager.Initialize()) { return false; }
 
 		if (!InitializeCamera(mWorldManager.GetPlayerCenter())) { return false; }
@@ -51,62 +49,19 @@ namespace Engine {
 			NumberOfFrameResources
 		);
 
-		// Following order of operations is important
-		// Load textures first
-		LoadTextures();
-
-		// then setup the pipeline
-		// which internally sets up the descriptors of the textures
-		if (!SetupPipelines()) { return false; }
-
-		LoadGeometry();
-
-		mRenderer.FinishInitialize();
+		// init the renderer
+		if (!InitializeRenderer(screenWidth, screenHeight)) { return false; }
 
 		// start the background audio
+		// todo: this is just for the demo
+		// once we have a "loading" scene,
+		// start playing once the loading scene is loaded
+		// and it's time to play the bg audio
 		mAudioSystem.StartBackgroundLoop(EngineAudio::SoundBG::BOSSFIGHT);
 
 		mIsInitialized = true;
 
 		return true;
-	}
-
-	bool EngineCore::SetupPipelines() {
-
-		// opaque render pipeline
-		bool result = mRenderer.SetupOpaqueRenderPipeline(
-			(uint32_t)mWorldManager.GetEntityCount(),
-			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
-			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
-			mWorldManager.GetMaterialCount(),
-			EngineConfig::EngineConfig::MAX_TEXTURES,
-			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject(),
-			1,
-			DebugSystem::DebugLimits::MAX_CHARACTERS
-		);
-
-		if (!result) { return false; }
-
-		// debug pipeline
-		result = mRenderer.SetupDebugPipeline(
-			DebugSystem::DebugLimits::MAX_CHARACTERS,
-			(uint32_t)EngineResources::TextureID::FONT
-		);
-
-		if (!result) { return false; }
-
-		// blur pipeline
-		return mRenderer.SetupBlurPipeline();
-	}
-
-	void EngineCore::UpdateInputSystemAndCamera(float deltaTime) {
-		mInputSystem.Update();
-
-		mCamera.UpdateWithInputSystem(
-			deltaTime,
-			mInputSystem.GetRightStickX(),
-			mInputSystem.GetRightStickY()
-		);
 	}
 
 	void EngineCore::Update(float deltaTime) {
@@ -123,11 +78,11 @@ namespace Engine {
 			&mInputSystem,
 			deltaTime,
 			mAnimationSpeed,
-			mCamera.GetBasisVectors()
+			mCameraManager.GetMainCameraBasisVectors()
 		);
 
 		// update the camera with updated player center
-		mCamera.UpdateWithTarget(mWorldManager.GetPlayerCenter());
+		mCameraManager.UpdateMainCameraWithTarget(mWorldManager.GetPlayerCenter());
 
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();
@@ -174,13 +129,18 @@ namespace Engine {
 		if (!mIsInitialized) { return; }
 
 		mRenderer.OnResize(newClientWidth, newClientHeight);
-		mCamera.OnResize(newClientWidth, newClientHeight);
+		mCameraManager.OnResize(newClientWidth, newClientHeight);
 		DebugSystem::DebugSystem::GetInstance().UpdateWindowDimensions(newClientWidth, newClientHeight);
 	}
 
+	void EngineCore::LogToDebugSystem(const std::string& log) {
+		Engine::DebugSystem::DebugSystem::GetInstance().LogText(log);
+	}
+
+#pragma region Private
+
 	bool EngineCore::InitializeCamera(const Vector3& playerPosition) {
-		mCamera.Initialize(playerPosition);
-		return true;
+		return mCameraManager.Initialize(playerPosition);
 	}
 
 	void EngineCore::LoadGeometry() {
@@ -201,6 +161,27 @@ namespace Engine {
 		}
 	}
 
+	bool EngineCore::InitializeRenderer(
+		UINT screenWidth,
+		UINT screenHeight
+	) {
+		if (!mRenderer.Initialize(mhMainWnd, NumberOfFrameResources, screenWidth, screenHeight)) { return false; }
+
+		// Following order of operations is important
+		// Load textures first
+		LoadTextures();
+
+		// then setup the pipeline
+		// which internally sets up the descriptors of the textures
+		if (!SetupPipelines()) { return false; }
+
+		LoadGeometry();
+
+		mRenderer.FinishInitialize();
+
+		return true;
+	}
+
 	void EngineCore::LoadTextures() {
 		for (EngineResources::TextureAsset& texture : mWorldManager.GetTextures()) {
 			if (texture.isLoaded) { continue; }
@@ -216,6 +197,44 @@ namespace Engine {
 				texture.isReadyToLoad = false;
 			}
 		}
+	}
+
+	bool EngineCore::SetupPipelines() {
+
+		// opaque render pipeline
+		bool result = mRenderer.SetupOpaqueRenderPipeline(
+			(uint32_t)mWorldManager.GetEntityCount(),
+			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
+			mWorldManager.GetMaterialCount(),
+			EngineConfig::EngineConfig::MAX_TEXTURES,
+			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject(),
+			1,
+			DebugSystem::DebugLimits::MAX_CHARACTERS
+		);
+
+		if (!result) { return false; }
+
+		// debug pipeline
+		result = mRenderer.SetupDebugPipeline(
+			DebugSystem::DebugLimits::MAX_CHARACTERS,
+			(uint32_t)EngineResources::TextureID::FONT
+		);
+
+		if (!result) { return false; }
+
+		// blur pipeline
+		return mRenderer.SetupBlurPipeline();
+	}
+
+	void EngineCore::UpdateInputSystemAndCamera(float deltaTime) {
+		mInputSystem.Update();
+
+		mCameraManager.UpdateMainCameraWithInputSystem(
+			deltaTime,
+			mInputSystem.GetRightStickX(),
+			mInputSystem.GetRightStickY()
+		);
 	}
 
 	void EngineCore::UpdateConstantBuffers() {
@@ -238,7 +257,7 @@ namespace Engine {
 		// DirectXMath uses row-major alignment in CPU memory, but 
 		// HLSL defaults to column-major storage for matrix packing. 
 		// We transpose here to prevent skewed vector transformations on the GPU.
-		const Matrix4x4& viewProj = mCamera.GetViewProjection();
+		const Matrix4x4& viewProj = mCameraManager.GetMainCameraViewProjection();
 		DirectX::XMMATRIX viewProjTranspose = DirectX::XMMatrixTranspose(
 			DirectX::XMLoadFloat4x4(&viewProj.AsXMFLOAT4X4())
 		);
@@ -248,7 +267,7 @@ namespace Engine {
 		);
 
 		// set camera pos
-		const Vector3& cameraPos = mCamera.GetPosition();
+		const Vector3& cameraPos = mCameraManager.GetMainCameraPosition();
 		perPassCB.EyePosW = cameraPos;
 
 		// set ambient light
@@ -423,4 +442,6 @@ namespace Engine {
 			Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
 		}
 	}
+
+#pragma endregion
 }

@@ -210,7 +210,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetIsActive(true);
 		playerEntity.SetID(PLAYER_INDEX);
 		playerEntity.SetEntityType(playerBlueprint.EntityType);
-		playerEntity.GetPhysicsBody().Center = playerBlueprint.Center;
+		playerEntity.SetCenter(playerBlueprint.Center);
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
 		// set mesh

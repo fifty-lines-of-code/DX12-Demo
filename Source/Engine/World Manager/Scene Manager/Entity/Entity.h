@@ -38,7 +38,12 @@ namespace Engine::EngineWorld {
 		void SetMesh(EngineResources::Mesh* mesh);
 		const EngineResources::Mesh* GetMesh() const;
 
-		void Update(float stickX, float stickY, float deltaTime, float speed);
+		void Update(
+			float stickX,
+			float stickY, 
+			float deltaTime, 
+			float speed
+		);
 
 		void CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
 
@@ -56,6 +61,7 @@ namespace Engine::EngineWorld {
 		bool GetIsActive() const noexcept;
 		void SetIsActive(bool isActive) noexcept;
 
+		void SetCenter(Vector3 center);
 		void SetScale(Vector3 scale);
 
 		bool GetIsTerrainOrFloor() const noexcept;

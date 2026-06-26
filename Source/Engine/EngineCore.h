@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Audio System/AudioSystem.h"
-#include "Camera/Camera.h"
+#include "Camera Manager/CameraManager.h"
 #include "Renderer/DX12Renderer/DX12Renderer.h"
 #include "Math/EngineMath.h"
 #include "../Helper/Helper.h"
+#include "Camera Manager/Main Camera/MainCamera.h"
 #include <memory>
 #include <vector>
 #include "World Manager/WorldManager.h"
@@ -19,26 +20,30 @@ namespace Engine {
 	class EngineCore {
 	public:
 		EngineCore(HINSTANCE hInstance, std::wstring caption);
-		EngineCore(const EngineCore& rhs) = delete;
-		EngineCore& operator=(const EngineCore& rhs) = delete;
 		~EngineCore();
 
-		bool Initialize(HWND mainWnd, UINT fullscreenWidth, UINT fullscreenHeight);
-		bool SetupPipelines();
+		EngineCore(const EngineCore& rhs) = delete;
+		EngineCore& operator=(const EngineCore& rhs) = delete;
 
-		void UpdateInputSystemAndCamera(float deltaTime);
+		bool Initialize(
+			HWND mainWnd, 
+			UINT fullscreenWidth, 
+			UINT fullscreenHeight
+		);
 		void Update(float deltaTime);
-
 		void Draw(bool drawDebugLayer);
-
-		void OnResize(UINT newClientWidth, UINT newClientHeight);
+		void OnResize(
+			UINT newClientWidth,
+			UINT newClientHeight
+		);
+		void LogToDebugSystem(const std::string& log);
 
 	private:
+		EngineAudio::AudioSystem mAudioSystem;
 		EngineWorld::WorldManager mWorldManager;
 		EngineRenderer::DX12Renderer::DX12Renderer mRenderer;
-		Camera mCamera;
+		EngineCamera::CameraManager mCameraManager;
 		XboxInputSystem mInputSystem;
-		EngineAudio::AudioSystem mAudioSystem;
 		std::wstring mMainWndCaption;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerEntity;
 		std::vector<uint32_t> mNumberOfDirtyFramesPerMaterial;
@@ -54,8 +59,14 @@ namespace Engine {
 
 	private:
 		bool InitializeCamera(const Vector3& playerPosition);
-		void LoadGeometry();
+		bool InitializeRenderer(
+			UINT screenWidth, 
+			UINT screenHeight
+		);
 		void LoadTextures();
+		bool SetupPipelines();
+		void LoadGeometry();
+		void UpdateInputSystemAndCamera(float deltaTime);
 		void UpdateConstantBuffers();
 		void UpdatePerPassConstantBuffers() const;
 		void UpdatePerEntityConstantBuffers();

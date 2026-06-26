@@ -83,7 +83,7 @@ namespace Engine::EngineWorld {
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 4.1f, -1.f), // center
-			Vector3(1.5f, 2.f, .2f),
+			Vector3(1.5f, 2.f, .2f), // scale
 			EntityType::WALL,
 			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
@@ -162,7 +162,7 @@ namespace Engine::EngineWorld {
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 2.225f, -1.f), // center
-			Vector3(1.5f, 2.f, .2f),
+			Vector3(1.5f, 2.f, .2f), // scale
 			EntityType::MIRROR,
 			EngineResources::MeshID::MIRROR,
 			subMeshBlueprints,

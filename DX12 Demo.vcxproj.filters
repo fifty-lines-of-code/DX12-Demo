@@ -91,12 +91,6 @@
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\OctTree">
       <UniqueIdentifier>{ef3867d0-47be-40ab-8f90-dd188479f8b3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Engine\Camera">
-      <UniqueIdentifier>{660204ff-0d65-4db5-8aa9-e6ee8eaf3865}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\Camera">
-      <UniqueIdentifier>{46975459-7bdd-4461-98d5-c4ac289fc850}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Engine\World Manager\Player">
       <UniqueIdentifier>{47407db7-5c21-4431-b332-b4d50f908647}</UniqueIdentifier>
     </Filter>
@@ -319,13 +313,31 @@
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh">
       <UniqueIdentifier>{660a33ed-d3bf-4fab-92a7-39958753ba01}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Engine\Camera Manager">
+      <UniqueIdentifier>{660204ff-0d65-4db5-8aa9-e6ee8eaf3865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Camera Manager">
+      <UniqueIdentifier>{46975459-7bdd-4461-98d5-c4ac289fc850}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Camera Manager\Main Camera">
+      <UniqueIdentifier>{2865acc2-6ea4-4757-bead-81d66c34da0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Camera Manager\Main Camera">
+      <UniqueIdentifier>{c19824a0-b510-4d40-9bc5-5ed3b3d02b71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Camera Manager\Reflected Camera">
+      <UniqueIdentifier>{04dfdf39-1edb-4bf7-8f79-a97871a1b525}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Camera Manager\Reflected Camera">
+      <UniqueIdentifier>{478d045f-8421-4545-959f-9db4c5da30a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Simulation">
+      <UniqueIdentifier>{a70d3855-7b9b-4942-aae0-538e208da87e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
       <Filter>Header Files\Helper</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine\Camera\Camera.h">
-      <Filter>Header Files\Engine\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Source\Helper\Logger.h">
       <Filter>Header Files\Helper</Filter>
@@ -567,6 +579,21 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Camera Manager\Main Camera\MainCamera.h">
+      <Filter>Header Files\Engine\Camera Manager\Main Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Camera Manager\CameraManager.h">
+      <Filter>Header Files\Engine\Camera Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.h">
+      <Filter>Header Files\Engine\Camera Manager\Reflected Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Simulation\SimulationDataStructures.h">
+      <Filter>Header Files\Engine\Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Camera Manager\CameraHelper.h">
+      <Filter>Header Files\Engine\Camera Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -577,9 +604,6 @@
     </ClCompile>
     <ClCompile Include="Source\main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Camera\Camera.cpp">
-      <Filter>Source Files\Engine\Camera</Filter>
     </ClCompile>
     <ClCompile Include="Source\Game\Game.cpp">
       <Filter>Source Files\Game</Filter>
@@ -703,6 +727,15 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\ResourceManager\Mesh Generator\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Camera Manager\Main Camera\MainCamera.cpp">
+      <Filter>Source Files\Engine\Camera Manager\Main Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Camera Manager\CameraManager.cpp">
+      <Filter>Source Files\Engine\Camera Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.cpp">
+      <Filter>Source Files\Engine\Camera Manager\Reflected Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

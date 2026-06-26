@@ -1,11 +1,13 @@
 #include "Game.h"
 
-#include "../Engine/Camera/Camera.h"
-#include "../Engine/Debug System/DebugSystem.h"
-#include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 #include "../Helper/Helper.h"
 
-Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
+Game::Game(
+	HINSTANCE hInstance, 
+	int windowedClientWidth, 
+	int windowedClientHeight, 
+	const std::wstring caption
+) :
 	mhMainWnd(nullptr),
 	mMainWndCaption(caption),
 	mEngineCore(hInstance, mMainWndCaption),
@@ -156,7 +158,7 @@ void Game::CalculateFrameStats() {
 		",MSPF:" +
 		std::to_string(previousMSPF) +
 		"\n";
-	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
+	mEngineCore.LogToDebugSystem(fpsStr);
 
 	// Compute averages over one second period.
 	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)
