@@ -59,8 +59,9 @@ namespace Engine::EngineWorld {
 		bool GetIsActive() const noexcept;
 		void SetIsActive(bool isActive) noexcept;
 
-		void SetCenter(Vector3 center);
-		void SetScale(Vector3 scale);
+		void SetCenter(const Vector3& center) noexcept;
+		void SetScale(const Vector3& scale) noexcept;
+		void SetBasisVectors(const BasisVectors& basisVectors) noexcept;
 
 		bool GetIsTerrainOrFloor() const noexcept;
 		

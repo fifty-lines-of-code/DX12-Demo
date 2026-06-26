@@ -58,7 +58,7 @@ namespace Engine::EngineWorld {
 				mesh = resourceManager.GetMesh(EngineResources::MeshID::CUBE);
 				break;
 			case EntityType::MIRROR:
-				mesh = resourceManager.GetMesh(EngineResources::MeshID::MIRROR);
+				mesh = resourceManager.GetMesh(EngineResources::MeshID::CUBE_TWO_SUBMESHES);
 				break;
 			default: break;
 			}
@@ -70,6 +70,7 @@ namespace Engine::EngineWorld {
 				entity.SetEntityType(entityBlueprint.EntityType);
 				entity.SetCenter(entityBlueprint.Center);
 				entity.SetScale(entityBlueprint.Scale);
+				entity.SetBasisVectors(entityBlueprint.BasisVectors);
 				// set mesh
 				entity.SetMesh(mesh);
 				// update all submeshes

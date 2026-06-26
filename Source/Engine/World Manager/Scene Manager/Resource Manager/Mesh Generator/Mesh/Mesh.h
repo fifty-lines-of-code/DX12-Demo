@@ -10,7 +10,7 @@ namespace Engine::EngineResources {
 
 	enum class MeshID : uint32_t {
 		CUBE = 0,
-		MIRROR,
+		CUBE_TWO_SUBMESHES,
 		TERRAIN_0x0,
 		COUNT,
 		INVALID

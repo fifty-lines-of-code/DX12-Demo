@@ -32,6 +32,7 @@ private:
 	// dash animation data
 	BackwardsDashAnimationData mDashAnimationData;
 	// Rotation Data
+	// in degrees
 	float mCurrentRotation;
 	bool mIsRotationComplete = false;
 

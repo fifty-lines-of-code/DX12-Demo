@@ -104,12 +104,21 @@ namespace Engine::EngineWorld {
 
 	void Entity::SetIsActive(bool isActive) noexcept { mIsActive = isActive; }
 
-	void Entity::SetCenter(Vector3 center) { 
+	void Entity::SetCenter(const Vector3& center) noexcept { 
 		mTransformData.Center = center;
 	}
 
-	void Entity::SetScale(Vector3 scale) { 
+	void Entity::SetScale(const Vector3& scale) noexcept { 
 		mTransformData.Scale = scale; 
+	}
+
+	void Entity::SetBasisVectors(const BasisVectors& basisVectors) noexcept {
+		mTransformData.BasisVectors = basisVectors;
+		mRenderData.RebuildWorldMatrix(
+			mTransformData.Center,
+			mTransformData.Scale,
+			basisVectors
+		);
 	}
 
 	bool Entity::GetIsTerrainOrFloor() const noexcept { 

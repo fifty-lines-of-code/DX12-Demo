@@ -17,7 +17,11 @@ namespace Engine::EngineCamera {
 	}
 
 	void MainCamera::UpdateWithInputSystem(float deltaTime, float rightJoystickX, float rightJoystickY) {
-		UpdateYawPitchAndOffset(deltaTime, rightJoystickX, rightJoystickY);
+		UpdateYawPitchAndOffset(
+			deltaTime, 
+			rightJoystickX, 
+			rightJoystickY
+		);
 
 		BuildViewMatrix();
 		BuildViewProjectionMatrix();
@@ -96,15 +100,18 @@ namespace Engine::EngineCamera {
 			mMainCameraData.PitchMin
 		);
 
-		mMainCameraData.Offset.y = mMainCameraData.Radius * std::sin(mMainCameraData.Pitch);
+		mMainCameraData.Offset.y = 
+			mMainCameraData.Radius * 
+			std::sin(mMainCameraData.Pitch);
 		// remember offset in -z cause we want the camera behind the player
 		mMainCameraData.Offset.z = -(
 			mMainCameraData.Radius * 
 			std::cos(mMainCameraData.Pitch) * 
 			std::cos(mMainCameraData.Yaw)
-			);
+		);
 
-		mMainCameraData.Offset.x = mMainCameraData.Radius *
+		mMainCameraData.Offset.x = 
+			mMainCameraData.Radius *
 			std::cos(mMainCameraData.Pitch) * 
 			std::sin(mMainCameraData.Yaw);
 

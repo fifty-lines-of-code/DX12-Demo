@@ -280,6 +280,7 @@
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
     <Image Include="Source\Resources\Textures\Checkboard.dds" />
     <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
+    <Image Include="Source\Resources\Textures\WoodCrate02.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

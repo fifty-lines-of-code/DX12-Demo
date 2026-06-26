@@ -22,9 +22,12 @@ namespace Engine::EngineResources {
 
 		// todo: find a better way of loading these vs writing by hand
 
-		// load the wood crate texture
+		// load the two wood crate textures
 		std::wstring filename = L"Source\\Resources\\Textures\\WoodCrate01.dds";
-		if (!RegisterTexture(filename, (uint32_t)TextureID::WOOD_CRATE)) { return false; }
+		if (!RegisterTexture(filename, (uint32_t)TextureID::WOOD_CRATE_01)) { return false; }
+
+		filename = L"Source\\Resources\\Textures\\WoodCrate02.dds";
+		if (!RegisterTexture(filename, (uint32_t)TextureID::WOOD_CRATE_02)) { return false; }
 
 		// load the check board texture
 		filename = L"Source\\Resources\\Textures\\Checkboard.dds";

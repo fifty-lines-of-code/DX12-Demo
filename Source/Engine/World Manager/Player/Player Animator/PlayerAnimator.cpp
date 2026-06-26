@@ -4,7 +4,7 @@
 #include "../../../Math/MathHelper.h"
 
 PlayerAnimator::PlayerAnimator() : 
-	mCurrentRotation(0.f)
+	mCurrentRotation(DirectX::XMConvertToRadians(180))
 {}
 
 PlayerAnimator::~PlayerAnimator() {}
@@ -17,31 +17,42 @@ void PlayerAnimator::UpdateVisualRotation(
 	// We have to send in x first and then z to convert from 
 	// Math's RH rule to DX12's LH coordinate rule
 	// Rotation in Math is CCW and DX12 is CW
-	float targetRotation = std::atan2(movement.x, movement.z);
+
+	// Our player mesh faces -z natively (see MeshGenerator),
+	// so we add PI to offset it so the mesh faces forward (+Z) when moving North.
+	float targetRotation = std::atan2(movement.x, movement.z) + Engine::MathHelper::Pi;
 	float deltaRotation = targetRotation - mCurrentRotation;
 
-	// we have to make sure we take the shortest rotation 
-	// so rotate -90 instead of 270
-	// to do that we subtract 2pi if delta is > pi
-	// and add 2pi if delta is < -pi
-	// since rotation values will accumulate, we do this over a loop
-
-	while (deltaRotation > Engine::MathHelper::Pi) { 
-		deltaRotation -= Engine::MathHelper::Two_Pi; 
+	// Shortest path optimization:
+	// Subtract 2pi if delta is > pi, and add 2pi if delta is < -pi
+	while (deltaRotation > Engine::MathHelper::Pi) {
+		deltaRotation -= Engine::MathHelper::Two_Pi;
 	}
 
-	while (deltaRotation < -Engine::MathHelper::Pi) { 
-		deltaRotation += Engine::MathHelper::Two_Pi; 
+	while (deltaRotation < -Engine::MathHelper::Pi) {
+		deltaRotation += Engine::MathHelper::Two_Pi;
 	}
 
+	// Completion check
 	if (std::abs(deltaRotation) < 0.01f) {
 		mCurrentRotation = targetRotation;
 		mIsRotationComplete = true;
 		return;
 	}
 
-	// now we smoothly interpolate to the targetRotation
+	// Smoothly interpolate to the targetRotation
 	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime;
+
+	// Bounding Safety Wrap:
+	// Keeps mCurrentRotation strictly locked inside the [-PI, PI] range.
+	// This prevents the shortest-path while-loops above from accumulating multi-loop overhead 
+	// when the player runs in circles continuously.
+	while (mCurrentRotation > Engine::MathHelper::Pi) {
+		mCurrentRotation -= Engine::MathHelper::Two_Pi;
+	}
+	while (mCurrentRotation < -Engine::MathHelper::Pi) {
+		mCurrentRotation += Engine::MathHelper::Two_Pi;
+	}
 }
 
 void PlayerAnimator::AnimateBackwardsDash(
