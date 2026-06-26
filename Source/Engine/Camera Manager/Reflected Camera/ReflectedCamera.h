@@ -10,6 +10,7 @@ namespace Engine::EngineCamera {
 		Matrix4x4 Projection;
 		Matrix4x4 ViewProjection;
 		Vector3 Center;
+		bool IsValid = false;
 	};
 
 	class ReflectedCamera {

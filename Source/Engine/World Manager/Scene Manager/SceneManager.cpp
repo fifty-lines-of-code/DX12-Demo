@@ -176,8 +176,9 @@ namespace Engine::EngineWorld {
 			case EntityType::FLOOR:
 				// add a small delta value (0.025f) so that
 				// object appears just above the floor
-				// TODO: extract this constant somewhere
-				return entity.GetPhysicsBody().Scale.y + 0.025f;
+				return 
+					entity.GetPhysicsBody().Scale.y + 
+					EngineConfig::EngineConfig::PHYSICS_Y_EPSILON;
 			default:
 				// it should never reach here, something has gone wrong
 				return uint16_t(-1);
@@ -318,7 +319,7 @@ namespace Engine::EngineWorld {
 		}
 
 		// add a tiny Y to elevate the entity above the terrain
-		proposedY += 0.35f;
+		proposedY += EngineConfig::EngineConfig::PHYSICS_Y_EPSILON;
 
 		return proposedY;
 	}

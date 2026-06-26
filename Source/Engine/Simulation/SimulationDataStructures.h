@@ -8,7 +8,7 @@ namespace Engine::EngineSimulation {
 
 	struct MirrorPlaneData {
 		Vector3 Normal;
-		float PlaneD;
+		Vector3 Center;
 	};
 
 	struct MirrorPlaneQueryResult {
