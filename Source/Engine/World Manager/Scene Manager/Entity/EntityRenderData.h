@@ -6,15 +6,15 @@
 
 namespace Engine::EngineWorld {
 
+	struct EntitySubMeshMaterialData {
+		uint32_t MaterialID = 0;
+		uint32_t TextureID = 0;
+	};
+
 	struct EntityRenderData {
 
-		struct EntitySubMeshMaterialData {
-			uint32_t MaterialID = 0;
-			uint32_t TextureID = 0;
-		};
-
         Matrix4x4 WorldMatrix;
-        Vector3   SurfaceNormal;
+        Vector3 SurfaceNormal;
 
         std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> SubMeshMaterials;
 

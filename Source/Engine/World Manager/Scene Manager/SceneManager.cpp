@@ -214,6 +214,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetCenter(playerBlueprint.Center);
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetBasisVectors(playerBlueprint.BasisVectors);
+		playerEntity.SetSurfaceNormal(playerBlueprint.SurfaceNormal);
 		playerEntity.SetIsStatic(false);
 		// set mesh
 		EngineResources::Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);

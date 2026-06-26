@@ -68,7 +68,7 @@ namespace Engine {
 		// todo:
 
 		// update the input system first
-		UpdateInputSystemAndCamera(deltaTime);
+		UpdateInputSystemAndMainCamera(deltaTime);
 
 		// update the audio system
 		mAudioSystem.Update(mInputSystem, deltaTime);
@@ -81,13 +81,15 @@ namespace Engine {
 			mCameraManager.GetMainCameraBasisVectors()
 		);
 
-		// update the camera with updated player center
+		// update the main camera with updated player center
 		mCameraManager.UpdateMainCameraWithTarget(mWorldManager.GetPlayerCenter());
+
+		// update the reflection camera
 
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();
 
-		// draw the time profiling data once gpu has finished previous frame
+		// draw the time profiling data once gpu has finished the frame we're working with
 		if (mIsDebugBuild) { LogProfilingData(); }
 
 		// calculate our geometry and related data of Debug System
@@ -227,7 +229,7 @@ namespace Engine {
 		return mRenderer.SetupBlurPipeline();
 	}
 
-	void EngineCore::UpdateInputSystemAndCamera(float deltaTime) {
+	void EngineCore::UpdateInputSystemAndMainCamera(float deltaTime) {
 		mInputSystem.Update();
 
 		mCameraManager.UpdateMainCameraWithInputSystem(

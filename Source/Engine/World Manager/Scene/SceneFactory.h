@@ -31,6 +31,7 @@ namespace Engine::EngineWorld {
 			Vector3 center, 
 			Vector3 scale, 
 			BasisVectors basisVectors,
+			Vector3 surfaceNormal,
 			EntityType entityType,
 			EngineResources::MeshID meshID,
 			std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,

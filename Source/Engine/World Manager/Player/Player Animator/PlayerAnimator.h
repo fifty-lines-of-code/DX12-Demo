@@ -11,7 +11,9 @@ struct BackwardsDashAnimationData {
 class PlayerAnimator {
 public:
 	PlayerAnimator();
-	~PlayerAnimator();
+	~PlayerAnimator() = default;
+
+	void InitializeRotation(float rotation);
 
 	void UpdateVisualRotation(
 		float deltaTime,
@@ -34,6 +36,8 @@ private:
 	// Rotation Data
 	// in degrees
 	float mCurrentRotation;
+	float mDebugAnimationSpeed;
+	bool mIWantToDebugAnimation;
 	bool mIsRotationComplete = false;
 
 private:

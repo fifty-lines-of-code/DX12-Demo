@@ -61,7 +61,13 @@ namespace Engine::EngineWorld {
 
 		void SetCenter(const Vector3& center) noexcept;
 		void SetScale(const Vector3& scale) noexcept;
-		void SetBasisVectors(const BasisVectors& basisVectors) noexcept;
+		void SetBasisVectors(
+			const BasisVectors& basisVectors
+		) noexcept;
+
+		void SetSurfaceNormal(
+			const Vector3& surfaceNormal
+		) noexcept;
 
 		bool GetIsTerrainOrFloor() const noexcept;
 		

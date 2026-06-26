@@ -4,10 +4,18 @@
 #include "../../../Math/MathHelper.h"
 
 PlayerAnimator::PlayerAnimator() : 
-	mCurrentRotation(DirectX::XMConvertToRadians(180))
-{}
+	mCurrentRotation(0),
+	mDebugAnimationSpeed(1.f),
+	mIWantToDebugAnimation(false)
+{
+#ifdef _DEBUG
+	mDebugAnimationSpeed = mIWantToDebugAnimation ? 0.01f : 1.f;
+#endif 
+}
 
-PlayerAnimator::~PlayerAnimator() {}
+void PlayerAnimator::InitializeRotation(float rotation) {
+	mCurrentRotation = rotation;
+}
 
 void PlayerAnimator::UpdateVisualRotation(
 	float deltaTime,
@@ -17,10 +25,7 @@ void PlayerAnimator::UpdateVisualRotation(
 	// We have to send in x first and then z to convert from 
 	// Math's RH rule to DX12's LH coordinate rule
 	// Rotation in Math is CCW and DX12 is CW
-
-	// Our player mesh faces -z natively (see MeshGenerator),
-	// so we add PI to offset it so the mesh faces forward (+Z) when moving North.
-	float targetRotation = std::atan2(movement.x, movement.z) + Engine::MathHelper::Pi;
+	float targetRotation = std::atan2(movement.x, movement.z);
 	float deltaRotation = targetRotation - mCurrentRotation;
 
 	// Shortest path optimization:
@@ -41,7 +46,8 @@ void PlayerAnimator::UpdateVisualRotation(
 	}
 
 	// Smoothly interpolate to the targetRotation
-	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime;
+	static float debugAnimationSpeed = 1.f;
+	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime * mDebugAnimationSpeed;
 
 	// Bounding Safety Wrap:
 	// Keeps mCurrentRotation strictly locked inside the [-PI, PI] range.

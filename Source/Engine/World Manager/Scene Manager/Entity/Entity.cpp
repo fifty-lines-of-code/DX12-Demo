@@ -121,6 +121,10 @@ namespace Engine::EngineWorld {
 		);
 	}
 
+	void Entity::SetSurfaceNormal(const Vector3& surfaceNormal) noexcept {
+		mRenderData.SurfaceNormal = surfaceNormal;
+	}
+
 	bool Entity::GetIsTerrainOrFloor() const noexcept { 
 		return 
 			mEntityType == EntityType::TERRAIN ||

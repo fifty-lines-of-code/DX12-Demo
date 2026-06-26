@@ -45,13 +45,9 @@ namespace Engine::EngineWorld {
 		subMeshBlueprint0.TextureID = EngineResources::TextureID::WOOD_CRATE_01;
 
 		// calculate the basis vectors
-
-		// player in the model faces -z
-		// we want to start facing +z
-		// rotate by 180
 		BasisVectors basisVectors;
 		GenerateBasisVectorsFrom(
-			180,
+			0,
 			0,
 			0,
 			basisVectors
@@ -62,6 +58,7 @@ namespace Engine::EngineWorld {
 			Vector3(-10.f, 0.875f, -10.5f), // center
 			Vector3(.75f, .75f, .75f), // scale
 			basisVectors, // basis vectors
+			basisVectors.Forward, // surface normal
 			EntityType::PLAYER, // entitytype
 			EngineResources::MeshID::CUBE, // mesh id,
 			subMeshBlueprints, // submesh blueprints,
@@ -90,6 +87,7 @@ namespace Engine::EngineWorld {
 			Vector3(0.f, 0.f, 0.f),
 			Vector3(1.f),
 			basisVectors,
+			basisVectors.Forward, // surface normal
 			EntityType::TERRAIN,
 			EngineResources::MeshID::TERRAIN_0x0,
 			subMeshBlueprints,
@@ -108,6 +106,7 @@ namespace Engine::EngineWorld {
 			Vector3(0.f, 4.1f, -1.f), // center
 			Vector3(1.5f, 2.f, .2f), // scale
 			basisVectors,
+			basisVectors.Forward, // surface normal
 			EntityType::WALL,
 			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
@@ -149,13 +148,9 @@ namespace Engine::EngineWorld {
 		subMeshBlueprint1.TextureID = EngineResources::TextureID::WOOD_CRATE_02;
 
 		// calculate the basis vectors
-		
-		// player in the model faces -z
-		// we want to start facing +z
-		// rotate by 180
 		BasisVectors basisVectors;
 		GenerateBasisVectorsFrom(
-			180,
+			0,
 			0,
 			0,
 			basisVectors
@@ -166,6 +161,7 @@ namespace Engine::EngineWorld {
 			Vector3(-10.f, 0.975f, -10.5f), // center
 			Vector3(.75f, .75f, .75f), // scale
 			basisVectors, // basis Vectors
+			basisVectors.Forward, // surface normal
 			EntityType::PLAYER, // entitytype
 			EngineResources::MeshID::CUBE_TWO_SUBMESHES, // mesh id,
 			subMeshBlueprints, // submesh blueprints,
@@ -192,6 +188,7 @@ namespace Engine::EngineWorld {
 			Vector3(0.f),
 			Vector3(32.f, 0.2f, 32.f),
 			basisVectors,
+			basisVectors.Forward, // surface normal
 			EntityType::FLOOR,
 			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
@@ -204,7 +201,7 @@ namespace Engine::EngineWorld {
 
 		// Mirror
 		GenerateBasisVectorsFrom(
-			0,
+			180,
 			0,
 			0,
 			basisVectors
@@ -220,6 +217,7 @@ namespace Engine::EngineWorld {
 			Vector3(0.f, 2.205f, -1.f), // center
 			Vector3(1.5f, 2.f, .2f), // scale
 			basisVectors,
+			basisVectors.Forward, // surface normal
 			EntityType::MIRROR,
 			EngineResources::MeshID::CUBE_TWO_SUBMESHES,
 			subMeshBlueprints,
@@ -251,6 +249,7 @@ namespace Engine::EngineWorld {
 		Vector3 center,
 		Vector3 scale,
 		BasisVectors basisVectors,
+		Vector3 surfaceNormal,
 		EntityType entityType,
 		EngineResources::MeshID meshID,
 		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
@@ -265,6 +264,7 @@ namespace Engine::EngineWorld {
 		blueprintAtIndex.Center = center;
 		blueprintAtIndex.Scale = scale;
 		blueprintAtIndex.BasisVectors = basisVectors;
+		blueprintAtIndex.SurfaceNormal = surfaceNormal;
 		blueprintAtIndex.EntityType = entityType;
 		blueprintAtIndex.MeshID = meshID;
 		blueprintAtIndex.EntitySubMeshBlueprints = subMeshBlueprints;

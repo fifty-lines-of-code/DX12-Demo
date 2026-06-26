@@ -71,6 +71,7 @@ namespace Engine::EngineWorld {
 				entity.SetCenter(entityBlueprint.Center);
 				entity.SetScale(entityBlueprint.Scale);
 				entity.SetBasisVectors(entityBlueprint.BasisVectors);
+				entity.SetSurfaceNormal(entityBlueprint.SurfaceNormal);
 				// set mesh
 				entity.SetMesh(mesh);
 				// update all submeshes

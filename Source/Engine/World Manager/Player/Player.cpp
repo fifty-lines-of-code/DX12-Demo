@@ -10,7 +10,22 @@ Player::Player() : mPlayerAnimator() {}
 
 Player::~Player() { mEntity = nullptr; }
 
-void Player::SetEntity(Engine::EngineWorld::Entity& entity) { mEntity = &entity; }
+void Player::SetEntity(Engine::EngineWorld::Entity& entity) { 
+	mEntity = &entity; 
+
+	// todo:
+	// this is temp fix for now until we upgrade to
+	// storing angles inside transform data
+	// instead of basis vectors
+	const auto& basis = entity.GetTransformData().BasisVectors;
+
+	// Calculate the starting yaw angle directly from the Forward vector
+	// This matches the exact inverse operation of your basis generator
+	float initialRotationRad = std::atan2(-basis.Forward.x, basis.Forward.z);
+
+	// Initialize your animator with this exact world space angle
+	mPlayerAnimator.InitializeRotation(initialRotationRad);
+}
 
 void Player::Update(
 	float deltaTime, 
