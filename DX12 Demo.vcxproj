@@ -187,6 +187,8 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityRenderData.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityTransformData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h" />

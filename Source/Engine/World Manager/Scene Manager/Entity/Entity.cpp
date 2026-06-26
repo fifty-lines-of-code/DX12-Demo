@@ -16,8 +16,7 @@ namespace Engine::EngineWorld {
 		Vector3 scale, 
 		bool isStatic, 
 		bool isActive
-	) :	mPhysicsBody(center, scale),
-		mMesh(nullptr),
+	) :	mMesh(nullptr),
 		mID(Id),
 		mEntityType(EntityType::INVALID),
 		mIsStatic(isStatic),
@@ -42,20 +41,29 @@ namespace Engine::EngineWorld {
 		mPhysicsBody.LocalAABB.Min = mesh->GetLocalMin();
 		mPhysicsBody.LocalAABB.Max = mesh->GetLocalMax();
 
-		mPhysicsBody.UpdateProductionTransforms();
+		mPhysicsBody.UpdateWorldAABB(mRenderData.WorldMatrix);
 	}
 
 	// thus this returns an ID
 	const EngineResources::Mesh* Entity::GetMesh() const { return mMesh; }
 
 	void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
-		if (mIsDirty) { mPhysicsBody.UpdateProductionTransforms(); }
+		if (mIsDirty) { 
+			mRenderData.RebuildWorldMatrix(
+				mTransformData.Center,
+				mTransformData.Scale,
+				mTransformData.BasisVectors
+			);
+			mPhysicsBody.UpdateWorldAABB(
+				mRenderData.WorldMatrix
+			); 
+		}
 	}
 
 	void Entity::CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData) {
 		// store world transpose
 		DirectX::XMMATRIX worldTranspose = DirectX::XMMatrixTranspose(
-			DirectX::XMLoadFloat4x4(&mPhysicsBody.WorldMatrix.AsXMFLOAT4X4())
+			DirectX::XMLoadFloat4x4(&mRenderData.WorldMatrix.AsXMFLOAT4X4())
 		);
 		DirectX::XMStoreFloat4x4(
 			&bufferData.World.AsXMFLOAT4X4(),
@@ -76,15 +84,17 @@ namespace Engine::EngineWorld {
 			? subMeshIndex : 0;
 
 		// store Material ID;
-		destinationBufferData.MaterialID = mSubMeshMaterialData[index].MaterialID;
+		destinationBufferData.MaterialID = mRenderData.SubMeshMaterials[index].MaterialID;
 
 		// store Texture ID
-		destinationBufferData.TextureID = mSubMeshMaterialData[index].TextureID;
+		destinationBufferData.TextureID = mRenderData.SubMeshMaterials[index].TextureID;
 	}
 
-	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() { return mPhysicsBody; }
+	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() noexcept { return mPhysicsBody; }
 
-	const AABB& Entity::GetAABB() const { return mPhysicsBody.WorldAABB; }
+	const AABB& Entity::GetAABB() const noexcept { return mPhysicsBody.WorldAABB; }
+
+	EntityTransformData& Entity::GetTransformData() noexcept { return mTransformData; }
 
 	bool Entity::GetIsDirty() const { return mIsDirty; }
 
@@ -94,9 +104,13 @@ namespace Engine::EngineWorld {
 
 	void Entity::SetIsActive(bool isActive) noexcept { mIsActive = isActive; }
 
-	void Entity::SetCenter(Vector3 center) { mPhysicsBody.Center = center; }
+	void Entity::SetCenter(Vector3 center) { 
+		mTransformData.Center = center;
+	}
 
-	void Entity::SetScale(Vector3 scale) { mPhysicsBody.Scale = scale; }
+	void Entity::SetScale(Vector3 scale) { 
+		mTransformData.Scale = scale; 
+	}
 
 	bool Entity::GetIsTerrainOrFloor() const noexcept { 
 		return 
@@ -127,7 +141,8 @@ namespace Engine::EngineWorld {
 		uint8_t index =
 			subMeshIndex >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH ?
 			0 : subMeshIndex;
-		mSubMeshMaterialData[index].MaterialID = (uint8_t)material;
-		mSubMeshMaterialData[index].TextureID = (uint8_t)texture;
+
+		mRenderData.SubMeshMaterials[index].MaterialID = (uint8_t)material;
+		mRenderData.SubMeshMaterials[index].TextureID = (uint8_t)texture;
 	}
 }

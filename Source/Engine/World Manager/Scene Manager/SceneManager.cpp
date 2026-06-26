@@ -177,7 +177,7 @@ namespace Engine::EngineWorld {
 				// add a small delta value (0.025f) so that
 				// object appears just above the floor
 				return 
-					entity.GetPhysicsBody().Scale.y + 
+					entity.GetTransformData().Scale.y + 
 					EngineConfig::EngineConfig::PHYSICS_Y_EPSILON;
 			default:
 				// it should never reach here, something has gone wrong

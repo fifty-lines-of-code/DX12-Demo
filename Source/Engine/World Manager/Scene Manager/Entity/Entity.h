@@ -2,6 +2,8 @@
 
 #include <array>
 #include "../../../Math/BasisVectors.h"
+#include "EntityRenderData.h"
+#include "EntityTransformData.h"
 #include "EntityType.h"
 #include "../../../Math/Geometry.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
@@ -11,11 +13,6 @@
 #include "../Resource Manager/Texture Manager/TextureID.h"
 
 namespace Engine::EngineWorld {
-
-	struct EntitySubMeshMaterialData {
-		uint32_t MaterialID = 0;
-		uint32_t TextureID = 0;
-	};
 
 	class Entity {
 	public:
@@ -52,8 +49,9 @@ namespace Engine::EngineWorld {
 			EntitySubMeshConstantBufferData& destinationBufferData
 		);
 
-		EnginePhysics::PhysicsBody& GetPhysicsBody();
-		const AABB& GetAABB() const;
+		EnginePhysics::PhysicsBody& GetPhysicsBody() noexcept;
+		const AABB& GetAABB() const noexcept;
+		EntityTransformData& GetTransformData() noexcept;
 
 		bool GetIsDirty() const;
 		void SetIsDirty(bool dirty);
@@ -78,7 +76,8 @@ namespace Engine::EngineWorld {
 	private:
 		EngineResources::Mesh* mMesh;
 		EnginePhysics::PhysicsBody mPhysicsBody;
-		std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshMaterialData;
+		EntityRenderData mRenderData;
+		EntityTransformData mTransformData;
 		uint32_t mID;
 		EntityType mEntityType;
 		bool mIsStatic;

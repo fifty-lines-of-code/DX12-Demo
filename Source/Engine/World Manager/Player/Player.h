@@ -23,7 +23,6 @@ public:
 		const Engine::BasisVectors& cameraBasisVectors
 	);
 
-	const Engine::Vector3& GetCenter() const;
 	Engine::AABB CalculatePotentialFootprintAABB() const;
 	void PostPhysicsUpdate(
 		const Engine::EnginePhysics::CollisionResult&

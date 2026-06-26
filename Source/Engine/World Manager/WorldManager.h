@@ -38,8 +38,7 @@ namespace Engine::EngineWorld {
 		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& GetEntities();
 		EngineResources::MaterialArray& GetMaterials() noexcept;
 		EngineResources::TextureArray& GetTextures() noexcept;
-		const Vector3& GetPlayerCenter() const;
-		Entity& GetPlayerEntity();
+		Vector3 GetPlayerCenter();
 		const EngineResources::MeshArray& GetMeshesToLoad() const noexcept;
 
 	private:

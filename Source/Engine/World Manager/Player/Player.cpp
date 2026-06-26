@@ -19,6 +19,8 @@ void Player::Update(
 ) {
 	// reset velocity intent
 	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
+
 	physicsBody.VelocityIntent.Reset();
 
 	// update player's state
@@ -57,7 +59,7 @@ void Player::Update(
 	}
 	case PlayerState::BackwardsDashing:
 	{
-		Engine::Vector3 forward = physicsBody.BasisVectors.Forward;
+		Engine::Vector3 forward = transformData.BasisVectors.Forward;
 		forward.Normalize();
 
 		physicsBody.VelocityIntent.x = -forward.x *  mPlayerLogic.mBackwardsDashVelocity * deltaTime;
@@ -79,10 +81,6 @@ void Player::Update(
 	}
 
 	mEntity->SetIsDirty(true);
-}
-
-const Engine::Vector3& Player::GetCenter() const {
-	return mEntity->GetPhysicsBody().Center;
 }
 
 Engine::AABB Player::CalculatePotentialFootprintAABB() const {
@@ -108,10 +106,12 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 	return broadphase;
 }
 
-void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisionResult) {
-	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+void Player::PostPhysicsUpdate(
+	const Engine::EnginePhysics::CollisionResult& collisionResult
+) {
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
 
-	physicsBody.Center = collisionResult.ProposedCenter;
+	transformData.Center = collisionResult.ProposedCenter;
 
 	if (collisionResult.HasCollided() && 
 		mPlayerLogic.GetPlayerState() == PlayerState::BackwardsDashing) {
@@ -129,15 +129,15 @@ void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& col
 void Player::UpdateBasisVectorsFromVisualRotation() {
 	float currentRotation = mPlayerAnimator.GetRotation();
 
-	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
 
-	physicsBody.BasisVectors.Forward.x = std::sin(currentRotation);
-	physicsBody.BasisVectors.Forward.y = 0.0f;
-	physicsBody.BasisVectors.Forward.z = std::cos(currentRotation);
+	transformData.BasisVectors.Forward.x = std::sin(currentRotation);
+	transformData.BasisVectors.Forward.y = 0.0f;
+	transformData.BasisVectors.Forward.z = std::cos(currentRotation);
 
-	physicsBody.BasisVectors.Right.x = std::cos(currentRotation);
-	physicsBody.BasisVectors.Right.y = 0.0f;
-	physicsBody.BasisVectors.Right.z = -std::sin(currentRotation);
+	transformData.BasisVectors.Right.x = std::cos(currentRotation);
+	transformData.BasisVectors.Right.y = 0.0f;
+	transformData.BasisVectors.Right.z = -std::sin(currentRotation);
 }
 
 void Player::CalculateMovementVector(
