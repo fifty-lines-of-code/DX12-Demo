@@ -32,6 +32,7 @@ namespace Engine::EngineWorld {
 		uint32_t GetConstantBufferDataByteSizeOfEachEntity() const;
 		uint32_t GetConstantBufferDataByteSizeOfEachPerPassObject() const;
 		uint32_t GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept;
+		uint32_t GetConstantBufferDataByteSizeOFEntityPerSubMeshObject() const noexcept;
 		const Vector4& GetAmbientLight() const noexcept;
 		void GetLightsData(LightsArray16& lights) const;
 		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& GetEntities();

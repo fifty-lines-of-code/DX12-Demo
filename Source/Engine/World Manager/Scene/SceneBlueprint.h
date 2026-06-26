@@ -9,7 +9,7 @@
 namespace Engine::EngineWorld {
 
 	enum class Scene : uint32_t {
-		FLAT_PLAIN,
+		FLAT_PLANE,
 		SINGLE_MIRROR,
 		HEIGHTMAP,
 		COUNT,
@@ -25,7 +25,7 @@ namespace Engine::EngineWorld {
 		Vector3 Center;
 		Vector3 Scale;
 		EntityType EntityType;
-		MeshID MeshID;
+		EngineResources::MeshID MeshID;
 		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> EntitySubMeshBlueprints;
 		uint8_t ActiveSubMeshCount;
 	};

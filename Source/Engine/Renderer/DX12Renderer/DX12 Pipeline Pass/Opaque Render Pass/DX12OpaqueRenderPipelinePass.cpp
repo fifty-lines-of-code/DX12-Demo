@@ -65,7 +65,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			&args.DepthStencilView
 		);
 
-		// set the per pass cb, materials cb
+		// set the descriptor heap
 		ID3D12DescriptorHeap* descriptorHeaps[] = { mDescriptorHeap.Get() };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
@@ -123,29 +123,36 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			// Offset to the CBV in the CBV heap for this object and for this frame resource.
+			uint32_t entityOffset = itemContext.ID * args.AlignedSizeOfPerRenderItemCb;
 			D3D12_GPU_VIRTUAL_ADDRESS currentEntityAddress =
 				args.PerRenderItemCBResourceAddress + 
-				(itemContext.ID * args.AlignedSizeOfPerRenderItemCb);
+				entityOffset;
 
 			mCommandList->SetGraphicsRootConstantBufferView(
 				mPerObjectCBIndex, 
 				currentEntityAddress
 			);
 
+			uint32_t entitySubMeshesOffset = itemContext.ID * 
+				args.NumberOfSubMeshesPerItem *
+				args.AlignedSizeOfPerRenderItemSubMeshCb;
+
 			// calculate submesh CB address
 			D3D12_GPU_VIRTUAL_ADDRESS subMeshBaseAddress =
 				args.PerRenderItemSubMeshCBResourceAddress +
-				(itemContext.ID * args.NumberOfSubMeshesPerItem * args.AlignedSizeOfPerRenderItemSubMeshCb);
+				entitySubMeshesOffset;
 
 			// now draw per sub mesh
-			for (int j = 0; j < itemContext.SubMeshCount; ++j) {
+			for (uint8_t j = 0; j < itemContext.SubMeshCount; ++j) {
 				const DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshContext =
 					itemContext.SubMeshExecuteArgs[j];
  
+				uint32_t subMeshOffset = j * args.AlignedSizeOfPerRenderItemSubMeshCb;
+
 				// get this submeshes address
 				D3D12_GPU_VIRTUAL_ADDRESS subMeshAddress =
 					subMeshBaseAddress +
-					(subMeshContext.ID * args.AlignedSizeOfPerRenderItemSubMeshCb);
+					subMeshOffset;
 
 				// bind it
 				mCommandList->SetGraphicsRootConstantBufferView(
@@ -226,7 +233,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				handle.Offset(heapIndex, args.CbvSrvUavDescriptorSize);
 
 				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-				cbvDesc.BufferLocation = cbAddress + (i * args.AlignedSizeOfPerMaterialCb);
+				uint32_t thisMaterialOffset = i * args.AlignedSizeOfPerMaterialCb;
+				cbvDesc.BufferLocation = cbAddress + thisMaterialOffset;
 				cbvDesc.SizeInBytes = args.AlignedSizeOfPerMaterialCb;
 
 				args.Device->CreateConstantBufferView(&cbvDesc, handle);

@@ -9,6 +9,7 @@ namespace Engine {
 		TERRAIN,
 		FLOOR,
 		WALL,
+		MIRROR,
 		COUNT,
 		INVALID
 	};

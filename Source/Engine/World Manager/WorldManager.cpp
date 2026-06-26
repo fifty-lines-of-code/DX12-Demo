@@ -137,6 +137,10 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetConstantBufferDataByteSizeOfEachPerPassObject();
 	}
 
+	uint32_t WorldManager::GetConstantBufferDataByteSizeOFEntityPerSubMeshObject() const noexcept {
+		return mSceneManager.GetConstantBufferDataByteSizeOFEntityPerSubMeshObject();
+	}
+
 	uint32_t WorldManager::GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept {
 		return sizeof(EngineResources::MaterialData);
 	}
@@ -181,14 +185,17 @@ namespace Engine::EngineWorld {
 		bool isLoaded = false;
 		SceneBlueprint blueprint;
 
+		// define what scene you want to load
+		const Scene scene = Scene::SINGLE_MIRROR;
+
 		// get scene factory to load the scene
 		mSceneFactory.LoadScene(
-			Scene::HEIGHTMAP,
+			scene,
 			blueprint,
 			isLoaded
 		);
 
-		if (!isLoaded || blueprint.Scene != Scene::HEIGHTMAP) { return false; }
+		if (!isLoaded || blueprint.Scene != scene) { return false; }
 
 		if (!mSceneManager.LoadScene(blueprint)) { return false; }
 

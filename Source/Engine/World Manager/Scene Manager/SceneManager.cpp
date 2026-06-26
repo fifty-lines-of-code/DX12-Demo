@@ -107,6 +107,10 @@ namespace Engine::EngineWorld {
 		return sizeof(PerPassConstantBufferData);
 	}
 
+	uint32_t SceneManager::GetConstantBufferDataByteSizeOFEntityPerSubMeshObject() const noexcept {
+		return sizeof(EntitySubMeshConstantBufferData);
+	}
+
 	uint32_t SceneManager::GetConstantBufferDataByteSizeOfEachMaterialObject() const noexcept {
 		return sizeof(EngineResources::MaterialData);
 	}
@@ -135,6 +139,7 @@ namespace Engine::EngineWorld {
 		mOctTree.ClearDynamicEntities();
 	}
 
+	// todo: Move this somewhere else
 	float SceneManager::GetProposedYOfTerrainOrFloor(
 		float entityX, 
 		float entityZ,
@@ -169,11 +174,10 @@ namespace Engine::EngineWorld {
 				);
 			}
 			case EntityType::FLOOR:
-				// add a small delta value (0.05f) so that
+				// add a small delta value (0.025f) so that
 				// object appears just above the floor
 				// TODO: extract this constant somewhere
-
-				return entity.GetPhysicsBody().Scale.y * 0.5f + 0.05f;
+				return entity.GetPhysicsBody().Scale.y + 0.025f;
 			default:
 				// it should never reach here, something has gone wrong
 				return uint16_t(-1);
@@ -210,7 +214,7 @@ namespace Engine::EngineWorld {
 		playerEntity.SetScale(playerBlueprint.Scale);
 		playerEntity.SetIsStatic(false);
 		// set mesh
-		Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
+		EngineResources::Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
 		playerEntity.SetMesh(cubeMesh);
 
 		// update all submeshes
@@ -244,7 +248,7 @@ namespace Engine::EngineWorld {
 	}
 
 	float SceneManager::CalculateProposedYOfTerrain(
-		const Mesh& terrainMesh,
+		const EngineResources::Mesh& terrainMesh,
 		float entityX,
 		float entityZ,
 		const Vector2& chunkCenterXZ,

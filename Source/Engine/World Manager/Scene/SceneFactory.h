@@ -2,7 +2,7 @@
 
 #include <array>
 #include "../../EngineConfig.h"
-#include "../Scene Manager/Entity/Mesh/Mesh.h"
+#include "../Scene Manager/Resource Manager/Mesh Generator/Mesh/Mesh.h"
 #include "SceneBlueprint.h"
 
 namespace Engine::EngineWorld {
@@ -25,12 +25,13 @@ namespace Engine::EngineWorld {
 	private:
 		void Reset();
 		bool LoadHeightMapScene(SceneBlueprint& sceneBlueprint);
+		bool LoadSingleMirroScene(SceneBlueprint& sceneBlueprint);
 		bool UpdateBlueprint(
 			uint32_t index,
 			Vector3 center, 
 			Vector3 scale, 
 			EntityType entityType,
-			Engine::EngineWorld::MeshID meshID,
+			EngineResources::MeshID meshID,
 			std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
 			uint8_t activeSubMeshCount
 		);

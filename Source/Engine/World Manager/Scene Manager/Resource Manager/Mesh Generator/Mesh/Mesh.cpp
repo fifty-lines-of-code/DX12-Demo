@@ -1,14 +1,15 @@
 #include "Mesh.h"
 
-#include "../../../../../Helper/Logger.h"
+#include "../../../../../../Helper/Logger.h"
 
-namespace Engine::EngineWorld {
+namespace Engine::EngineResources {
 
 	Mesh::Mesh() :
-		mMeshID(MeshID::Count),
+		mMeshID(MeshID::COUNT),
 		mVbByteSize(0),
 		mIbByteSize(0),
-		mActiveSubMeshCount(0)
+		mActiveSubMeshCount(0),
+		mIsReadyToLoad(false)
 	{}
 
 	Mesh::~Mesh() {}
@@ -31,6 +32,8 @@ namespace Engine::EngineWorld {
 		mIbByteSize = (uint32_t)indices.size() * sizeof(uint16_t);
 
 		CalculateLocalMinAndMax();
+
+		mIsReadyToLoad = true;
 	}
 
 	const std::vector<Vertex>& Mesh::GetVertices() const noexcept {
@@ -61,6 +64,8 @@ namespace Engine::EngineWorld {
 
 		return mSubMeshes[index];
 	}
+
+	bool Mesh::GetIsReadyToLoad() const noexcept { return mIsReadyToLoad; }
 
 #pragma region Private
 

@@ -184,7 +184,6 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h" />
-    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.h" />
@@ -195,6 +194,8 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\Texture Asset\TextureAsset.h" />
@@ -239,7 +240,6 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.cpp" />
-    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Entity\Mesh\Mesh.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\ILight.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.cpp" />
@@ -247,6 +247,8 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\Mesh\Mesh.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\ResourceManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Terrain Manager\TerrainManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Texture Manager\TextureManager.cpp" />
@@ -268,6 +270,7 @@
     <Image Include="Source\Resources\Heightmaps\Chunk0x0-3.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0-4.png" />
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
+    <Image Include="Source\Resources\Textures\Checkboard.dds" />
     <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
   </ItemGroup>
   <ItemGroup>

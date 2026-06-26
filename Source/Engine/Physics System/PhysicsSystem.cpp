@@ -91,7 +91,7 @@ namespace Engine::EnginePhysics {
 		}
 
 		// resolve movement in Y
-		safeCenter.y = terrainGroundY + physicsBody.Scale.y * 0.5f;
+		safeCenter.y = terrainGroundY + physicsBody.Scale.y;
 
 		// commit the movement
 		collisionResult.ProposedCenter = safeCenter;

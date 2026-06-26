@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <DirectXMath.h>
-#include "Mesh/Mesh.h"
 #include "../../../../Helper/Logger.h"
 
 namespace Engine::EngineWorld {
@@ -37,7 +36,7 @@ namespace Engine::EngineWorld {
 	bool Entity::GetIsStatic() const { return mIsStatic; }
 
 	//TODO: store the mesh ID instead of a pointer indirection for efficiency
-	void Entity::SetMesh(Mesh* mesh) {
+	void Entity::SetMesh(EngineResources::Mesh* mesh) {
 		mMesh = mesh;
 
 		mPhysicsBody.LocalAABB.Min = mesh->GetLocalMin();
@@ -47,7 +46,7 @@ namespace Engine::EngineWorld {
 	}
 
 	// thus this returns an ID
-	const Mesh* Entity::GetMesh() const { return mMesh; }
+	const EngineResources::Mesh* Entity::GetMesh() const { return mMesh; }
 
 	void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 		if (mIsDirty) { mPhysicsBody.UpdateProductionTransforms(); }
