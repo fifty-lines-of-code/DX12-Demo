@@ -62,7 +62,8 @@ namespace Engine::EngineWorld {
 			EntityType::PLAYER, // entitytype
 			EngineResources::MeshID::CUBE, // mesh id,
 			subMeshBlueprints, // submesh blueprints,
-			1 // active submesh count
+			1, // active submesh count
+			false // is static
 		);
 
 		if (!result) { return false; }
@@ -91,7 +92,8 @@ namespace Engine::EngineWorld {
 			EntityType::TERRAIN,
 			EngineResources::MeshID::TERRAIN_0x0,
 			subMeshBlueprints,
-			1
+			1,
+			true // is static
 		);
 
 		if (!result) { return false; }
@@ -110,7 +112,8 @@ namespace Engine::EngineWorld {
 			EntityType::WALL,
 			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
-			1
+			1,
+			true // is static
 		);
 
 		if (!result) { return false; }
@@ -165,7 +168,8 @@ namespace Engine::EngineWorld {
 			EntityType::PLAYER, // entitytype
 			EngineResources::MeshID::CUBE_TWO_SUBMESHES, // mesh id,
 			subMeshBlueprints, // submesh blueprints,
-			2 // active submesh count
+			2, // active submesh count,
+			false // isstatic 
 		);
 
 		if (!result) { return false; }
@@ -192,7 +196,8 @@ namespace Engine::EngineWorld {
 			EntityType::FLOOR,
 			EngineResources::MeshID::CUBE,
 			subMeshBlueprints,
-			1
+			1,
+			true // is static
 		);
 
 		if (!result) { return false; }
@@ -221,8 +226,9 @@ namespace Engine::EngineWorld {
 			EntityType::MIRROR,
 			EngineResources::MeshID::CUBE_TWO_SUBMESHES,
 			subMeshBlueprints,
-			2 // mirror has 2 submeshses
-			// todo: find a better way to know these things
+			2, // mirror has 2 submeshses
+			// todo: find a better way to know these things,
+			true // isstatic
 		);
 
 		if (!result) { return false; }
@@ -253,7 +259,8 @@ namespace Engine::EngineWorld {
 		EntityType entityType,
 		EngineResources::MeshID meshID,
 		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
-		uint8_t activeSubMeshCount
+		uint8_t activeSubMeshCount,
+		bool isStatic
 	) {
 		if (index >= EngineConfig::EngineConfig::MAX_ENTITIES) {
 			Logger::ERR(L"Cannot load more Entities");
@@ -269,6 +276,7 @@ namespace Engine::EngineWorld {
 		blueprintAtIndex.MeshID = meshID;
 		blueprintAtIndex.EntitySubMeshBlueprints = subMeshBlueprints;
 		blueprintAtIndex.ActiveSubMeshCount = activeSubMeshCount;
+		blueprintAtIndex.IsStatic = isStatic;
 
 		return true;
 	}

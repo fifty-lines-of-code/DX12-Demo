@@ -8,30 +8,31 @@ namespace Engine::EngineWorld {
 
 	struct ChunkSlot {
 	public:
+		ChunkSlot() = default;
+		~ChunkSlot() = default;
+
+		ChunkSlot(const ChunkSlot& rhs) = delete;
+		ChunkSlot& operator=(const ChunkSlot& rhs) = delete;
+		ChunkSlot(ChunkSlot&&) = delete;
+		ChunkSlot& operator=(ChunkSlot&&) = delete;
+
 		bool Initialize(
 			uint16_t chunkID,
-			Vector3& chunkCenter,
-			uint32_t chunkEntityStartIndex
+			Vector3& chunkCenter
 		) {
 			if (isLoaded) { return false; }
 
-			if (!mChunk.Initialize(chunkID, chunkCenter, chunkEntityStartIndex)) { return false; }
+			if (!mChunk.Initialize(chunkID, chunkCenter)) { return false; }
 
 			return true;
 		}
 
 		bool LoadChunk(
-			uint8_t* entityStartAddressInBytes, 
-			EngineResources::ResourceManager& resourceManager,
-			SceneBlueprint& sceneBlueprint
+			const std::vector<uint32_t>& entityIDs
 		) {
 			if (isLoaded) { return false; }
 
-			bool loadResult = mChunk.Load(
-				entityStartAddressInBytes,
-				resourceManager,
-				sceneBlueprint
-			);
+			bool loadResult = mChunk.Load(entityIDs);
 			isLoaded = loadResult;
 
 			return isLoaded;

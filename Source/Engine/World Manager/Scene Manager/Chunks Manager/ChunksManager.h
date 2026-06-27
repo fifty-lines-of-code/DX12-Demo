@@ -10,22 +10,21 @@ namespace Engine::EngineWorld {
 
 	class ChunksManager {
 	public:
-		ChunksManager(
-			void* mEntitiesStartAddressInMemory, 
-			uint32_t chunkEntitiesStartingID
-		);
+		ChunksManager() = default;
+		~ChunksManager() = default;
 
-		~ChunksManager();
+		ChunksManager(const ChunksManager& rhs) = delete;
+		ChunksManager& operator=(const ChunksManager& rhs) = delete;
+		ChunksManager(ChunksManager&&) = delete;
+		ChunksManager& operator=(ChunksManager&&) = delete;
 
 		bool Initialize();
-		bool LoadChunks(
-			EngineResources::ResourceManager& resourceManager,
-			SceneBlueprint& sceneBlueprint
-		);
-		Vector2 GetCenterXZOfChunkContaining(const Vector2& entityXZ);
-		uint16_t GetIdOfTerrainOrFloor(
-			float entityX, 
-			float entityZ
+
+		bool Load(
+			const std::vector<uint32_t>& entityIDs
+		) noexcept;
+		Vector2 GetCenterXZOfChunkContaining(
+			const Vector2& entityXZ
 		);
 
 		static constexpr uint16_t CHUNK_SIZE = 32;
@@ -36,15 +35,12 @@ namespace Engine::EngineWorld {
 		static constexpr size_t MAX_ACTIVE_CHUNKS = 1;
 
 		std::array<ChunkSlot, MAX_ACTIVE_CHUNKS> mActiveChunks;
-		const void* mEntitiesStartAddressInMemory;
 		uint16_t mNextChunkID;
-		uint32_t mChunkEntitiesStartingID;
 
 	private:
 		bool InitializeInitialChunks();
 		bool LoadChunkAtSlot0(
-			EngineResources::ResourceManager& resourceManager,
-			SceneBlueprint& sceneBlueprint
-		);
+			const std::vector<uint32_t>& entityIDs
+		) noexcept;
 	};
 }

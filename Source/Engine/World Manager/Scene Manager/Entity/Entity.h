@@ -11,6 +11,7 @@
 #include "PerPassAndPerEntityConstantBufferData.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
+#include "../../Scene/SceneBlueprint.h"
 
 namespace Engine::EngineWorld {
 
@@ -24,7 +25,13 @@ namespace Engine::EngineWorld {
 			bool isStatic,
 			bool isActive
 		);
-		~Entity();
+		~Entity() = default;
+
+		bool Initialize(
+			const EntityBlueprint& entityBlueprint,
+			uint32_t id,
+			EngineResources::Mesh* mesh
+		) noexcept;
 
 		void SetID(uint32_t id);
 		uint32_t GetID() const;

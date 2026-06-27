@@ -197,6 +197,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h" />
@@ -253,6 +254,7 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.cpp" />

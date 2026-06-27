@@ -8,7 +8,6 @@ namespace Engine::EngineCamera {
 
 	class CameraUtil {
 	public:
-
 		static void BuildViewProjection(
 			const Matrix4x4& view,
 			const Matrix4x4& projection,

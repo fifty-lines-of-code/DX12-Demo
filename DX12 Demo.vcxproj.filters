@@ -334,6 +334,12 @@
     <Filter Include="Header Files\Engine\Simulation">
       <UniqueIdentifier>{a70d3855-7b9b-4942-aae0-538e208da87e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\World Manager\Scene Manager\Reflection Manager">
+      <UniqueIdentifier>{c38b9bca-3d5c-4d77-a848-7ca276987419}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\World Manager\Scene Manager\Reflection Manager">
+      <UniqueIdentifier>{d98a0714-0903-4528-bc35-838ec187008c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -594,6 +600,15 @@
     <ClInclude Include="Source\Engine\Camera Manager\CameraHelper.h">
       <Filter>Header Files\Engine\Camera Manager</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Reflection Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityRenderData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityTransformData.h">
+      <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -737,6 +752,9 @@
     <ClCompile Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.cpp">
       <Filter>Source Files\Engine\Camera Manager\Reflected Camera</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.cpp">
+      <Filter>Source Files\Engine\World Manager\Scene Manager\Reflection Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -769,6 +787,7 @@
     <Image Include="Source\Resources\Textures\Checkboard.dds">
       <Filter>Resource Files\Textures</Filter>
     </Image>
+    <Image Include="Source\Resources\Textures\WoodCrate02.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\Debug\debug_ps.hlsl">

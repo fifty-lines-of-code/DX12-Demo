@@ -23,8 +23,35 @@ namespace Engine::EngineWorld {
 		mIsDirty(true),
 		mIsActive(false)
 	{}
+	
+	bool Entity::Initialize(
+		const EntityBlueprint& entityBlueprint,
+		uint32_t id,
+		EngineResources::Mesh* mesh
+	) noexcept {
+		SetIsDirty(true);
+		SetIsActive(true);
+		SetID(id);
+		SetEntityType(entityBlueprint.EntityType);
+		SetCenter(entityBlueprint.Center);
+		SetScale(entityBlueprint.Scale);
+		SetBasisVectors(entityBlueprint.BasisVectors);
+		SetSurfaceNormal(entityBlueprint.SurfaceNormal);
+		SetIsStatic(entityBlueprint.IsStatic);
+		SetMesh(mesh);
 
-	Entity::~Entity() {}
+		// update all submeshes
+		for (int i = 0; i < entityBlueprint.ActiveSubMeshCount; ++i) {
+			const EntitySubMeshBlueprint& subMeshBlueprint = entityBlueprint.EntitySubMeshBlueprints[i];
+			SetSubMeshMaterialAndTexture(
+				i,
+				subMeshBlueprint.MaterialType,
+				subMeshBlueprint.TextureID
+			);
+		}
+
+		return true;
+	}
 
 	void Entity::SetID(uint32_t id) { mID = id; }
 

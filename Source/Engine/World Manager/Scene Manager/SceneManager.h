@@ -11,6 +11,7 @@
 #include "Resource Manager/ResourceManager.h"
 #include "../Scene/SceneBlueprint.h"
 #include <unordered_map>
+#include "Reflection Manager/ReflectionManager.h"
 
 class IInputSystem;
 
@@ -21,13 +22,21 @@ namespace Engine::EngineWorld {
 		SceneManager();
 		~SceneManager();
 
-		bool Initialize(const Vector3& center, float halfWidth);
-		bool LoadScene(SceneBlueprint& sceneBlueprint);
+		SceneManager(const SceneManager& rhs) = delete;
+		SceneManager& operator=(const SceneManager& rhs) = delete;
+		SceneManager(SceneManager&&) = delete;
+		SceneManager& operator=(SceneManager&&) = delete;
+
+		bool Initialize(
+			const Vector3& center, 
+			float halfWidth
+		);
+		bool LoadScene(const SceneBlueprint& sceneBlueprint);
+
 		void GetPotentialCollisionsWithAABB(
 			const AABB& playerPotentialAABB,
 			std::vector<const Entity*>& candidates
 		);
-
 		void Update(
 			const IInputSystem* const inputSystem, 
 			float deltaTime,
@@ -65,12 +74,27 @@ namespace Engine::EngineWorld {
 		EngineResources::ResourceManager mResourceManager;
 		ChunksManager mChunksManager;
 		LightsManager mLightsManager;
+		ReflectionManager mReflectionManager;
 		std::vector<uint32_t> mIndexesOfDynamicEntities;
 
+		// ID is always the same as index in the array
+		uint32_t mNextEntityID;
+
+		// todo: find a different place to put this
+		// wraps around to uint32_t.max
+		uint32_t mIdOfTerrainOrFloor = -1; 
+
 	private:
+		bool LoadEntitiesIntoScene(
+			const SceneBlueprint& sceneBlueprint
+		) noexcept;
 		bool GeneratePlayerEntity(
-			SceneBlueprint& sceneblueprint
+			const SceneBlueprint& sceneBlueprint
 		);
+		bool LoadAndRegisterEntitiesIntoChunkManager(
+			const SceneBlueprint& sceneBlueprint
+		);
+
 		void PrepareForCollisionPass();
 		float CalculateProposedYOfTerrain(
 			const EngineResources::Mesh& terrainMesh,

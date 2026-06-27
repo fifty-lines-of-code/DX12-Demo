@@ -6,12 +6,9 @@
 namespace Engine::EngineWorld {
 
 	SceneManager::SceneManager() :
-		// Chunks manager entities id always start at 1
-		// cause the player index is always 0
-		// we pass in the start of the array
-		mChunksManager(&mEntities[0], 1),
 		mResourceManager(ChunksManager::CHUNK_SIZE),
-		mEntityCount(0)
+		mEntityCount(0),
+		mNextEntityID(0)
 	{}
 
 	SceneManager::~SceneManager() {}
@@ -29,22 +26,20 @@ namespace Engine::EngineWorld {
 
 		if (!mLightsManager.Initialize()) { return false; }
 
+		if (!mReflectionManager.Initialize()) {	return false; }
+
 		return true;
 	}
 
-	bool SceneManager::LoadScene(SceneBlueprint& blueprint) {
+	bool SceneManager::LoadScene(const SceneBlueprint& blueprint) {
 		// update entity count
 		mEntityCount = blueprint.EntityCount;
-
-		// ALWAYS create Player Entity first so it has ID 0
-		// todo: find a better way to enforce this
-		if (!GeneratePlayerEntity(blueprint)) { return false; }
+		
+		// load entities
+		if (!LoadEntitiesIntoScene(blueprint)) { return false; }
 
 		// load the lights
 		mLightsManager.Load(blueprint.SunStrength, blueprint.SunDirection);
-
-		// load the chunks
-		if (!mChunksManager.LoadChunks(mResourceManager, blueprint)) { return false; }
 
 		// only add static entities to the OctTree during Load
 		for (const auto& entity : mEntities) {
@@ -145,47 +140,34 @@ namespace Engine::EngineWorld {
 		float entityZ,
 		float deltaTime
 	) {
-		uint16_t terrainOrFloorId = mChunksManager.GetIdOfTerrainOrFloor(
-			entityX,
-			entityZ
-		);
-
-		if (terrainOrFloorId >= EngineConfig::EngineConfig::MAX_ENTITIES ||
-			// wraps around to uint16_t max
-			terrainOrFloorId == uint16_t(-1)) {
+		if (mIdOfTerrainOrFloor >= EngineConfig::EngineConfig::MAX_ENTITIES) {
 			return uint16_t(-1);
 		}
 
-		Entity& entity = mEntities[terrainOrFloorId];
-		if (entity.GetIsTerrainOrFloor()) {
-			switch (entity.GetEntityType()) {
-			case EntityType::TERRAIN: {
-				Vector2 entityXZ = Vector2(entityX, entityZ);
-				Vector2 chunkCenterXZ = mChunksManager.GetCenterXZOfChunkContaining(
-					entityXZ
-				);
+		Entity& entity = mEntities[mIdOfTerrainOrFloor];
+		switch (entity.GetEntityType()) {
+		case EntityType::TERRAIN: {
+			Vector2 entityXZ = Vector2(entityX, entityZ);
+			Vector2 chunkCenterXZ = mChunksManager.GetCenterXZOfChunkContaining(
+				entityXZ
+			);
 
-				return CalculateProposedYOfTerrain(
-					*mEntities[terrainOrFloorId].GetMesh(),
-					entityX,
-					entityZ,
-					chunkCenterXZ,
-					deltaTime
-				);
-			}
-			case EntityType::FLOOR:
-				// add a small delta value (0.025f) so that
-				// object appears just above the floor
-				return 
-					entity.GetTransformData().Scale.y + 
-					EngineConfig::EngineConfig::PHYSICS_Y_EPSILON;
-			default:
-				// it should never reach here, something has gone wrong
-				return uint16_t(-1);
-			}
+			return CalculateProposedYOfTerrain(
+				*mEntities[mIdOfTerrainOrFloor].GetMesh(),
+				entityX,
+				entityZ,
+				chunkCenterXZ,
+				deltaTime
+			);
 		}
-		else {
-			// something went wrong this entity should be a terrain or a floor
+		case EntityType::FLOOR:
+			// add a small delta value (0.025f) so that
+			// object appears just above the floor
+			return
+				entity.GetTransformData().Scale.y +
+				EngineConfig::EngineConfig::PHYSICS_Y_EPSILON;
+		default:
+			// it should never reach here, something has gone wrong
 			return uint16_t(-1);
 		}
 	}
@@ -200,37 +182,100 @@ namespace Engine::EngineWorld {
 		return mEntities[PLAYER_INDEX];
 	}
 
-	bool SceneManager::GeneratePlayerEntity(SceneBlueprint& blueprint) {
+	bool SceneManager::LoadEntitiesIntoScene(
+		const SceneBlueprint& blueprint
+	) noexcept {
+		// ALWAYS create Player Entity first so it has ID 0
+		// todo: find a better way to enforce this
+		if (!GeneratePlayerEntity(blueprint)) { return false; }
+
+		mNextEntityID++;
+
+		if (!LoadAndRegisterEntitiesIntoChunkManager(blueprint)) { return false; }
+
+		return true;
+	}
+
+	bool SceneManager::GeneratePlayerEntity(const SceneBlueprint& blueprint) {
 		if (blueprint.EntityCount == 0) { return false; }
+		if (mNextEntityID > 0) { return false; }
 
 		Entity& playerEntity = mEntities[PLAYER_INDEX];
+
 		// currently player is always at index 0
 		// TODO: find a better way to do this
-		const EntityBlueprint& playerBlueprint = blueprint.EntityBlueprints[PLAYER_INDEX];
-		playerEntity.SetIsDirty(true);
-		playerEntity.SetIsActive(true);
-		playerEntity.SetID(PLAYER_INDEX);
-		playerEntity.SetEntityType(playerBlueprint.EntityType);
-		playerEntity.SetCenter(playerBlueprint.Center);
-		playerEntity.SetScale(playerBlueprint.Scale);
-		playerEntity.SetBasisVectors(playerBlueprint.BasisVectors);
-		playerEntity.SetSurfaceNormal(playerBlueprint.SurfaceNormal);
-		playerEntity.SetIsStatic(false);
-		// set mesh
-		EngineResources::Mesh* cubeMesh = mResourceManager.GetMesh(playerBlueprint.MeshID);
-		playerEntity.SetMesh(cubeMesh);
 
-		// update all submeshes
-		for (int i = 0; i < playerBlueprint.ActiveSubMeshCount; ++i) {
-			const EntitySubMeshBlueprint& subMeshBlueprint = playerBlueprint.EntitySubMeshBlueprints[i];
-			playerEntity.SetSubMeshMaterialAndTexture(
-				i,
-				subMeshBlueprint.MaterialType,
-				subMeshBlueprint.TextureID
-			);
-		}
+		const EntityBlueprint& playerBlueprint = blueprint.EntityBlueprints[PLAYER_INDEX];
+		EngineResources::Mesh* playerMesh = mResourceManager.GetMesh(
+			playerBlueprint.MeshID
+		);
+		if (playerMesh == nullptr) { return false; }
+
+		bool result = playerEntity.Initialize(
+			playerBlueprint,
+			PLAYER_INDEX,
+			playerMesh
+		);
+
+		if (!result) { return false; }
 
 		mIndexesOfDynamicEntities.push_back(PLAYER_INDEX);
+
+		return true;
+	}
+
+	bool SceneManager::LoadAndRegisterEntitiesIntoChunkManager(
+		const SceneBlueprint& sceneBlueprint
+	) {
+		std::vector<uint32_t> entityIDs = {};
+		entityIDs.reserve(sceneBlueprint.EntityCount);
+
+		for (uint32_t i = 0; i < sceneBlueprint.EntityCount; ++i) {
+			// we've loaded max entities
+			// gonna return false for now cause this should never happen
+			// but will need to fix in the future
+			// TODO:
+
+			if (mNextEntityID >= EngineConfig::EngineConfig::MAX_ENTITIES) {
+				return false;
+			}
+
+			const EntityBlueprint& entityBlueprint = sceneBlueprint.EntityBlueprints[i];
+
+			// skip all Player entities, should only be one
+			if (entityBlueprint.EntityType == EntityType::PLAYER) {
+				continue;
+			}
+
+			EngineResources::Mesh* mesh = mResourceManager.GetMesh(
+				entityBlueprint.MeshID
+			);
+			if (mesh == nullptr) { return false; }
+
+			Entity& entity = mEntities[mNextEntityID];
+			switch (entityBlueprint.EntityType) {
+				// todo: find a better way to store this ID
+				// for floor/terrain traversal
+			case EntityType::TERRAIN:
+				mIdOfTerrainOrFloor = mNextEntityID;
+				break;
+			case EntityType::FLOOR:
+				mIdOfTerrainOrFloor = mNextEntityID;
+				break;
+			case EntityType::MIRROR:
+				mReflectionManager.RegisterMirror(mNextEntityID);
+				break;
+			default: break;
+			}
+
+			entity.Initialize(entityBlueprint, mNextEntityID, mesh);
+			entityIDs.push_back(mNextEntityID);
+			mNextEntityID++;
+		}
+
+		if (entityIDs.size() > 0) {
+			mChunksManager.Load(entityIDs);
+		 }
 
 		return true;
 	}
@@ -250,6 +295,7 @@ namespace Engine::EngineWorld {
 		}
 	}
 
+	// TODO: move this out to somewhere else
 	float SceneManager::CalculateProposedYOfTerrain(
 		const EngineResources::Mesh& terrainMesh,
 		float entityX,

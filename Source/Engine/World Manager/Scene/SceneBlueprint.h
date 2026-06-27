@@ -30,6 +30,7 @@ namespace Engine::EngineWorld {
 		EngineResources::MeshID MeshID;
 		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> EntitySubMeshBlueprints;
 		uint8_t ActiveSubMeshCount;
+		bool IsStatic;
 	};
 
 	struct SceneBlueprint {

@@ -66,7 +66,7 @@ namespace Engine {
 		void LoadTextures();
 		bool SetupPipelines();
 		void LoadGeometry();
-		void UpdateInputSystemAndCamera(float deltaTime);
+		void UpdateInputSystemAndMainCamera(float deltaTime);
 		void UpdateConstantBuffers();
 		void UpdatePerPassConstantBuffers() const;
 		void UpdatePerEntityConstantBuffers();
