@@ -53,7 +53,11 @@ namespace Engine::EngineCamera {
 
 		const Matrix4x4& GetViewProjection() const;
 		const BasisVectors& GetBasisVectors() const;
-		const Vector3& GetPosition() const noexcept;
+		const Vector3& GetCenter() const noexcept;
+		float GetFovY() const noexcept;
+		float GetAspectRatio() const noexcept;
+		float GetNearPlane() const noexcept;
+		float GetFarPlane() const noexcept;
 
 		void OnResize(
 			UINT newClientWidth, 

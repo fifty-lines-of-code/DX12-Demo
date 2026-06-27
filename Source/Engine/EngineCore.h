@@ -58,7 +58,7 @@ namespace Engine {
 		bool mIsDebugBuild;
 
 	private:
-		bool InitializeCamera(const Vector3& playerPosition);
+		bool InitializeCameras(const Vector3& playerPosition);
 		bool InitializeRenderer(
 			UINT screenWidth, 
 			UINT screenHeight

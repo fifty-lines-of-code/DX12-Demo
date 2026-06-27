@@ -400,6 +400,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mPsByteCode->GetBufferSize()
 		};
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		// only comment out below when testing rendering the mirror reflection
+		// and never in prod
+		// psoDesc.RasterizerState.FrontCounterClockwise = true;
+
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 		psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 		psoDesc.SampleMask = UINT_MAX;

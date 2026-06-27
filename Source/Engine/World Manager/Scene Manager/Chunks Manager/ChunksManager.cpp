@@ -26,7 +26,7 @@ namespace Engine::EngineWorld {
 		return Vector2(0.f);
 	}
 
-#pragma region Privte
+#pragma region Private
 
 	bool ChunksManager::InitializeInitialChunks() {
 		// todo:

@@ -24,11 +24,27 @@ namespace Engine::EngineCamera {
 
 	void CameraManager::UpdateReflectedCameraWithSimulationData(
 		const EngineSimulation::MirrorPlaneQueryResult& result
-	) {
-		// todo:
+	) noexcept {
+		const BasisVectors& mainCameraBasisvectors = mMainCamera.GetBasisVectors();
+
+		mReflectedCamera.UpdateWithMainCameraData(
+			mMainCamera.GetCenter(),
+			mainCameraBasisvectors.Forward,
+			mainCameraBasisvectors.Up,
+			mMainCamera.GetFovY(),
+			mMainCamera.GetAspectRatio(),
+			mMainCamera.GetNearPlane(),
+			mMainCamera.GetFarPlane(),
+			result
+		);
 	}
 
-	const Matrix4x4& CameraManager::GetMainCameraViewProjection() const {
+	const Matrix4x4& CameraManager::GetViewProjection(CameraType type) const noexcept {
+
+		if (type == CameraType::REFLECTED) {
+			return mReflectedCamera.GetViewProjection();
+		}
+
 		return mMainCamera.GetViewProjection();
 	}
 
@@ -36,8 +52,8 @@ namespace Engine::EngineCamera {
 		return mMainCamera.GetBasisVectors();
 	}
 
-	const Vector3& CameraManager::GetMainCameraPosition() const noexcept {
-		return mMainCamera.GetPosition();
+	const Vector3& CameraManager::GetMainCameraCenter() const noexcept {
+		return mMainCamera.GetCenter();
 	}
 
 	void CameraManager::OnResize(UINT newClientWidth, UINT newClientHeight) {

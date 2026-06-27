@@ -32,7 +32,7 @@ namespace Engine {
 
 		if (!mWorldManager.Initialize()) { return false; }
 
-		if (!InitializeCamera(mWorldManager.GetPlayerCenter())) { return false; }
+		if (!InitializeCameras(mWorldManager.GetPlayerCenter())) { return false; }
 
 		if (!mAudioSystem.Initialize()) { return false; }
 
@@ -85,6 +85,13 @@ namespace Engine {
 		mCameraManager.UpdateMainCameraWithTarget(mWorldManager.GetPlayerCenter());
 
 		// update the reflection camera
+		if (mWorldManager.HasActiveMirros()) {
+			const EngineSimulation::MirrorPlaneQueryResult result = mWorldManager.GetMirrorPlaneQueryResult();
+
+			mCameraManager.UpdateReflectedCameraWithSimulationData(
+				result
+			);
+		}
 
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();
@@ -141,7 +148,7 @@ namespace Engine {
 
 #pragma region Private
 
-	bool EngineCore::InitializeCamera(const Vector3& playerPosition) {
+	bool EngineCore::InitializeCameras(const Vector3& playerPosition) {
 		return mCameraManager.Initialize(playerPosition);
 	}
 
@@ -259,7 +266,9 @@ namespace Engine {
 		// DirectXMath uses row-major alignment in CPU memory, but 
 		// HLSL defaults to column-major storage for matrix packing. 
 		// We transpose here to prevent skewed vector transformations on the GPU.
-		const Matrix4x4& viewProj = mCameraManager.GetMainCameraViewProjection();
+		const Matrix4x4& viewProj = mCameraManager.GetViewProjection(
+			EngineCamera::CameraType::MAIN
+		);
 		DirectX::XMMATRIX viewProjTranspose = DirectX::XMMatrixTranspose(
 			DirectX::XMLoadFloat4x4(&viewProj.AsXMFLOAT4X4())
 		);
@@ -269,7 +278,7 @@ namespace Engine {
 		);
 
 		// set camera pos
-		const Vector3& cameraPos = mCameraManager.GetMainCameraPosition();
+		const Vector3& cameraPos = mCameraManager.GetMainCameraCenter();
 		perPassCB.EyePosW = cameraPos;
 
 		// set ambient light

@@ -12,6 +12,7 @@
 #include "../Scene/SceneBlueprint.h"
 #include <unordered_map>
 #include "Reflection Manager/ReflectionManager.h"
+#include "../../Simulation/SimulationDataStructures.h"
 
 class IInputSystem;
 
@@ -33,14 +34,15 @@ namespace Engine::EngineWorld {
 		);
 		bool LoadScene(const SceneBlueprint& sceneBlueprint);
 
-		void GetPotentialCollisionsWithAABB(
-			const AABB& playerPotentialAABB,
-			std::vector<const Entity*>& candidates
-		);
+		void PrepareForUpdate();
 		void Update(
 			const IInputSystem* const inputSystem, 
 			float deltaTime,
 			float animationSpeed
+		);
+		void GetPotentialCollisionsWithAABB(
+			const AABB& playerPotentialAABB,
+			std::vector<const Entity*>& candidates
 		);
 
 		uint32_t GetEntityCount() const noexcept;
@@ -58,13 +60,15 @@ namespace Engine::EngineWorld {
 		EngineResources::MaterialArray& GetMaterials() noexcept;
 		EngineResources::TextureArray& GetTextures() noexcept;
 
-		void PrepareForUpdate();
-
 		float GetProposedYOfTerrainOrFloor(
 			float entityX, 
 			float entityZ,
 			float deltaTime
 		);
+
+		bool HasActiveMirros() const noexcept;
+
+		const EngineSimulation::MirrorPlaneQueryResult GetMirrorPlaneQueryResult() const noexcept;
 
 	private:
 		static constexpr uint32_t PLAYER_INDEX = 0;

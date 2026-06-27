@@ -53,27 +53,6 @@ namespace Engine::EngineWorld {
 		return true;
 	}
 
-	void Entity::SetID(uint32_t id) { mID = id; }
-
-	uint32_t Entity::GetID() const { return mID; }
-
-	void Entity::SetIsStatic(bool isStatic) { mIsStatic = isStatic; }
-
-	bool Entity::GetIsStatic() const { return mIsStatic; }
-
-	//TODO: store the mesh ID instead of a pointer indirection for efficiency
-	void Entity::SetMesh(EngineResources::Mesh* mesh) {
-		mMesh = mesh;
-
-		mPhysicsBody.LocalAABB.Min = mesh->GetLocalMin();
-		mPhysicsBody.LocalAABB.Max = mesh->GetLocalMax();
-
-		mPhysicsBody.UpdateWorldAABB(mRenderData.WorldMatrix);
-	}
-
-	// thus this returns an ID
-	const EngineResources::Mesh* Entity::GetMesh() const { return mMesh; }
-
 	void Entity::Update(float stickX, float stickY, float deltaTime, float speed) {
 		if (mIsDirty) { 
 			mRenderData.RebuildWorldMatrix(
@@ -117,6 +96,21 @@ namespace Engine::EngineWorld {
 		destinationBufferData.TextureID = mRenderData.SubMeshMaterials[index].TextureID;
 	}
 
+	uint32_t Entity::GetID() const noexcept { return mID; }
+
+	bool Entity::GetIsStatic() const noexcept { return mIsStatic; }
+
+	Vector3 Entity::GetCenter() const noexcept { return mTransformData.Center; }
+
+	Vector3 Entity::GetScale() const noexcept { return mTransformData.Scale; }
+
+	Vector3 Entity::GetSurfaceNormal() const noexcept { 
+		return mRenderData.SurfaceNormal; 
+	}
+
+	// thus this returns an ID
+	const EngineResources::Mesh* Entity::GetMesh() const noexcept { return mMesh; }
+
 	EnginePhysics::PhysicsBody& Entity::GetPhysicsBody() noexcept { return mPhysicsBody; }
 
 	const AABB& Entity::GetAABB() const noexcept { return mPhysicsBody.WorldAABB; }
@@ -128,6 +122,30 @@ namespace Engine::EngineWorld {
 	void Entity::SetIsDirty(bool dirty) { mIsDirty = dirty; }
 
 	bool Entity::GetIsActive() const noexcept { return mIsActive; }
+
+	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
+
+	bool Entity::GetIsTerrainOrFloor() const noexcept {
+		return
+			mEntityType == EntityType::TERRAIN ||
+			mEntityType == EntityType::FLOOR;
+	}
+
+#pragma region Private
+
+	void Entity::SetID(uint32_t id) { mID = id; }
+
+	void Entity::SetIsStatic(bool isStatic) { mIsStatic = isStatic; }
+
+	//TODO: store the mesh ID instead of a pointer indirection for efficiency
+	void Entity::SetMesh(EngineResources::Mesh* mesh) {
+		mMesh = mesh;
+
+		mPhysicsBody.LocalAABB.Min = mesh->GetLocalMin();
+		mPhysicsBody.LocalAABB.Max = mesh->GetLocalMax();
+
+		mPhysicsBody.UpdateWorldAABB(mRenderData.WorldMatrix);
+	}
 
 	void Entity::SetIsActive(bool isActive) noexcept { mIsActive = isActive; }
 
@@ -152,17 +170,10 @@ namespace Engine::EngineWorld {
 		mRenderData.SurfaceNormal = surfaceNormal;
 	}
 
-	bool Entity::GetIsTerrainOrFloor() const noexcept { 
-		return 
-			mEntityType == EntityType::TERRAIN ||
-			mEntityType == EntityType::FLOOR; 
-	}
-
 	void Entity::SetEntityType(EntityType entityType) noexcept {
 		mEntityType = entityType;
 	}
 
-	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
 
 	void Entity::SetSubMeshMaterialAndTexture(
 		uint8_t subMeshIndex,
@@ -185,4 +196,5 @@ namespace Engine::EngineWorld {
 		mRenderData.SubMeshMaterials[index].MaterialID = (uint8_t)material;
 		mRenderData.SubMeshMaterials[index].TextureID = (uint8_t)texture;
 	}
+#pragma endregion
 }

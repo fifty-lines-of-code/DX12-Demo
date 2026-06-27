@@ -51,6 +51,23 @@ namespace Engine::EngineWorld {
 		return true;
 	}
 
+	void SceneManager::PrepareForUpdate() {
+		mOctTree.ClearDynamicEntities();
+	}
+
+	void SceneManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed) {
+
+		// tell entities to update their World matrix
+		for (auto& entity : mEntities) {
+			entity.Update(
+				inputSystem->GetLeftStickX(),
+				inputSystem->GetLeftStickY(),
+				deltaTime,
+				animationSpeed
+			);
+		}
+	}
+
 	void SceneManager::GetPotentialCollisionsWithAABB(
 		const AABB& playerPotentialAABB,
 		std::vector<const Entity*>& candidates
@@ -70,19 +87,6 @@ namespace Engine::EngineWorld {
 			if (index >= 0 && index < EngineConfig::EngineConfig::MAX_ENTITIES) {
 				candidates.push_back(&mEntities[index]);
 			}
-		}
-	}
-
-	void SceneManager::Update(const IInputSystem* const inputSystem, float deltaTime, float animationSpeed) {
-
-		// tell entities to update their World matrix
-		for (auto& entity : mEntities) {
-			entity.Update(
-				inputSystem->GetLeftStickX(),
-				inputSystem->GetLeftStickY(),
-				deltaTime,
-				animationSpeed
-			);
 		}
 	}
 
@@ -130,10 +134,6 @@ namespace Engine::EngineWorld {
 		return mResourceManager.GetTextures();
 	}
 
-	void SceneManager::PrepareForUpdate() {
-		mOctTree.ClearDynamicEntities();
-	}
-
 	// todo: Move this somewhere else
 	float SceneManager::GetProposedYOfTerrainOrFloor(
 		float entityX, 
@@ -170,6 +170,22 @@ namespace Engine::EngineWorld {
 			// it should never reach here, something has gone wrong
 			return uint16_t(-1);
 		}
+	}
+
+	bool SceneManager::HasActiveMirros() const noexcept {
+		// todo: perform frustum culling before calling this
+		return mReflectionManager.HasActiveMirrors();
+	}
+
+	const EngineSimulation::MirrorPlaneQueryResult SceneManager::GetMirrorPlaneQueryResult() const noexcept {
+		EngineSimulation::MirrorPlaneQueryResult result;
+
+		mReflectionManager.LoadMirrorPlaneQueryResult(
+			result,
+			mEntities
+		);
+
+		return result;
 	}
 
 #pragma region Private

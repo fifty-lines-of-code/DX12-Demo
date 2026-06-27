@@ -54,8 +54,24 @@ namespace Engine::EngineCamera {
 		return mMainCameraData.BasisVectors;
 	}
 
-	const Vector3& MainCamera::GetPosition() const noexcept { 
+	const Vector3& MainCamera::GetCenter() const noexcept { 
 		return mMainCameraData.Center;
+	}
+
+	float MainCamera::GetFovY() const noexcept {
+		return mMainCameraData.FovY;
+	}
+
+	float MainCamera::GetAspectRatio() const noexcept {
+		return mMainCameraData.AspectRatio;
+	}
+
+	float MainCamera::GetNearPlane() const noexcept {
+		return mMainCameraData.NearPlane;
+	}
+
+	float MainCamera::GetFarPlane() const noexcept {
+		return mMainCameraData.FarPlane;
 	}
 
 	void MainCamera::OnResize(UINT newClientWidth, UINT newClientHeight) {

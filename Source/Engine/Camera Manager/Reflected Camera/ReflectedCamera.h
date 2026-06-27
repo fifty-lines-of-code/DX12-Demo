@@ -29,12 +29,17 @@ namespace Engine::EngineCamera {
 			const Vector3& mainCamUp,
 			float          fovY,
 			float          aspectRatio,
-			float          nearZ,
-			float          farZ,
+			float          nearPlane,
+			float          farPlane,
 			const EngineSimulation::MirrorPlaneQueryResult& mirrorPlanes
-		);
+		) noexcept;
+
+		const Matrix4x4& GetViewProjection() const noexcept;
 
 	private:
 		ReflectedCameraData mData;
+
+	private:
+		void DebugPrintCameraData() const noexcept;
 	};
 }

@@ -175,6 +175,14 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetMeshesToLoad();
 	}
 
+	bool WorldManager::HasActiveMirros() const noexcept {
+		return mSceneManager.HasActiveMirros();
+	}
+
+	const EngineSimulation::MirrorPlaneQueryResult WorldManager::GetMirrorPlaneQueryResult() const noexcept {
+		return mSceneManager.GetMirrorPlaneQueryResult();
+	}
+
 #pragma endregion
 
 #pragma region Private

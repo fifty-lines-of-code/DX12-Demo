@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Main Camera/MainCamera.h"
+#include "Reflected Camera/ReflectedCamera.h"
 #include "../Simulation/SimulationDataStructures.h"
 
 namespace Engine::EngineCamera {
@@ -33,11 +34,12 @@ namespace Engine::EngineCamera {
 
 		void UpdateReflectedCameraWithSimulationData(
 			const EngineSimulation::MirrorPlaneQueryResult& result
-		);
+		) noexcept;
 
-		const Matrix4x4& GetMainCameraViewProjection() const;
+		const Matrix4x4& GetViewProjection(CameraType type) const noexcept;
+
 		const BasisVectors& GetMainCameraBasisVectors() const;
-		const Vector3& GetMainCameraPosition() const noexcept;
+		const Vector3& GetMainCameraCenter() const noexcept;
 
 		void OnResize(
 			UINT newClientWidth,
@@ -46,5 +48,6 @@ namespace Engine::EngineCamera {
 
 	private:
 		MainCamera mMainCamera;
+		ReflectedCamera mReflectedCamera;
 	};
 }
