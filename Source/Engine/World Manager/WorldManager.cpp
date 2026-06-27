@@ -159,6 +159,12 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetEntities();
 	}
 
+	void WorldManager::GetEntitiesForReflectionPass(
+		std::vector<const Entity*>& entities
+	) {
+		return mSceneManager.GetEntitiesForReflectionPass(entities);
+	}
+
 	EngineResources::MaterialArray& WorldManager::GetMaterials() noexcept {
 		return mSceneManager.GetMaterials();
 	}
@@ -175,8 +181,8 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetMeshesToLoad();
 	}
 
-	bool WorldManager::HasActiveMirros() const noexcept {
-		return mSceneManager.HasActiveMirros();
+	bool WorldManager::HasActiveMirrors() const noexcept {
+		return mSceneManager.HasActiveMirrors();
 	}
 
 	const EngineSimulation::MirrorPlaneQueryResult WorldManager::GetMirrorPlaneQueryResult() const noexcept {

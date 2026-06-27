@@ -1,9 +1,12 @@
 #include "ReflectionManager.h"
 
+#include "../../../../Helper/Helper.h"
+
 namespace Engine::EngineWorld {
 
 	ReflectionManager::ReflectionManager() : 
 		mMirrorEntityIndices({}),
+		mIsMirrorLUT({ false }),
 		mMirrorCount(0)
 	{}
 
@@ -13,14 +16,25 @@ namespace Engine::EngineWorld {
 		return true;
 	}
 
-	bool ReflectionManager::RegisterMirror(uint32_t mirrorEntityIndex) {
-		if (mMirrorCount >= EngineConfig::EngineConfig::MAX_MIRROR_PLANES) {
+	bool ReflectionManager::RegisterMirror(uint32_t mirrorEntityIndex)  {
+		if (mMirrorCount >= EngineConfig::EngineConfig::MAX_MIRROR_PLANES ||
+			mirrorEntityIndex >= EngineConfig::EngineConfig::MAX_ENTITIES) {
 			return false;
 		}
 
 		mMirrorEntityIndices[mMirrorCount++] = mirrorEntityIndex;
+		mIsMirrorLUT[mirrorEntityIndex] = true;
 
 		return true;
+	}
+
+	void ReflectionManager::Reset() noexcept {
+		mMirrorCount = 0;
+		mIsMirrorLUT.fill(false);
+	}
+
+	bool ReflectionManager::HasActiveMirrors() const noexcept {
+		return mMirrorCount > 0;
 	}
 
 	void ReflectionManager::LoadMirrorPlaneQueryResult(
@@ -62,9 +76,14 @@ namespace Engine::EngineWorld {
 		}
 	}
 
-	void ReflectionManager::Reset() noexcept { mMirrorCount = 0; }
+	bool ReflectionManager::IsMirrorEntity(uint32_t entityID) const noexcept {
+		ENGINE_ASSERT(
+			entityID < EngineConfig::EngineConfig::MAX_ENTITIES,
+			L"Entity ID is invalid!!"
+		);
 
-	bool ReflectionManager::HasActiveMirrors() const noexcept {
-		return mMirrorCount > 0;
+		if (entityID >= EngineConfig::EngineConfig::MAX_ENTITIES) { return false; }
+
+		return mIsMirrorLUT[entityID];
 	}
 }

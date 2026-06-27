@@ -47,6 +47,10 @@ namespace Engine::EngineWorld {
 
 		std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& GetEntities();
 
+		void GetEntitiesForReflectionPass(
+			std::vector<const Entity*>& entities
+		);
+
 		EngineResources::MaterialArray& GetMaterials() noexcept;
 
 		EngineResources::TextureArray& GetTextures() noexcept;
@@ -55,7 +59,7 @@ namespace Engine::EngineWorld {
 
 		const EngineResources::MeshArray& GetMeshesToLoad() const noexcept;
 
-		bool HasActiveMirros() const noexcept;
+		bool HasActiveMirrors() const noexcept;
 
 		const EngineSimulation::MirrorPlaneQueryResult GetMirrorPlaneQueryResult() const noexcept;
 

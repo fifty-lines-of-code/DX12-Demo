@@ -30,8 +30,13 @@ namespace Engine::EngineWorld {
 			const std::array<Entity, EngineConfig::EngineConfig::MAX_ENTITIES>& entities
 		) const noexcept;
 
+		bool IsMirrorEntity(uint32_t entityID) const noexcept;
+
 	private:
 		std::array<uint32_t, EngineConfig::EngineConfig::MAX_MIRROR_PLANES> mMirrorEntityIndices;
+		// we want a O(1) lookup per frame when we query
+		// if an entity is a mirror
+		std::array<bool, EngineConfig::EngineConfig::MAX_ENTITIES> mIsMirrorLUT;
 		uint32_t mMirrorCount;
 	};
 }

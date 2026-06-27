@@ -126,6 +126,23 @@ namespace Engine::EngineWorld {
 		return mEntities;
 	}
 
+	void SceneManager::GetEntitiesForReflectionPass(
+		std::vector<const Entity*>& entities
+	) const noexcept {
+		entities.clear();
+		if (entities.capacity() < mEntities.size()) {
+			entities.reserve(mEntities.size());
+		}
+
+		for (const Entity& entity : mEntities) {
+			if (mReflectionManager.IsMirrorEntity(entity.GetID())) {
+				continue;
+			}
+
+			entities.push_back(&entity);
+		}
+	}
+
 	EngineResources::MaterialArray& SceneManager::GetMaterials() noexcept {
 		return mResourceManager.GetMaterials();
 	}
@@ -172,7 +189,7 @@ namespace Engine::EngineWorld {
 		}
 	}
 
-	bool SceneManager::HasActiveMirros() const noexcept {
+	bool SceneManager::HasActiveMirrors() const noexcept {
 		// todo: perform frustum culling before calling this
 		return mReflectionManager.HasActiveMirrors();
 	}
