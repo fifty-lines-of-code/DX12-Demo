@@ -429,11 +429,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-	void DX12Renderer::UpdateOpaqueRenderItemsPerPassCb(
+	void DX12Renderer::UpdateOpaquePassRenderItemsPerPassCb(
 		const void* data, 
 		size_t dataSize
 	) const {
-		mCurrentFrameResource->mOpaquePerPassCB.CopyData(0, data);
+		mCurrentFrameResource->mOpaquePassRenderItemsPerPassCB.CopyData(0, data);
+	}
+
+	void DX12Renderer::UpdateMirrorPassRenderItemsPerPassCb(
+		const void* data, 
+		size_t dataSize
+	) const {
+		mCurrentFrameResource->mMirrorPassRenderItemsPerPassCB.CopyData(0, data);
 	}
 
 	void DX12Renderer::UpdateOpaqueRenderItemCb(
@@ -487,7 +494,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// tell gpu profiler it's a new frame
 		mGpuProfiler.BeginFrame();
 
-		auto commandAllocator = mCurrentFrameResource->mCommandAllocator;
+		auto& commandAllocator = mCurrentFrameResource->mCommandAllocator;
 		// Reuse the memory associated with command recording.
 		// We can only reset when the associated command lists have finished execution on the GPU.
 		ThrowIfFailed(commandAllocator->Reset());
@@ -550,6 +557,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12Renderer::Execute(const IPipelinePassExecuteContext& context) {
 
 		switch (context.GetPipelinePassType()) {
+		case RendererPipelinePass::MIRROR_RENDER_PASS: {
+			// todo:
+		}
 		case RendererPipelinePass::OPAQUE_RENDER_PASS: {
 			const DX12OpaquePipelinePassExecuteContext& ppContext = static_cast<const DX12OpaquePipelinePassExecuteContext&>(context);
 			DrawOpaqueRenderItems(ppContext);
@@ -1195,7 +1205,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-
 	bool DX12Renderer::DrawOpaqueRenderItems(
 		const DX12OpaquePipelinePassExecuteContext& context
 	) {
@@ -1253,7 +1262,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			PerItemExecuteArgs.data(),
 			context.NumberOfItems,
 			context.MaxNumSubMeshesPerItem,
-			mCurrentFrameResource->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaquePassRenderItemsPerPassCB.Resource()->GetGPUVirtualAddress(),
 			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
 			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
 			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),

@@ -39,7 +39,7 @@ namespace Engine::EngineCamera {
 		const Matrix4x4& GetViewProjection(CameraType type) const noexcept;
 
 		const BasisVectors& GetMainCameraBasisVectors() const;
-		const Vector3& GetMainCameraCenter() const noexcept;
+		const Vector3& GetCameraCenter(CameraType type) const noexcept;
 
 		void OnResize(
 			UINT newClientWidth,

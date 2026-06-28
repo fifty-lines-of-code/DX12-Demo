@@ -15,7 +15,7 @@ namespace Engine::EngineCamera {
 
 	class ReflectedCamera {
 	public:
-		ReflectedCamera() = default;
+		ReflectedCamera();
 		~ReflectedCamera() = default;
 
 		ReflectedCamera(const ReflectedCamera& rhs) = delete;
@@ -35,9 +35,11 @@ namespace Engine::EngineCamera {
 		) noexcept;
 
 		const Matrix4x4& GetViewProjection() const noexcept;
+		const Vector3& GetCenter() const noexcept;
 
 	private:
 		ReflectedCameraData mData;
+		bool mShouldDebugPrint;
 
 	private:
 		void DebugPrintCameraData() const noexcept;

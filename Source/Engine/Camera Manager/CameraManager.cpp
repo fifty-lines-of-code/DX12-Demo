@@ -40,7 +40,6 @@ namespace Engine::EngineCamera {
 	}
 
 	const Matrix4x4& CameraManager::GetViewProjection(CameraType type) const noexcept {
-
 		if (type == CameraType::REFLECTED) {
 			return mReflectedCamera.GetViewProjection();
 		}
@@ -52,7 +51,10 @@ namespace Engine::EngineCamera {
 		return mMainCamera.GetBasisVectors();
 	}
 
-	const Vector3& CameraManager::GetMainCameraCenter() const noexcept {
+	const Vector3& CameraManager::GetCameraCenter(CameraType type) const noexcept {
+		if (type == CameraType::REFLECTED) {
+			return mReflectedCamera.GetCenter();
+		}
 		return mMainCamera.GetCenter();
 	}
 

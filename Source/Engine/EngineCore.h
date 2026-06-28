@@ -68,7 +68,8 @@ namespace Engine {
 		void LoadGeometry();
 		void UpdateInputSystemAndMainCamera(float deltaTime);
 		void UpdateConstantBuffers();
-		void UpdatePerPassConstantBuffers() const;
+		void UpdateOpaquePassEntitiesPerPassConstantBuffers() const;
+		void UpdateMirrorPassEntitiesPerPassConstantBuffers() const;
 		void UpdatePerEntityConstantBuffers();
 		void UpdatePerMaterialConstantBuffers();
 		void UpdateDebugSystemConstantBuffers();

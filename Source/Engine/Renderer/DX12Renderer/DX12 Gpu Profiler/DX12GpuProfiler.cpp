@@ -212,7 +212,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
     void DX12GpuProfiler::ResetPassProfileDataForCurrentFrame() { 
         auto& currentData = mFrameProfilerData[mCurrentFrameIndex];
-        std::fill(currentData.PassIndexes.begin(), currentData.PassIndexes.end(), INVALID_PASS_INDEX);
+        std::fill(
+            currentData.PassIndexes.begin(),
+            currentData.PassIndexes.end(), 
+            INVALID_PASS_INDEX
+        );
         currentData.TotalTimestampsRecorded = 0;
     }
 

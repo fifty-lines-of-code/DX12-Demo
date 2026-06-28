@@ -11,6 +11,7 @@ namespace Engine::EngineRenderer {
 
 	enum class RendererPipelinePass : uint8_t {
 		SHADOW_PASS,
+		MIRROR_RENDER_PASS,
 		OPAQUE_RENDER_PASS,
 		DEBUG_SYSTEM_PASS,
 		BLUR_UI_PASS,
@@ -51,8 +52,12 @@ namespace Engine::EngineRenderer {
 			const void* indices
 		) = 0;
 		virtual void PrepareForUpdate() = 0;
-		virtual void UpdateOpaqueRenderItemsPerPassCb(
+		virtual void UpdateOpaquePassRenderItemsPerPassCb(
 			const void* data, 
+			size_t dataSize
+		) const = 0;
+		virtual void UpdateMirrorPassRenderItemsPerPassCb(
+			const void* data,
 			size_t dataSize
 		) const = 0;
 		virtual void UpdateOpaqueRenderItemCb(

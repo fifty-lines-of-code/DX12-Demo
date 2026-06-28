@@ -4,6 +4,10 @@
 
 namespace Engine::EngineCamera {
 
+    ReflectedCamera::ReflectedCamera() : 
+        mShouldDebugPrint(false) 
+    {}
+
     void ReflectedCamera::UpdateWithMainCameraData(
         const Vector3& mainCamCenter,
         const Vector3& mainCamForward,
@@ -32,16 +36,26 @@ namespace Engine::EngineCamera {
         const DirectX::XMVECTOR camPos = DirectX::XMLoadFloat3(&mainCamCenter.AsXMFLOAT3());
         const DirectX::XMVECTOR camFwd = DirectX::XMLoadFloat3(&mainCamForward.AsXMFLOAT3());
         const DirectX::XMVECTOR camUp = DirectX::XMLoadFloat3(&mainCamUp.AsXMFLOAT3());
-        const DirectX::XMVECTOR planeNormal = DirectX::XMLoadFloat3(&plane.Normal.AsXMFLOAT3());
-        const DirectX::XMVECTOR mirrorPos = DirectX::XMLoadFloat3(&plane.Center.AsXMFLOAT3());
+        const DirectX::XMVECTOR planeNormal = DirectX::XMLoadFloat3(
+            &plane.Normal.AsXMFLOAT3()
+        );
+        const DirectX::XMVECTOR mirrorPos = DirectX::XMLoadFloat3(
+            &plane.Center.AsXMFLOAT3()
+        );
 
         // =========================================================================
         // HALF-SPACE VALIDATION TEST
         // Geometric signed distance: Dot(CameraPos - MirrorPos, Normal)
         // Positive = camera in front of mirror (valid reflection side)
         // =========================================================================
-        const DirectX::XMVECTOR mirrorToCamera = DirectX::XMVectorSubtract(camPos, mirrorPos);
-        const DirectX::XMVECTOR distVec = DirectX::XMVector3Dot(mirrorToCamera, planeNormal);
+        const DirectX::XMVECTOR mirrorToCamera = DirectX::XMVectorSubtract(
+            camPos, 
+            mirrorPos
+        );
+        const DirectX::XMVECTOR distVec = DirectX::XMVector3Dot(
+            mirrorToCamera, 
+            planeNormal
+        );
         const float dist = DirectX::XMVectorGetX(distVec);
 
         // Camera too close or behind the mirror plane -> cull
@@ -91,7 +105,12 @@ namespace Engine::EngineCamera {
         //   | -2NzNx    -2NzNy      1-2Nz^2     0 |
         //   | -2dNx     -2dNy       -2dNz       1 |
         // =========================================================================
-        const float d = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(planeNormal, mirrorPos));
+        const float d = -DirectX::XMVectorGetX(
+            DirectX::XMVector3Dot(
+                planeNormal, 
+                mirrorPos
+            )
+        );
         const float Nx = DirectX::XMVectorGetX(planeNormal);
         const float Ny = DirectX::XMVectorGetY(planeNormal);
         const float Nz = DirectX::XMVectorGetZ(planeNormal);
@@ -112,12 +131,22 @@ namespace Engine::EngineCamera {
         //   - In DXMath row-major: Multiply(A, B) applies A then B
         //   - Therefore: Multiply(manualReflect, mainView) = Reflect then View
         // =========================================================================
-        const DirectX::XMMATRIX mainViewXM = DirectX::XMMatrixLookToLH(camPos, camFwd, camUp);
-        const DirectX::XMMATRIX viewXM = DirectX::XMMatrixMultiply(manualReflect, mainViewXM);
+        const DirectX::XMMATRIX mainViewXM = DirectX::XMMatrixLookToLH(
+            camPos, 
+            camFwd, 
+            camUp
+        );
+        const DirectX::XMMATRIX viewXM = DirectX::XMMatrixMultiply(
+            manualReflect, 
+            mainViewXM
+        );
 
         // Standard projection (identical to main camera)
         const DirectX::XMMATRIX projXM = DirectX::XMMatrixPerspectiveFovLH(
-            fovY, aspectRatio, nearPlane, farPlane
+            fovY, 
+            aspectRatio, 
+            nearPlane, 
+            farPlane
         );
 
         // Pre-multiply VP on CPU -- never per-vertex on GPU
@@ -140,9 +169,15 @@ namespace Engine::EngineCamera {
         return mData.ViewProjection;
     }
 
+    const Vector3& ReflectedCamera::GetCenter() const noexcept {
+        return mData.Center;
+    }
+
 #pragma region Private
 
     void ReflectedCamera::DebugPrintCameraData() const noexcept {
+        if (!mShouldDebugPrint) { return; }
+
 #ifdef _DEBUG
         std::wstring reflPosString =
             L"Reflected Camera Pos - X: " +
@@ -156,6 +191,5 @@ namespace Engine::EngineCamera {
         Logger::PRINT(reflPosString);
 #endif
     }
-
 #pragma endregion
 }

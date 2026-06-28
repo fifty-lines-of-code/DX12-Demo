@@ -34,7 +34,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
         // We cannot update a cbuffer until the GPU is done processing the commands that reference it. 
         // So each frame needs their own cbuffers.
-        DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mOpaquePerPassCB;
+        DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mOpaquePassRenderItemsPerPassCB;
+        DX12ConstantBuffersUploadBuffer<DX12OpaquePerPassConstants> mMirrorPassRenderItemsPerPassCB;
         DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemConstants> mOpaqueRenderItemCB;
         DX12ConstantBuffersUploadBuffer<DX12OpaqueRenderItemPerSubMeshConstants> mOpaqueRenderItemPerSubMeshCB;
         DX12ConstantBuffersUploadBuffer<DX12PerMaterialConstants> mPerMaterialCB;

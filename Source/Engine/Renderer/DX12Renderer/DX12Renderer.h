@@ -101,7 +101,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		void PrepareForUpdate() override;
 
-		void UpdateOpaqueRenderItemsPerPassCb(
+		void UpdateOpaquePassRenderItemsPerPassCb(
+			const void* data, 
+			size_t dataSize
+		) const override;
+
+		void UpdateMirrorPassRenderItemsPerPassCb(
 			const void* data, 
 			size_t dataSize
 		) const override;

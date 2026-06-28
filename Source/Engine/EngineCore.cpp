@@ -84,6 +84,14 @@ namespace Engine {
 		// update the main camera with updated player center
 		mCameraManager.UpdateMainCameraWithTarget(mWorldManager.GetPlayerCenter());
 
+		// if we have active mirrors, update refelcted camera
+		if (mWorldManager.HasActiveMirrors()) {
+			const EngineSimulation::MirrorPlaneQueryResult result = mWorldManager.GetMirrorPlaneQueryResult();
+			mCameraManager.UpdateReflectedCameraWithSimulationData(result);
+		}
+
+		// TODO: handle MAX_MIRRORS
+		// TODO 2: Handle MAX_MIRRORS with MAX_MIRROR_PASSES
 		/*
 		if (mWorldManager.HasActiveMirrors()) {
 			const EngineSimulation::MirrorPlaneQueryResult result = mWorldManager.GetMirrorPlaneQueryResult();
@@ -131,6 +139,10 @@ namespace Engine {
 		// TODO: Implement a DAG where nodes are the Pipeline Passes and edges are their 
 		// resource dependencies so that we can automate the overall Pipeline 
 		// instead of manually having to execute passes like so below
+
+		if (mWorldManager.HasActiveMirrors()) {
+			// TODO: draw the mirror pass
+		}
 
 		// draw our 3D objects
 		DrawOpaqueRenderPass();
@@ -228,6 +240,7 @@ namespace Engine {
 
 	bool EngineCore::SetupPipelines() {
 
+		// prepare to setup pipelines
 		bool result = mRenderer.PrepareToSetupRenderPipelines(
 			(uint32_t)mWorldManager.GetEntityCount(),
 			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
@@ -242,7 +255,7 @@ namespace Engine {
 			return false;
 		}
 
-		// opaque render pipeline
+		// setup opaque render pipeline
 		result = mRenderer.SetupOpaqueRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
 			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
@@ -256,7 +269,7 @@ namespace Engine {
 
 		if (!result) { return false; }
 
-		// debug pipeline
+		// setup debug pipeline
 		result = mRenderer.SetupDebugPipeline(
 			DebugSystem::DebugLimits::MAX_CHARACTERS,
 			(uint32_t)EngineResources::TextureID::FONT
@@ -264,7 +277,7 @@ namespace Engine {
 
 		if (!result) { return false; }
 
-		// blur pipeline
+		// setup blur pipeline
 		return mRenderer.SetupBlurPipeline();
 	}
 
@@ -279,8 +292,10 @@ namespace Engine {
 	}
 
 	void EngineCore::UpdateConstantBuffers() {
-		// update per-pass constant buffers
-		UpdatePerPassConstantBuffers();
+		// update per-pass constant buffers for both mirror and opaque passes
+		UpdateOpaquePassEntitiesPerPassConstantBuffers();
+
+		UpdateMirrorPassEntitiesPerPassConstantBuffers();
 
 		// update per entity cb
 		UpdatePerEntityConstantBuffers();
@@ -292,7 +307,7 @@ namespace Engine {
 		UpdateDebugSystemConstantBuffers();
 	}
 
-	void EngineCore::UpdatePerPassConstantBuffers() const {
+	void EngineCore::UpdateOpaquePassEntitiesPerPassConstantBuffers() const {
 		EngineWorld::PerPassConstantBufferData perPassCB;
 
 		// DirectXMath uses row-major alignment in CPU memory, but 
@@ -310,7 +325,9 @@ namespace Engine {
 		);
 
 		// set camera pos
-		const Vector3& cameraPos = mCameraManager.GetMainCameraCenter();
+		const Vector3& cameraPos = mCameraManager.GetCameraCenter(
+			EngineCamera::CameraType::MAIN
+		);
 		perPassCB.EyePosW = cameraPos;
 
 		// set ambient light
@@ -319,7 +336,45 @@ namespace Engine {
 		// set light data
 		mWorldManager.GetLightsData(perPassCB.Lights);
 
-		mRenderer.UpdateOpaqueRenderItemsPerPassCb(
+		mRenderer.UpdateOpaquePassRenderItemsPerPassCb(
+			&perPassCB,
+			sizeof(EngineWorld::PerPassConstantBufferData)
+		);
+	}
+
+	void EngineCore::UpdateMirrorPassEntitiesPerPassConstantBuffers() const {
+		// no op if no active mirrors
+		if (!mWorldManager.HasActiveMirrors()) { return; }
+
+		EngineWorld::PerPassConstantBufferData perPassCB;
+
+		// DirectXMath uses row-major alignment in CPU memory, but 
+		// HLSL defaults to column-major storage for matrix packing. 
+		// We transpose here to prevent skewed vector transformations on the GPU.
+		const Matrix4x4& viewProj = mCameraManager.GetViewProjection(
+			EngineCamera::CameraType::REFLECTED
+		);
+		DirectX::XMMATRIX viewProjTranspose = DirectX::XMMatrixTranspose(
+			DirectX::XMLoadFloat4x4(&viewProj.AsXMFLOAT4X4())
+		);
+		DirectX::XMStoreFloat4x4(
+			&perPassCB.ViewProjectionTranspose.AsXMFLOAT4X4(),
+			viewProjTranspose
+		);
+
+		// set camera pos
+		const Vector3& cameraPos = mCameraManager.GetCameraCenter(
+			EngineCamera::CameraType::REFLECTED
+		);
+		perPassCB.EyePosW = cameraPos;
+
+		// set ambient light
+		perPassCB.AmbientLight = mWorldManager.GetAmbientLight();
+
+		// set light data
+		mWorldManager.GetLightsData(perPassCB.Lights);
+
+		mRenderer.UpdateMirrorPassRenderItemsPerPassCb(
 			&perPassCB,
 			sizeof(EngineWorld::PerPassConstantBufferData)
 		);
@@ -473,7 +528,6 @@ namespace Engine {
 			float msValue = profilerResults.PassTimes[i];
 			if (msValue == 0.f) { continue; }
 
-
 			const std::string& passName = mRenderer.RendererPipelinePass_ToString(
 				EngineRenderer::RendererPipelinePass(i)
 			);
@@ -482,7 +536,7 @@ namespace Engine {
 				passName + msString +
 				std::to_string(msValue) +
 				"\n";
-			Engine::DebugSystem::DebugSystem::GetInstance().LogText(opaqueProfilingMs);
+			LogToDebugSystem(opaqueProfilingMs);
 		}
 	}
 
