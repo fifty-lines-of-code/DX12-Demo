@@ -25,7 +25,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void IDX12PipelinePass::ShutDown() {
 		OnShutdown();
 
-		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
 		if (mRootSignature != nullptr) { mRootSignature.Reset(); }
 		if (mPipelineStateObject != nullptr) { mPipelineStateObject.Reset(); }
 		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {

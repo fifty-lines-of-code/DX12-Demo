@@ -1,6 +1,6 @@
 #pragma once
 
-#include <d3d12.h>
+#include "../d3dx12.h"
 #include "../DX12 Gpu Profiler/DX12GpuProfiler.h"
 #include "../DX12RendererConfig.h"
 #include "../../../../Helper/Helper.h"
@@ -53,7 +53,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES];
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		bool mIsInitialized;
 
 	protected:

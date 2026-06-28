@@ -25,6 +25,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12DebugSystemPipelinePass::OnShutdown() {
 		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
 		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
+		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
 	}
 
 	void DX12DebugSystemPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {

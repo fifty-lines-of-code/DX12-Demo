@@ -32,6 +32,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void OnExecute(const DX12PipelinePassExecuteArgs& args) override;
 
 	private:
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
 

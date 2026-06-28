@@ -145,7 +145,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
             );
             if (FAILED(hr)) { return false; }
 
-            std::wstring name = L"MirrorRTV_Frame" + std::to_wstring(frame);
+            std::wstring name = L"Mirror RTV: " + std::to_wstring(frame);
             entry.Resource->SetName(name.c_str());
         }
 

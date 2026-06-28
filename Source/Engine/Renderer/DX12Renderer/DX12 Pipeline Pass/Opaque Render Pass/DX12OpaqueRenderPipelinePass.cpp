@@ -14,7 +14,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	) {
 		const DX12OpaqueRenderPipelineInitArgs& renderArgs = static_cast<const DX12OpaqueRenderPipelineInitArgs&>(args);
 
-		if (!CreateConstantBufferDescriptors(renderArgs)) { return false; }
 		if (!CreateRootSignature(renderArgs)) { return false; }
 		if (!CreateShadersAndInputLayout()) { return false; }
 		if (!CreatePipelineStateObject(renderArgs)) { return false; }
@@ -66,7 +65,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// set the descriptor heap
-		ID3D12DescriptorHeap* descriptorHeaps[] = { mDescriptorHeap.Get() };
+		ID3D12DescriptorHeap* descriptorHeaps[] = { args.DescriptorHeap };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		// per pass cb
@@ -76,31 +75,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// materials cb
-		auto materialsCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-		);
-		int globalMaterialHeapOffset = (args.NumberOfMaterials * args.CurrentFrameIndex);
-
-		materialsCbvHandle.Offset(
-			globalMaterialHeapOffset, 
-			args.CbvSrvUavDescriptorSize
-		);
 		mCommandList->SetGraphicsRootDescriptorTable(
 			mMaterialsCBIndex,
-			materialsCbvHandle
+			args.MaterialsCbvHandle
 		);
 
 		// textures
-		auto texturesCbHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-		);
-		texturesCbHandle.Offset(
-			mTexturesCbHeapOffset, 
-			args.CbvSrvUavDescriptorSize
-		);
 		mCommandList->SetGraphicsRootDescriptorTable(
 			mTexturesCBIndex,
-			texturesCbHandle
+			args.TexturesCbvHandle
 		);
 
 		// now draw each item
@@ -178,115 +161,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// don't close the command list, the aggregator will close it.
-	}
-
-	bool DX12OpaqueRenderPipelinePass::CreateConstantBufferDescriptors(
-		const DX12OpaqueRenderPipelineInitArgs& args
-	) {
-		// Textures sit at the very end after the 3 frames of per material cb
-		mTexturesCbHeapOffset = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
-
-		// Compute the global total of descriptors across all frames
-		// (M materials) * Total Frames + No Textures
-		UINT numberOfDescriptors = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES + args.NumberOfTextures;
-
-		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
-		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		cbvHeapDesc.NodeMask = 0;
-
-		// Create the CBV descriptor heap
-		ThrowIfFailed(
-			args.Device->CreateDescriptorHeap(
-				&cbvHeapDesc,
-				IID_PPV_ARGS(&mDescriptorHeap)
-			)
-		);
-
-		// Pass the offsets and sizes forward to generate the views
-		return CreateConstantBufferViews(args);
-	}
-
-	bool DX12OpaqueRenderPipelinePass::CreateConstantBufferViews(
-		const DX12OpaqueRenderPipelineInitArgs& args
-	) {		
-		// per material cbs are laid out first per frame
-		// so 
-		// PerMatCB0(F0), PerMatCB1(F0), PerMatCB0(F1)..., PerMatCBN-1(FN-1)
-		// then the textures are laid out
-		// T0, T1..., TN-1
-
-		// our per material cb
-		// ((alignedPerMaterialCB) * numberOfMaterials * numberOfFrames
-		for (UINT frameIndex = 0; frameIndex < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frameIndex)
-		{
-			D3D12_GPU_VIRTUAL_ADDRESS cbAddress = args.PerMaterialCBAddress[frameIndex];
-
-			for (uint32_t i = 0; i < args.NumberOfMaterials; ++i) {
-				// Offset to this material cbv in the descriptor heap.
-				int heapIndex = (args.NumberOfMaterials * frameIndex) + i;
-				auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
-					mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-				);
-				handle.Offset(heapIndex, args.CbvSrvUavDescriptorSize);
-
-				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-				uint32_t thisMaterialOffset = i * args.AlignedSizeOfPerMaterialCb;
-				cbvDesc.BufferLocation = cbAddress + thisMaterialOffset;
-				cbvDesc.SizeInBytes = args.AlignedSizeOfPerMaterialCb;
-
-				args.Device->CreateConstantBufferView(&cbvDesc, handle);
-			}
-		}
-
-		// then our textures
-
-		// ensure TexturesData is a valid pointer
-		if (args.TexturesData == nullptr) { return false; }
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(
-			mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-		);
-		// offset to the start of textures
-		hDescriptor.Offset(mTexturesCbHeapOffset, args.CbvSrvUavDescriptorSize);
-
-		for (uint32_t i = 0; i < args.NumberOfTextures; ++i) {
-			// walk to this descriptor in the heap
-			CD3DX12_CPU_DESCRIPTOR_HANDLE currentHandle(
-				hDescriptor, 
-				(INT)i,
-				args.CbvSrvUavDescriptorSize
-			);
-
-			// todo: find a way to ensure we don't overflow
-			const DX12Texture& tex = args.TexturesData[i];
-			ID3D12Resource* resource;
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-			// if unloaded 
-			if (!tex.IsLoaded || tex.Resource == nullptr) {
-				srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
-				srvDesc.Texture2D.MipLevels = 1;
-				resource = nullptr;
-			}
-			else {
-				srvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
-				srvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
-				resource = tex.Resource.Get();
-			}
-
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-			// Bake the view configuration straight into the descriptor heap slot
-			args.Device->CreateShaderResourceView(resource, &srvDesc, currentHandle);
-		}
-
-		return true;
 	}
 
 	bool DX12OpaqueRenderPipelinePass::CreateRootSignature(

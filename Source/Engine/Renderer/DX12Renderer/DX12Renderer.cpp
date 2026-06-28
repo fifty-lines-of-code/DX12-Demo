@@ -218,7 +218,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// =====================================================================
 		bool result = mDescriptorManager.Initialize(
 			mDX12Device.Get(),
-			DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES,
+			numberOfMaterials,
 			matCbvData.data(),
 			static_cast<uint32_t>(matCbvData.size()),
 			texSrvData.data(),
@@ -689,7 +689,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			ID3D12Resource* mirrorResource = mRenderTargetManager.GetMirrorResource(frame);
 			ENGINE_ASSERT(
 				mirrorResource != nullptr,
-				"Mirror RTV resource missing at descriptor init"
+				"Mirror RTV resource missing when creating Mirror RTV SRVs"
 			);
 
 			mDescriptorManager.CreateMirrorRtvSrv(
@@ -1221,7 +1221,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
 				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
 
-				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs;
+				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs = {};
 
 				subMeshArgs.ID = j;
 				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
@@ -1235,6 +1235,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		auto backBufferView = CurrentBackBufferView();
 		auto depthStencilView = DepthStencilView();
 
+		ID3D12DescriptorHeap* sharedHeap = mDescriptorManager.GetSharedHeap();
+
 		DX12OpaqueRenderPipelineExecuteArgs rArgs{
 			{
 				mCurrentFrameResourceIndex,
@@ -1247,6 +1249,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				mScissorRect,
 				mGpuProfiler
 			},
+			mDescriptorManager.GetSharedHeap(),
 			PerItemExecuteArgs.data(),
 			context.NumberOfItems,
 			context.MaxNumSubMeshesPerItem,
@@ -1255,7 +1258,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
 			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),
 			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.Resource()->GetGPUVirtualAddress(),
-			context.NumberOfMaterials
+			context.NumberOfMaterials,
+			mDescriptorManager.GetMaterialsDescriptorHandle(mCurrentFrameResourceIndex),
+			mDescriptorManager.GetTexturesDescriptorHandle()
 		};
 
 		mRenderPipelinePass.ExecutePass(rArgs);

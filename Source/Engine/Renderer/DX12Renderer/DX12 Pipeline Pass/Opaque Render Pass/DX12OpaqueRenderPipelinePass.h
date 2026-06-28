@@ -37,6 +37,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	};
 
 	struct DX12OpaqueRenderPipelineExecuteArgs : public DX12PipelinePassExecuteArgs {
+		ID3D12DescriptorHeap* DescriptorHeap;
 		DX12OpaqueRenderPipelinePerItemExecuteArgs* PipelineItemsExecuteArgs;
 		uint32_t NumberOfItems;
 		uint8_t NumberOfSubMeshesPerItem;
@@ -46,6 +47,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t AlignedSizeOfPerRenderItemSubMeshCb;
 		D3D12_GPU_VIRTUAL_ADDRESS PerRenderItemSubMeshCBResourceAddress;
 		uint32_t NumberOfMaterials;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE MaterialsCbvHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE TexturesCbvHandle;
 	};
 
 	class DX12OpaqueRenderPipelinePass : public IDX12PipelinePass {
@@ -73,12 +76,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	private:
 		void Execute(
 			const DX12OpaqueRenderPipelineExecuteArgs& args
-		);
-		bool CreateConstantBufferDescriptors(
-			const DX12OpaqueRenderPipelineInitArgs& args
-		);
-		bool CreateConstantBufferViews(
-			const DX12OpaqueRenderPipelineInitArgs& args
 		);
 		bool CreateRootSignature(
 			const DX12OpaqueRenderPipelineInitArgs& args

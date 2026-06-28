@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
-#include <d3d12.h>
+#include "../d3dx12.h"
+#include "../DX12RendererConfig.h"
 #include <wrl/client.h>
 
 namespace Engine::EngineRenderer::DX12Renderer {
@@ -51,13 +53,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
         );
 
         ID3D12DescriptorHeap* GetSharedHeap() const noexcept;
-        uint32_t GetDescriptorSize() const noexcept;
 
-        uint32_t GetMaterialCbvBaseIndex(
+        CD3DX12_GPU_DESCRIPTOR_HANDLE GetMaterialsDescriptorHandle(
             uint32_t frameIndex
         ) const noexcept;
-        uint32_t GetTextureSrvBaseIndex() const noexcept;
-        uint32_t GetMirrorSrvBaseIndex() const noexcept;
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE GetTexturesDescriptorHandle() const noexcept;
 
     private:
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSharedHeap;
@@ -65,6 +66,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
         uint32_t mDescriptorSize = 0;
         uint32_t mNumMaterials = 0;
         uint32_t mNumTextures = 0;
+
+        std::array<CD3DX12_GPU_DESCRIPTOR_HANDLE, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> mMaterialsGPUDescriptorHandles;
+
+        CD3DX12_GPU_DESCRIPTOR_HANDLE mTexturesGPUDescriptorHandle;
 
         uint32_t mTextureSrvBaseIndex = 0;
         uint32_t mMirrorSrvBaseIndex = 0;
