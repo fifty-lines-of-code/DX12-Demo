@@ -191,7 +191,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT numberOfDescriptors = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES + args.NumberOfTextures;
 
 		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
 		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
 		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -232,7 +232,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				);
 				handle.Offset(heapIndex, args.CbvSrvUavDescriptorSize);
 
-				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 				uint32_t thisMaterialOffset = i * args.AlignedSizeOfPerMaterialCb;
 				cbvDesc.BufferLocation = cbAddress + thisMaterialOffset;
 				cbvDesc.SizeInBytes = args.AlignedSizeOfPerMaterialCb;

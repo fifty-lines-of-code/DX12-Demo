@@ -71,7 +71,7 @@ namespace Engine::EngineRenderer {
 			const void* data, 
 			uint32_t perMaterialCbSize
 		) = 0;
-		virtual void UpdateDebugSystemPerPassCb(const void* data) = 0;
+		virtual void UpdateDebugSystemPerPassCb(const void* data) const noexcept = 0;
 		virtual void BeginFrame(uint32_t numberOfMaterials) = 0;
 		virtual void Execute(const IPipelinePassExecuteContext& context) = 0;
 		virtual bool DrawDebugSystem(uint32_t numberOfCharacters) = 0;

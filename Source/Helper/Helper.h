@@ -3,6 +3,7 @@
 #define WIN32_LEAN_AND_MEAN 
 
 #include <algorithm>
+#include <cassert>
 #include <string>
 #include <windows.h>
 
@@ -15,10 +16,10 @@
 #endif
 
 #ifndef ThrowIfFailed
-#define ThrowIfFailed(x)                                              \
-{                                                                     \
-    HRESULT hr__ = (x);                                               \
-    std::wstring wfn = Helper::StringToWideString(__FILE__);          \
+#define ThrowIfFailed(x)                               \
+{                                                      \
+    HRESULT hr__ = (x);                                \
+    std::wstring wfn = Helper::StringToWideString(__FILE__); \
     if(FAILED(hr__)) { throw DxException(hr__, L#x, wfn, __LINE__); } \
 } 
 #endif

@@ -228,8 +228,22 @@ namespace Engine {
 
 	bool EngineCore::SetupPipelines() {
 
+		bool result = mRenderer.PrepareToSetupRenderPipelines(
+			(uint32_t)mWorldManager.GetEntityCount(),
+			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			mWorldManager.GetMaterialCount(),
+			EngineConfig::EngineConfig::MAX_TEXTURES,
+			1,
+			DebugSystem::DebugLimits::MAX_CHARACTERS
+		);
+		
+		if (!result) {
+			Logger::ERR(L"Prepare to Setup Render Pipeliens returned false");
+			return false;
+		}
+
 		// opaque render pipeline
-		bool result = mRenderer.SetupOpaqueRenderPipeline(
+		result = mRenderer.SetupOpaqueRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
 			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
 			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
@@ -434,7 +448,7 @@ namespace Engine {
 
 			// update per entity sub mesh data
 			for (uint8_t j = 0; j < subMeshCount; ++j) {
-				EngineRenderer::DX12Renderer::DX12OpaqueRenderItemPerSubMeshExecuteContext subMeshExecuteContext;
+				EngineRenderer::DX12Renderer::DX12OpaqueRenderItemPerSubMeshExecuteContext subMeshExecuteContext = {};
 				const EngineResources::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
 
 				subMeshExecuteContext.ID = j;

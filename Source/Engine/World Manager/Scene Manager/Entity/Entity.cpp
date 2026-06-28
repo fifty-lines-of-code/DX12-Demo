@@ -83,7 +83,7 @@ namespace Engine::EngineWorld {
 	) {
 		ENGINE_ASSERT(
 			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
-			L"SubMesh Index is Incorrect, Bad things will happen!"
+			"SubMesh Index is Incorrect, Bad things will happen!"
 		);
 
 		uint8_t index = subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH 
@@ -181,12 +181,12 @@ namespace Engine::EngineWorld {
 		EngineResources::TextureID texture
 	) noexcept 
 	{
-		ENGINE_ASSERT(mMesh != nullptr, L"Mesh should NOT be nullptr here");
+		ENGINE_ASSERT(mMesh != nullptr, "Mesh should NOT be nullptr here");
 		if (mMesh == nullptr) { return; }
 
 		ENGINE_ASSERT(
 			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
-			L"SubMesh Index is Incorrect, Bad things will happen!"
+			"SubMesh Index is Incorrect, Bad things will happen!"
 		);
 
 		uint8_t index =

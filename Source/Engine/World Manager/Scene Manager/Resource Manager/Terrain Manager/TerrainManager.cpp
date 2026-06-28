@@ -184,7 +184,10 @@ namespace Engine {
 			return false;
 		}
 
-		ENGINE_ASSERT((width * height) == 1089, "Image dimensions do not match the expected vertex grid size!");
+		ENGINE_ASSERT(
+			(width * height) == 1089, 
+			"Image dimensions do not match the expected vertex grid size!"
+		);
 
 		std::copy(rawData, rawData + 1089, outPixelArray.begin());
 		stbi_image_free(rawData);

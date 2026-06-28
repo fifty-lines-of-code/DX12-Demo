@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include "Game/Game.h"
+#include <memory>
 
 // in debug mode let's us know about any memory we are leaking
 #if defined(DEBUG) || defined(_DEBUG)

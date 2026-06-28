@@ -90,7 +90,7 @@ void Game::CalculateFullscreenDimensions() {
 void Game::SetFullscreen() {
 
 	// make sure we have a main handle
-	ENGINE_ASSERT(mhMainWnd != nullptr, L"Main Window Handle should NOT be nullptr");
+	ENGINE_ASSERT(mhMainWnd != nullptr, "Main Window Handle should NOT be nullptr");
 
 	// strip all borders, captions, resize styles
 	SetWindowLongPtr(mhMainWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);

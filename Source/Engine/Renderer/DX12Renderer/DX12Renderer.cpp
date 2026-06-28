@@ -55,6 +55,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		CreateSwapChain();
 		CreateRtvDsvDescriptorHeaps();
 
+		mRenderTargetManager.Initialize(
+			mDX12Device.Get(),
+			screenWidth,
+			screenHeight,
+			mBackBufferFormat,
+			mDepthStencilFormat
+		);
+
 		// Reset the command list to prep for initialization commands.
 		ThrowIfFailed(mSetupCommandList->Reset(mInitAndResizeCommandAllocator.Get(), nullptr));
 
@@ -63,99 +71,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12Renderer::InitializeDevice() {
-		UINT dxgiFactoryFlags = 0;
+	void DX12Renderer::FinishInitialize() {
+		// Execute the initialization commands.
+		ThrowIfFailed(mSetupCommandList->Close());
 
-	#if defined(DEBUG) || defined(_DEBUG) 
-		// Enable the D3D12 debug layer.
-		{
-			Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
-			ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
-			debugController->EnableDebugLayer();
-		}
+		ID3D12CommandList* cmdsLists[] = { mSetupCommandList.Get() };
+		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-	#ifndef __MINGW32__
-		Microsoft::WRL::ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
-		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiInfoQueue.GetAddressOf()))))
-		{
-			dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+		// Wait until initialization is complete.
+		FlushCommandQueue();
 
-			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, true);
-			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
-
-			DXGI_INFO_QUEUE_MESSAGE_ID hide[] =
-			{
-				80 /* IDXGISwapChain::GetContainingOutput: The swapchain's adapter does not control the output on which the swapchain's window resides. */,
-			};
-			DXGI_INFO_QUEUE_FILTER filter = {};
-			filter.DenyList.NumIDs = static_cast<UINT>(std::size(hide));
-			filter.DenyList.pIDList = hide;
-			dxgiInfoQueue->AddStorageFilterEntries(DXGI_DEBUG_DXGI, &filter);
-		}
-	#endif // __MINGW32__
-
-	#endif
-
-		// Initialize DXGI Factory
-		ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
-
-		// Try to create hardware device.
-		HRESULT hardwareResult = D3D12CreateDevice(
-			nullptr,             // default adapter
-			D3D_FEATURE_LEVEL_12_0,
-			IID_PPV_ARGS(&mDX12Device)
-		);
-
-		// Fallback to WARP device.
-		if (FAILED(hardwareResult))
-		{
-			Microsoft::WRL::ComPtr<IDXGIAdapter> pWarpAdapter;
-			ThrowIfFailed(mdxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter))
-			);
-
-			ThrowIfFailed(
-				D3D12CreateDevice(
-					pWarpAdapter.Get(),
-					D3D_FEATURE_LEVEL_11_0,
-					IID_PPV_ARGS(&mDX12Device)
-				)
-			);
-		}
-
-		// create fence
-		ThrowIfFailed(
-			mDX12Device->CreateFence(
-				0,
-				D3D12_FENCE_FLAG_NONE,
-				IID_PPV_ARGS(&mFence)
-			)
-		);
-
-		// Check 4X MSAA quality support for our back buffer format.
-		// All Direct3D 11 capable devices support 4X MSAA for all render 
-		// target formats, so we only need to check quality support.
-
-		D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
-		msQualityLevels.Format = mBackBufferFormat;
-		msQualityLevels.SampleCount = 4;
-		msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
-		msQualityLevels.NumQualityLevels = 0;
-		ThrowIfFailed(
-			mDX12Device->CheckFeatureSupport(
-				D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-				&msQualityLevels,
-				sizeof(msQualityLevels)
-			)
-		);
-
-		m4xMsaaQuality = msQualityLevels.NumQualityLevels;
-		ENGINE_ASSERT(m4xMsaaQuality > 0, L"Unexpected MSAA quality level.");
-
-	#if defined(DEBUG) || defined(_DEBUG)
-		LogAdapters();
-	#endif
-
-		return true;
+		// dispose uploaders
+		DisposeUploaders();
 	}
 
 	void DX12Renderer::Shutdown() {
@@ -172,6 +99,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mBlurPipelinePass.ShutDown();
 		mDebugSystemPipelinePass.ShutDown();
 		mRenderPipelinePass.ShutDown();
+		mDescriptorManager.Shutdown();
+		mRenderTargetManager.Shutdown();
 		for (auto& resource : mFrameResources) {
 			resource.reset();
 		}
@@ -189,6 +118,291 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mFence.Reset();
 		mDX12Device.Reset();
 		mdxgiFactory.Reset();
+	}
+
+	bool DX12Renderer::LoadTexture(std::wstring& filename, uint32_t id) {
+		if (id >= mTextures.size()) { return false; }
+
+		DX12Texture& texture = mTextures[id];
+
+		if (texture.IsLoaded) { return false; }
+
+		texture.Id = id;
+
+		ThrowIfFailed(
+			DirectX::CreateDDSTextureFromFile12(
+				mDX12Device.Get(),
+				mSetupCommandList.Get(),
+				filename.c_str(),
+				texture.Resource,
+				texture.UploadHeap
+			)
+		);
+
+		texture.IsLoaded = true;
+
+		return true;
+	}
+
+	bool DX12Renderer::PrepareToSetupRenderPipelines(
+		uint32_t numberOfEntities,
+		uint8_t maxSubMeshesPerEntity,
+		uint32_t numberOfMaterials,
+		uint32_t numberOfTextures,
+		uint32_t debugSystemPerPassCBCount,
+		uint32_t debugSystemMaxCharacters
+	) {
+		CreateFrameResources(
+			numberOfEntities,
+			maxSubMeshesPerEntity,
+			numberOfMaterials,
+			debugSystemPerPassCBCount,
+			debugSystemMaxCharacters
+		);
+
+		// =====================================================================
+		// 1. Build Material CBV Init Data
+		//    Flat array: [Mat0_F0, Mat1_F0, ..., MatN_F0, Mat0_F1, ..., MatN_FN-1]
+		// =====================================================================
+		uint32_t totalMaterialCbvs = numberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
+		std::vector<MaterialCbvInitArgs> matCbvData(totalMaterialCbvs);
+
+		for (uint32_t frame = 0; frame < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frame) {
+			D3D12_GPU_VIRTUAL_ADDRESS frameCbBase =
+				mFrameResources[frame]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
+
+			for (uint32_t mat = 0; mat < numberOfMaterials; ++mat) {
+				uint32_t index = frame * numberOfMaterials + mat;
+				matCbvData[index].FrameIndex = frame;
+				matCbvData[index].MaterialIndex = mat;
+				matCbvData[index].BufferLocation = frameCbBase +
+					mat * mFrameResources[frame]->mPerMaterialCB.ElementByteSize();
+				matCbvData[index].SizeInBytes =
+					static_cast<uint32_t>(mFrameResources[frame]->mPerMaterialCB.ElementByteSize());
+			}
+		}
+
+		// =====================================================================
+		// 2. Build Texture SRV Init Data
+		// =====================================================================
+		std::vector<TextureSrvInitArgs> texSrvData(numberOfTextures);
+
+		for (uint32_t i = 0; i < numberOfTextures; ++i) {
+			const DX12Texture& tex = mTextures[i];
+
+			texSrvData[i].TextureIndex = i;
+			texSrvData[i].Resource = tex.IsLoaded ? tex.Resource.Get() : nullptr;
+
+			texSrvData[i].SrvDesc = {};
+			if (tex.IsLoaded && tex.Resource != nullptr) {
+				auto desc = tex.Resource->GetDesc();
+				texSrvData[i].SrvDesc.Format = desc.Format;
+				texSrvData[i].SrvDesc.Texture2D.MipLevels = desc.MipLevels;
+			}
+			else {
+				// Null/unloaded texture: safe default SRV
+				texSrvData[i].SrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				texSrvData[i].SrvDesc.Texture2D.MipLevels = 1;
+			}
+			texSrvData[i].SrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			texSrvData[i].SrvDesc.Texture2D.MostDetailedMip = 0;
+			texSrvData[i].SrvDesc.Texture2D.PlaneSlice = 0;
+			texSrvData[i].SrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+			texSrvData[i].SrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		}
+
+		// =====================================================================
+		// 3. Initialize Descriptor Manager
+		//    Creates shared heap + populates all material CBVs and texture SRVs.
+		//    Mirror SRVs created separately after render target manager init.
+		// =====================================================================
+		bool result = mDescriptorManager.Initialize(
+			mDX12Device.Get(),
+			DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES,
+			matCbvData.data(),
+			static_cast<uint32_t>(matCbvData.size()),
+			texSrvData.data(),
+			static_cast<uint32_t>(texSrvData.size())
+		);
+
+		if (!result) {
+			Logger::ERR(L"Failed to initialize DX12DescriptorManager");
+			return false;
+		}
+
+		// Mirror SRVs are created inside OnResize
+
+		return true;
+	}
+
+	bool DX12Renderer::SetupOpaqueRenderPipeline(
+		uint32_t numberOfEntities,
+		uint8_t maxSubMeshesPerEntity,
+		uint32_t numberOfMaterials,
+		uint32_t numberOfTextures,
+		uint32_t sizeOfPerMaterialCb,
+		uint32_t debugSystemPerPassCBCount,
+		uint32_t debugSystemMaxCharacters
+	) {
+		if (mRenderPipelinePass.GetIsInitialized()) { return true; }
+
+		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress;
+
+		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
+			PerMaterialCBAddress[i] = mFrameResources[i]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
+		}
+		uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
+
+		DX12OpaqueRenderPipelineInitArgs rArgs{
+			{
+				mDX12Device.Get(),
+				mInitAndResizeCommandAllocator.Get(),
+				mBackBufferFormat,
+				mDepthStencilFormat,
+				mCbvSrvUavDescriptorSize
+			},
+			numberOfMaterials,
+			numberOfTextures,
+			alignedSizeOfPerMaterialCb,
+			PerMaterialCBAddress,
+			mTextures.data()
+		};
+
+		if (!mRenderPipelinePass.Initialize(rArgs)) { return false; }
+
+		return true;
+	}
+
+	bool DX12Renderer::SetupDebugPipeline(
+		uint32_t debugSystemMaxCharacters,
+		uint32_t fontAtlasIndex
+	) {
+		if (mDebugSystemPipelinePass.GetIsInitialized()) { return true; }
+
+		if (fontAtlasIndex >= mTextures.size() || !mTextures[fontAtlasIndex].IsLoaded) {
+			return false;
+		}
+
+		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> CBResources;
+
+		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
+			CBResources[i] = mFrameResources[i]->mDebugSystemPerCharacterCB.Resource();
+		}
+
+		DX12DebugSystemPipelinePassInitArgs dArgs{
+			{
+				mDX12Device.Get(),
+				mInitAndResizeCommandAllocator.Get(),
+				mBackBufferFormat,
+				mDepthStencilFormat,
+				mCbvSrvUavDescriptorSize
+			},
+			debugSystemMaxCharacters,
+			fontAtlasIndex,
+			mTextures[fontAtlasIndex],
+			CBResources
+		};
+
+		if (!mDebugSystemPipelinePass.Initialize(dArgs)) { return false; }
+
+		return true;
+	}
+
+	bool DX12Renderer::SetupBlurPipeline() {
+		if (mBlurPipelinePass.GetIsInitialized()) { return true; }
+
+		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS> swapChainBuffers;
+
+		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
+			swapChainBuffers[i] = mSwapChainBuffers[i].Get();
+		}
+
+		DX12BlurPipelinePassInitArgs bArgs{
+			{
+				mDX12Device.Get(),
+				mInitAndResizeCommandAllocator.Get(),
+				mBackBufferFormat,
+				mDepthStencilFormat,
+				mCbvSrvUavDescriptorSize
+			},
+			DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS,
+			swapChainBuffers,
+			mWindowDimensions.Width,
+			mWindowDimensions.Height
+		};
+
+		if (!mBlurPipelinePass.Initialize(bArgs)) { return false; }
+
+		return true;
+	}
+
+	void DX12Renderer::LoadGeometry(
+		uint32_t meshID,
+		uint16_t sizeOfVertex,
+		uint32_t vertexBufferByteSize,
+		const void* vertices,
+		uint32_t indexBufferByteSize,
+		const void* indices
+	) {
+		// create mesh resource
+		std::unique_ptr<DX12MeshResource> meshResource = std::make_unique<DX12MeshResource>();
+		meshResource->id = meshID;
+
+		// create blob of vbByteSize and store address in vertex buffer cpu address
+		ThrowIfFailed(
+			D3DCreateBlob(
+				vertexBufferByteSize,
+				&meshResource->VertexBufferCPU
+			)
+		);
+
+		// copy vertices into vertex buffer cpu address
+		CopyMemory(
+			meshResource->VertexBufferCPU->GetBufferPointer(),
+			vertices,
+			vertexBufferByteSize
+		);
+
+		// create blob and copy indices into blob at index buffer cpu address
+		ThrowIfFailed(
+			D3DCreateBlob(
+				indexBufferByteSize,
+				&meshResource->IndexBufferCPU
+			)
+		);
+
+		CopyMemory(
+			meshResource->IndexBufferCPU->GetBufferPointer(),
+			indices,
+			indexBufferByteSize
+		);
+
+		// create default buffer on the gpu and upload vertices and indices
+		// from cpu to gpu usign the default buffer
+		meshResource->VertexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
+			mDX12Device.Get(),
+			mSetupCommandList.Get(),
+			vertices,
+			vertexBufferByteSize,
+			meshResource->VertexBufferUploader
+		);
+
+		meshResource->IndexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
+			mDX12Device.Get(),
+			mSetupCommandList.Get(),
+			indices,
+			indexBufferByteSize,
+			meshResource->IndexBufferUploader
+		);
+
+		// store metadata in mesh resource that we'll use during rendering
+		meshResource->VertexByteStride = sizeOfVertex;
+		meshResource->VertexBufferByteSize = vertexBufferByteSize;
+		meshResource->IndexFormat = DXGI_FORMAT_R16_UINT;
+		meshResource->IndexBufferByteSize = indexBufferByteSize;
+
+		// store it in our map
+		mMeshResourceMap[meshID] = std::move(meshResource);
 	}
 
 	void DX12Renderer::PrepareForUpdate() {
@@ -257,11 +471,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mCurrentFrameResource->mPerMaterialCB.CopyData(materialIndex, data);
 	}
 
-	void DX12Renderer::UpdateDebugSystemPerPassCb(const void* data) {
+	void DX12Renderer::UpdateDebugSystemPerPassCb(const void* data) const noexcept {
 		mCurrentFrameResource->mDebugSystemPerPassCB.CopyData(0, data);
 	}
 
-	void DX12Renderer::UpdateDebugSystemStructuredBuffer(uint32_t count, const void* data) {
+	void DX12Renderer::UpdateDebugSystemStructuredBuffer(
+		uint32_t count, 
+		const void* data
+	) const noexcept{
 		mCurrentFrameResource->mDebugSystemPerCharacterCB.CopyData(count, data);
 	}
 
@@ -351,106 +568,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-	bool DX12Renderer::DrawOpaqueRenderItems(
-		const DX12OpaquePipelinePassExecuteContext& context
-	) {
-		// todo: add this to some sort of a ring buffer so memory can be reused
-		std::array<DX12OpaqueRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
-
-		// fill in the execute args from execute context per render item
-		for (uint32_t i = 0; i < context.NumberOfItems; ++i) {
-			if (i >= DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
-
-			auto& renderItem = context.RenderItems[i];
-			const DX12MeshResource* const resource = mMeshResourceMap[renderItem.MeshID].get();
-
-			if (resource == nullptr) { continue; }
-
-			PerItemExecuteArgs[i].ID = renderItem.ID;
-			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
-			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
-			PerItemExecuteArgs[i].SubMeshCount = renderItem.SubMeshCount;
-			PerItemExecuteArgs[i].SubMeshExecuteArgs.reserve(renderItem.SubMeshCount);
-
-			// load up data per sub mesh per render item
-			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
-				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
-
-				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs;
-
-				subMeshArgs.ID = j;
-				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
-				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
-				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
-				PerItemExecuteArgs[i].SubMeshExecuteArgs.push_back(subMeshArgs);
-			}
-		}
-
-		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
-		auto backBufferView = CurrentBackBufferView();
-		auto depthStencilView = DepthStencilView();
-		
-		DX12OpaqueRenderPipelineExecuteArgs rArgs{
-			{
-				mCurrentFrameResourceIndex,
-				mCurrentBackBufferIndex,
-				mCbvSrvUavDescriptorSize,
-				currentBackBuffer,
-				backBufferView,
-				depthStencilView,
-				mScreenViewport,
-				mScissorRect,
-				mGpuProfiler
-			},
-			PerItemExecuteArgs.data(),
-			context.NumberOfItems,
-			context.MaxNumSubMeshesPerItem,
-			mCurrentFrameResource->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
-			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
-			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
-			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),
-			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.Resource()->GetGPUVirtualAddress(),
-			context.NumberOfMaterials
-		};
-
-		mRenderPipelinePass.ExecutePass(rArgs);
-
-		mPiplinePassAggregator.InsertPass(&mRenderPipelinePass);
-
-		return true;
-	}
-
-	bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
-		// todo: remove this from here in the future
-		DrawBlurPass();
-
-		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
-		auto backBufferView = CurrentBackBufferView();
-		auto depthStencilView = DepthStencilView();
-
-		DX12DebugSystemPipelinePassExecuteArgs args {
-			{
-				mCurrentFrameResourceIndex,
-				mCurrentBackBufferIndex,
-				mCbvSrvUavDescriptorSize,
-				currentBackBuffer,
-				backBufferView,
-				depthStencilView,
-				mScreenViewport,
-				mScissorRect,
-				mGpuProfiler
-			},
-			mCurrentFrameResource->mDebugSystemPerPassCB.Resource(),
-			numberOfCharacters
-		};
-
-		mDebugSystemPipelinePass.ExecutePass(args);
-
-		mPiplinePassAggregator.InsertPass(&mDebugSystemPipelinePass);
-
-		return true;
-	}
-
 	void DX12Renderer::EndFrame() {
 		DX12PipelinePassAggregatorResult result;
 		mPiplinePassAggregator.Aggregate(mSetupCommandList.Get(), result);
@@ -483,7 +600,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			(UINT)result.ActiveLists.size(),
 			result.ActiveLists.data()
 		);
-		
+
 		// mark the back buffer ready for presentation
 		ThrowIfFailed(mSwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING));
 
@@ -507,10 +624,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mWindowDimensions.Height = height;
 
 		// make sure we have a valid swap chain and command allocator
-		ENGINE_ASSERT(mSwapChain, L"Swap Chain should NOT be nullptr here");
+		ENGINE_ASSERT(mSwapChain, "Swap Chain should NOT be nullptr here");
 		ENGINE_ASSERT(
 			mInitAndResizeCommandAllocator,
-			L"Init and Resize Cmd Allocator should NOT be nullptr"
+			"Init and Resize Cmd Allocator should NOT be nullptr"
 		);
 
 		// flush all preivous commands
@@ -558,10 +675,34 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mRTVHeapHandle.Offset(1, mRtvDescriptorSize);
 		}
 
+		// recreate the render target manager buffers and views
+		mRenderTargetManager.OnResize(
+			mDX12Device.Get(),
+			width,
+			height
+		);
+
+		// Recreate Mirror RTV SRVs
+		// this has to be called inside OnResize because the mirror rtv buffers
+		// need to be created before we create the srvs 
+		for (uint32_t frame = 0; frame < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frame) {
+			ID3D12Resource* mirrorResource = mRenderTargetManager.GetMirrorResource(frame);
+			ENGINE_ASSERT(
+				mirrorResource != nullptr,
+				"Mirror RTV resource missing at descriptor init"
+			);
+
+			mDescriptorManager.CreateMirrorRtvSrv(
+				mDX12Device.Get(),
+				frame,
+				mirrorResource
+			);
+		}
+
 		// clear the blur scratch texture and recreate the teture and the descriptors
 		// this is because our back buffer and scratch texture both have been
 		// recreated with the new screen dimensions
-		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS> SwapchainBuffers;
+		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS> SwapchainBuffers = {};
 
 		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
 			SwapchainBuffers[i] = mSwapChainBuffers[i].Get();
@@ -661,6 +802,103 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	const DX12GpuProfilerResults& DX12Renderer::GetProfilerResults() {
 		return mGpuProfiler.GetProfilerResults();
+	}
+
+#pragma region Private
+
+	bool DX12Renderer::InitializeDevice() {
+		UINT dxgiFactoryFlags = 0;
+
+#if defined(DEBUG) || defined(_DEBUG) 
+		// Enable the D3D12 debug layer.
+		{
+			Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+			ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
+			debugController->EnableDebugLayer();
+		}
+
+#ifndef __MINGW32__
+		Microsoft::WRL::ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiInfoQueue.GetAddressOf()))))
+		{
+			dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, true);
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
+
+			DXGI_INFO_QUEUE_MESSAGE_ID hide[] =
+			{
+				80 /* IDXGISwapChain::GetContainingOutput: The swapchain's adapter does not control the output on which the swapchain's window resides. */,
+			};
+			DXGI_INFO_QUEUE_FILTER filter = {};
+			filter.DenyList.NumIDs = static_cast<UINT>(std::size(hide));
+			filter.DenyList.pIDList = hide;
+			dxgiInfoQueue->AddStorageFilterEntries(DXGI_DEBUG_DXGI, &filter);
+		}
+#endif // __MINGW32__
+
+#endif
+
+		// Initialize DXGI Factory
+		ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
+
+		// Try to create hardware device.
+		HRESULT hardwareResult = D3D12CreateDevice(
+			nullptr,             // default adapter
+			D3D_FEATURE_LEVEL_12_0,
+			IID_PPV_ARGS(&mDX12Device)
+		);
+
+		// Fallback to WARP device.
+		if (FAILED(hardwareResult))
+		{
+			Microsoft::WRL::ComPtr<IDXGIAdapter> pWarpAdapter;
+			ThrowIfFailed(mdxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter))
+			);
+
+			ThrowIfFailed(
+				D3D12CreateDevice(
+					pWarpAdapter.Get(),
+					D3D_FEATURE_LEVEL_11_0,
+					IID_PPV_ARGS(&mDX12Device)
+				)
+			);
+		}
+
+		// create fence
+		ThrowIfFailed(
+			mDX12Device->CreateFence(
+				0,
+				D3D12_FENCE_FLAG_NONE,
+				IID_PPV_ARGS(&mFence)
+			)
+		);
+
+		// Check 4X MSAA quality support for our back buffer format.
+		// All Direct3D 11 capable devices support 4X MSAA for all render 
+		// target formats, so we only need to check quality support.
+
+		D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
+		msQualityLevels.Format = mBackBufferFormat;
+		msQualityLevels.SampleCount = 4;
+		msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+		msQualityLevels.NumQualityLevels = 0;
+		ThrowIfFailed(
+			mDX12Device->CheckFeatureSupport(
+				D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+				&msQualityLevels,
+				sizeof(msQualityLevels)
+			)
+		);
+
+		m4xMsaaQuality = msQualityLevels.NumQualityLevels;
+		ENGINE_ASSERT(m4xMsaaQuality > 0, "Unexpected MSAA quality level.");
+
+#if defined(DEBUG) || defined(_DEBUG)
+		LogAdapters();
+#endif
+
+		return true;
 	}
 
 	void DX12Renderer::FlushCommandQueue() {
@@ -905,6 +1143,24 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 	}
 
+	void DX12Renderer::DisposeUploaders() {
+
+		// dispose mesh uploaders
+		for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
+			uint32_t id = it->first;
+			auto& meshResource = it->second;
+
+			meshResource->DisposeUploaders();
+		}
+
+		// dispose texture uploaders
+		for (DX12Texture& texture : mTextures) {
+			if (texture.IsLoaded && texture.UploadHeap != nullptr) {
+				texture.DisposeUploader();
+			}
+		}
+	}
+
 	D3D12_CPU_DESCRIPTOR_HANDLE DX12Renderer::CurrentBackBufferView() const
 	{
 		return CD3DX12_CPU_DESCRIPTOR_HANDLE(
@@ -917,52 +1173,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	D3D12_CPU_DESCRIPTOR_HANDLE DX12Renderer::DepthStencilView() const
 	{
 		return mDSVDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	}
-
-	bool DX12Renderer::SetupOpaqueRenderPipeline(
-		uint32_t numberOfEntities, 
-		uint8_t maxSubMeshesPerEntity,
-		uint32_t numberOfMaterials,
-		uint32_t numberOfTextures,
-		uint32_t sizeOfPerMaterialCb,
-		uint32_t debugSystemPerPassCBCount,
-		uint32_t debugSystemMaxCharacters
-	) {
-		CreateFrameResources(
-			numberOfEntities,
-			maxSubMeshesPerEntity,
-			numberOfMaterials,
-			debugSystemPerPassCBCount,
-			debugSystemMaxCharacters
-		);
-
-		if (mRenderPipelinePass.GetIsInitialized()) { return true; }
-
-		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress;
-
-		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
-			PerMaterialCBAddress[i] = mFrameResources[i]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
-		}
-		uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
-
-		DX12OpaqueRenderPipelineInitArgs rArgs{
-			{
-				mDX12Device.Get(),
-				mInitAndResizeCommandAllocator.Get(),
-				mBackBufferFormat,
-				mDepthStencilFormat,
-				mCbvSrvUavDescriptorSize
-			},
-			numberOfMaterials,
-			numberOfTextures,
-			alignedSizeOfPerMaterialCb,
-			PerMaterialCBAddress,
-			mTextures.data()
-		};
-
-		if (!mRenderPipelinePass.Initialize(rArgs)) { return false; }
-
-		return true;
 	}
 
 	void DX12Renderer::CreateFrameResources(
@@ -985,65 +1195,103 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
-	bool DX12Renderer::SetupDebugPipeline(
-		uint32_t debugSystemMaxCharacters,
-		uint32_t fontAtlasIndex
+
+	bool DX12Renderer::DrawOpaqueRenderItems(
+		const DX12OpaquePipelinePassExecuteContext& context
 	) {
-		if (mDebugSystemPipelinePass.GetIsInitialized()) { return true; }
+		// todo: add this to some sort of a ring buffer so memory can be reused
+		std::array<DX12OpaqueRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
 
-		if (fontAtlasIndex >= mTextures.size() || !mTextures[fontAtlasIndex].IsLoaded) {
-			return false; 
+		// fill in the execute args from execute context per render item
+		for (uint32_t i = 0; i < context.NumberOfItems; ++i) {
+			if (i >= DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
+
+			auto& renderItem = context.RenderItems[i];
+			const DX12MeshResource* const resource = mMeshResourceMap[renderItem.MeshID].get();
+
+			if (resource == nullptr) { continue; }
+
+			PerItemExecuteArgs[i].ID = renderItem.ID;
+			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
+			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
+			PerItemExecuteArgs[i].SubMeshCount = renderItem.SubMeshCount;
+			PerItemExecuteArgs[i].SubMeshExecuteArgs.reserve(renderItem.SubMeshCount);
+
+			// load up data per sub mesh per render item
+			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
+				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
+
+				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs;
+
+				subMeshArgs.ID = j;
+				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
+				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
+				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
+				PerItemExecuteArgs[i].SubMeshExecuteArgs.push_back(subMeshArgs);
+			}
 		}
 
-		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> CBResources;
+		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
+		auto backBufferView = CurrentBackBufferView();
+		auto depthStencilView = DepthStencilView();
 
-		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
-			CBResources[i] = mFrameResources[i]->mDebugSystemPerCharacterCB.Resource();
-		}
-
-		DX12DebugSystemPipelinePassInitArgs dArgs{
+		DX12OpaqueRenderPipelineExecuteArgs rArgs{
 			{
-				mDX12Device.Get(),
-				mInitAndResizeCommandAllocator.Get(),
-				mBackBufferFormat,
-				mDepthStencilFormat,
-				mCbvSrvUavDescriptorSize
+				mCurrentFrameResourceIndex,
+				mCurrentBackBufferIndex,
+				mCbvSrvUavDescriptorSize,
+				currentBackBuffer,
+				backBufferView,
+				depthStencilView,
+				mScreenViewport,
+				mScissorRect,
+				mGpuProfiler
 			},
-			debugSystemMaxCharacters,
-			fontAtlasIndex,
-			mTextures[fontAtlasIndex],
-			CBResources
+			PerItemExecuteArgs.data(),
+			context.NumberOfItems,
+			context.MaxNumSubMeshesPerItem,
+			mCurrentFrameResource->mOpaquePerPassCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.Resource()->GetGPUVirtualAddress(),
+			context.NumberOfMaterials
 		};
 
-		if (!mDebugSystemPipelinePass.Initialize(dArgs)) { return false; }
+		mRenderPipelinePass.ExecutePass(rArgs);
+
+		mPiplinePassAggregator.InsertPass(&mRenderPipelinePass);
 
 		return true;
 	}
 
-	bool DX12Renderer::SetupBlurPipeline() {
-		if (mBlurPipelinePass.GetIsInitialized()) { return true; }
+	bool DX12Renderer::DrawDebugSystem(uint32_t numberOfCharacters) {
+		// todo: remove this from here in the future
+		DrawBlurPass();
 
-		std::array<ID3D12Resource*, DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS> swapChainBuffers;
+		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
+		auto backBufferView = CurrentBackBufferView();
+		auto depthStencilView = DepthStencilView();
 
-		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS; ++i) {
-			swapChainBuffers[i] = mSwapChainBuffers[i].Get();
-		}
-
-		DX12BlurPipelinePassInitArgs bArgs{
+		DX12DebugSystemPipelinePassExecuteArgs args{
 			{
-				mDX12Device.Get(),
-				mInitAndResizeCommandAllocator.Get(),
-				mBackBufferFormat,
-				mDepthStencilFormat,
-				mCbvSrvUavDescriptorSize
+				mCurrentFrameResourceIndex,
+				mCurrentBackBufferIndex,
+				mCbvSrvUavDescriptorSize,
+				currentBackBuffer,
+				backBufferView,
+				depthStencilView,
+				mScreenViewport,
+				mScissorRect,
+				mGpuProfiler
 			},
-			DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS,
-			swapChainBuffers,
-			mWindowDimensions.Width,
-			mWindowDimensions.Height
+			mCurrentFrameResource->mDebugSystemPerPassCB.Resource(),
+			numberOfCharacters
 		};
 
-		if (!mBlurPipelinePass.Initialize(bArgs)) { return false; }
+		mDebugSystemPipelinePass.ExecutePass(args);
+
+		mPiplinePassAggregator.InsertPass(&mDebugSystemPipelinePass);
 
 		return true;
 	}
@@ -1076,129 +1324,5 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		return true;
 	}
-
-	void DX12Renderer::LoadGeometry(
-		uint32_t meshID, 
-		uint16_t sizeOfVertex,
-		uint32_t vertexBufferByteSize, 
-		const void* vertices, 
-		uint32_t indexBufferByteSize,
-		const void* indices
-	) {
-		// create mesh resource
-		std::unique_ptr<DX12MeshResource> meshResource = std::make_unique<DX12MeshResource>();
-		meshResource->id = meshID;
-
-		// create blob of vbByteSize and store address in vertex buffer cpu address
-		ThrowIfFailed(
-			D3DCreateBlob(
-				vertexBufferByteSize,
-				&meshResource->VertexBufferCPU
-			)
-		);
-
-		// copy vertices into vertex buffer cpu address
-		CopyMemory(
-			meshResource->VertexBufferCPU->GetBufferPointer(),
-			vertices,
-			vertexBufferByteSize
-		);
-
-		// create blob and copy indices into blob at index buffer cpu address
-		ThrowIfFailed(
-			D3DCreateBlob(
-				indexBufferByteSize,
-				&meshResource->IndexBufferCPU
-			)
-		);
-
-		CopyMemory(
-			meshResource->IndexBufferCPU->GetBufferPointer(),
-			indices,
-			indexBufferByteSize
-		);
-
-		// create default buffer on the gpu and upload vertices and indices
-		// from cpu to gpu usign the default buffer
-		meshResource->VertexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
-			mDX12Device.Get(),
-			mSetupCommandList.Get(),
-			vertices,
-			vertexBufferByteSize,
-			meshResource->VertexBufferUploader
-		);
-
-		meshResource->IndexBufferGPU = DX12RendererHelper::CreateDefaultBuffer(
-			mDX12Device.Get(),
-			mSetupCommandList.Get(), 
-			indices,
-			indexBufferByteSize,
-			meshResource->IndexBufferUploader
-		);
-
-		// store metadata in mesh resource that we'll use during rendering
-		meshResource->VertexByteStride = sizeOfVertex;
-		meshResource->VertexBufferByteSize = vertexBufferByteSize;
-		meshResource->IndexFormat = DXGI_FORMAT_R16_UINT;
-		meshResource->IndexBufferByteSize = indexBufferByteSize;
-
-		// store it in our map
-		mMeshResourceMap[meshID] = std::move(meshResource);
-	}
-
-	bool DX12Renderer::LoadTexture(std::wstring& filename, uint32_t id) {
-		if (id >= mTextures.size()) { return false; }
-
-		DX12Texture& texture = mTextures[id];
-
-		if (texture.IsLoaded) { return false; }
-
-		texture.Id = id;
-
-		ThrowIfFailed(
-			DirectX::CreateDDSTextureFromFile12(
-				mDX12Device.Get(),
-				mSetupCommandList.Get(),
-				filename.c_str(),
-				texture.Resource,
-				texture.UploadHeap
-			)
-		);
-
-		texture.IsLoaded = true;
-
-		return true;
-	}
-
-	void DX12Renderer::FinishInitialize() {
-		// Execute the initialization commands.
-		ThrowIfFailed(mSetupCommandList->Close());
-
-		ID3D12CommandList* cmdsLists[] = { mSetupCommandList.Get() };
-		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-		// Wait until initialization is complete.
-		FlushCommandQueue();
-
-		// dispose uploaders
-		DisposeUploaders();
-	}
-
-	void DX12Renderer::DisposeUploaders() {
-
-		// dispose mesh uploaders
-		for (auto it = mMeshResourceMap.begin(); it != mMeshResourceMap.end(); ++it) {
-			uint32_t id = it->first;
-			auto& meshResource = it->second;
-
-			meshResource->DisposeUploaders();
-		}
-
-		// dispose texture uploaders
-		for (DX12Texture& texture : mTextures) {
-			if (texture.IsLoaded && texture.UploadHeap != nullptr) {
-				texture.DisposeUploader();
-			}
-		}
-	}
+#pragma endregion
 }

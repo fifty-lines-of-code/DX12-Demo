@@ -79,7 +79,7 @@ namespace Engine::EngineWorld {
 	bool ReflectionManager::IsMirrorEntity(uint32_t entityID) const noexcept {
 		ENGINE_ASSERT(
 			entityID < EngineConfig::EngineConfig::MAX_ENTITIES,
-			L"Entity ID is invalid!!"
+			"Entity ID is invalid!!"
 		);
 
 		if (entityID >= EngineConfig::EngineConfig::MAX_ENTITIES) { return false; }

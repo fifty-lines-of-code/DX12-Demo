@@ -17,7 +17,7 @@ DX12Demo::DX12Demo(HINSTANCE hInstance) :
     mhAppInst(hInstance),
     mGame(mhAppInst, mClientWidth, mClientHeight, mMainWndCaption)
 {
-    ENGINE_ASSERT(mDemo == nullptr, L"Demo should be nullptr");
+    ENGINE_ASSERT(mDemo == nullptr, "Demo should be nullptr");
     mDemo = this;
 }
 

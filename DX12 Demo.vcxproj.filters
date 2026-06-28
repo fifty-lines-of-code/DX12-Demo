@@ -340,6 +340,18 @@
     <Filter Include="Source Files\Engine\World Manager\Scene Manager\Reflection Manager">
       <UniqueIdentifier>{d98a0714-0903-4528-bc35-838ec187008c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Render Target Manager">
+      <UniqueIdentifier>{ec4fae6d-fc38-4f5c-862b-dc02ad4a8a52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Render Target Manager">
+      <UniqueIdentifier>{380a8f2d-4241-498b-aba9-e99a208ad623}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager">
+      <UniqueIdentifier>{7124e6d0-e3b8-4603-bdab-f4faabdcd128}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer\DX2Renderer\DX12 Descriptor Manager">
+      <UniqueIdentifier>{8f819478-2382-4ab2-ae50-d439c5d5d69d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Helper\Helper.h">
@@ -609,6 +621,12 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityTransformData.h">
       <Filter>Header Files\Engine\World Manager\Scene Manager\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Render Target Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager\DX12DescriptorManager.h">
+      <Filter>Header Files\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\DX12Demo.cpp">
@@ -755,6 +773,12 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.cpp">
       <Filter>Source Files\Engine\World Manager\Scene Manager\Reflection Manager</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Render Target Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager\DX12DescriptorManager.cpp">
+      <Filter>Source Files\Engine\Renderer\DX2Renderer\DX12 Descriptor Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -787,7 +811,9 @@
     <Image Include="Source\Resources\Textures\Checkboard.dds">
       <Filter>Resource Files\Textures</Filter>
     </Image>
-    <Image Include="Source\Resources\Textures\WoodCrate02.dds" />
+    <Image Include="Source\Resources\Textures\WoodCrate02.dds">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Resources\Shaders\Debug\debug_ps.hlsl">

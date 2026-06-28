@@ -116,7 +116,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT numberOfDescriptors = (1 * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES) + 1;
 
 		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
 		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
 		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;

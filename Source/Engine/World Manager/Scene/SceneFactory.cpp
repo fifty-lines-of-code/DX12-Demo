@@ -18,7 +18,7 @@ namespace Engine::EngineWorld {
 			break;
 		case Scene::FLAT_PLANE:
 			// todo;
-			ENGINE_ASSERT(false, L" Flat Plane Scene Still needs to be implemented");
+			ENGINE_ASSERT(false, " Flat Plane Scene Still needs to be implemented");
 			break;
 		case Scene::SINGLE_MIRROR:
 			isLoaded = LoadSingleMirroScene(sceneBlueprint);
