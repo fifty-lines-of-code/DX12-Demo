@@ -69,31 +69,30 @@ ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
 
 Texture2D gTextures[NUM_TEXTURES] : register(t0);
 
-SamplerState gsamPointWrap        : register(s0);
-SamplerState gsamPointClamp       : register(s1);
-SamplerState gsamLinearWrap       : register(s2);
-SamplerState gsamLinearClamp      : register(s3);
-SamplerState gsamAnisotropicWrap  : register(s4);
-SamplerState gsamAnisotropicClamp : register(s5);
+SamplerState gsamPointWrap                  : register(s0);
+SamplerState gsamPointClamp                 : register(s1);
+SamplerState gsamLinearWrap                 : register(s2);
+SamplerState gsamLinearClamp                : register(s3);
+SamplerState gsamAnisotropicWrap            : register(s4);
+SamplerState gsamAnisotropicClamp           : register(s5);
+SamplerState gsamMirrorAnisotropicClamp     : register(s6);
 
 float4 Mirror_PS(VertexOut pin) : SV_Target
 {
-    // Material lookup
     uint matIdx = min(gMaterialIndex, NUM_MATERIALS - 1);
     cbMaterial matData = gMaterials[matIdx];
 
-    // Projected UV: world position -> reflected clip space -> texture UV
-    // This replaces vertex UVs entirely for mirror submeshes
     float4 projPos = mul(float4(pin.PosW, 1.0f), ReflectedViewProjTranspose);
-    float2 mirrorUV = projPos.xy / projPos.w;
+    
+    // Guard against behind-camera pixels
+    if (projPos.w <= 0.0f) discard; 
 
-    // NDC [-1,1] -> UV [0,1], flip Y for DX12 texture coordinate convention
+    float2 mirrorUV = projPos.xy / projPos.w;
     mirrorUV = mirrorUV * 0.5f + 0.5f;
     mirrorUV.y = 1.0f - mirrorUV.y;
 
-    // Sample mirror RTV using projected UVs
-    // gTextureIndex is pre-resolved on CPU to the correct mirror SRV slot
-    float4 diffuseAlbedo = gTextures[gTextureIndex].Sample(gsamAnisotropicClamp, mirrorUV)
+    // Use the BORDER sampler to prevent stretching/smearing at edges
+    float4 diffuseAlbedo = gTextures[gTextureIndex].Sample(gsamMirrorAnisotropicClamp, mirrorUV)
                          * matData.gDiffuseAlbedo;
 
     // Lighting - identical to opaque PS, uses MAIN camera EyePosW

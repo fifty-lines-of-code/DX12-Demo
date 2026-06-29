@@ -14,7 +14,7 @@ namespace Engine::EngineConfig {
 
 		// epsilons
 		static constexpr float PHYSICS_Y_EPSILON = 0.025f;
-		static constexpr float MIRROR_PLANE_DISTANCE_EPSILON = 0.02f;
-		static constexpr float MIRROR_PLANE_ANGLE_EPSILON = 0.1f;
+		static constexpr float MIRROR_PLANE_DISTANCE_EPSILON = 0.005f;
+		static constexpr float MIRROR_PLANE_ANGLE_EPSILON = 0.005f;
 	};
 } 

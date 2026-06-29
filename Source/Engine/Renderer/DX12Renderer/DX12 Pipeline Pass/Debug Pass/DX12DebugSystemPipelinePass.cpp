@@ -240,7 +240,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		rootParameters[2].InitAsDescriptorTable(1, &slotRootRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
 		// Static Sampler for smooth texel mapping interpolation
-		std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers;
+		std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
 		DX12RendererHelper::GetStaticSamplers(samplers);
 
 		// index 3 is the linear clamp we want

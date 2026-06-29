@@ -74,12 +74,13 @@ ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
 
 Texture2D gTextures[NUM_TEXTURES] : register(t0);
 
-SamplerState gsamPointWrap        : register(s0);
-SamplerState gsamPointClamp       : register(s1);
-SamplerState gsamLinearWrap       : register(s2);
-SamplerState gsamLinearClamp      : register(s3);
-SamplerState gsamAnisotropicWrap  : register(s4);
-SamplerState gsamAnisotropicClamp : register(s5);
+SamplerState gsamPointWrap                  : register(s0);
+SamplerState gsamPointClamp                 : register(s1);
+SamplerState gsamLinearWrap                 : register(s2);
+SamplerState gsamLinearClamp                : register(s3);
+SamplerState gsamAnisotropicWrap            : register(s4);
+SamplerState gsamAnisotropicClamp           : register(s5);
+SamplerState gsamMirrorAnisotropicClamp     : register(s6);
 
 // vertex shader
 VertexOut VS(VertexIn vin)

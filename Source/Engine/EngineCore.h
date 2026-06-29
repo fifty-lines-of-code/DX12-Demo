@@ -24,6 +24,8 @@ namespace Engine {
 
 		EngineCore(const EngineCore& rhs) = delete;
 		EngineCore& operator=(const EngineCore& rhs) = delete;
+		EngineCore(EngineCore&&) = delete;
+		EngineCore& operator=(EngineCore&&) = delete;
 
 		bool Initialize(
 			HWND mainWnd, 

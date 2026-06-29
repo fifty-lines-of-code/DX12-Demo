@@ -85,39 +85,13 @@ namespace Engine {
 		mCameraManager.UpdateMainCameraWithTarget(mWorldManager.GetPlayerCenter());
 
 		// if we have active mirrors, update refelcted camera
+		
+		// TODO: handle MAX_MIRRORS
+		// TODO 2: Handle MAX_MIRRORS with MAX_MIRROR_PASSES
 		if (mWorldManager.HasActiveMirrors()) {
 			const EngineSimulation::MirrorPlaneQueryResult result = mWorldManager.GetMirrorPlaneQueryResult();
 			mCameraManager.UpdateReflectedCameraWithSimulationData(result);
 		}
-
-		// TODO: handle MAX_MIRRORS
-		// TODO 2: Handle MAX_MIRRORS with MAX_MIRROR_PASSES
-		/*
-		if (mWorldManager.HasActiveMirrors()) {
-			const EngineSimulation::MirrorPlaneQueryResult result = mWorldManager.GetMirrorPlaneQueryResult();
-
-			auto reflectionQueue = mWorldManager.GetEntitiesForReflectionPass();
-
-			for (size_t i = 0; i < result.Count; ++i)
-			{
-				mCameraManager.UpdateReflectedCameraWithSimulationData(
-					result.Planes[i];
-				);
-
-				// TODO: reflected camera now stores upto MAX_MIRRORS count 
-				// worth of reflection data
-				const Matrix4x4& mirrorVP = mCameraManager.GetViewProjection(
-					EngineCamera::CameraType::REFLECTED,
-					i
-				);
-
-				for (Entity* entity : reflectionQueue)
-				{
-					mRenderer.ReflectionPass(entity);
-				}
-			}
-		}
-		*/
 
 		// prepare the renderer for updates
 		mRenderer.PrepareForUpdate();

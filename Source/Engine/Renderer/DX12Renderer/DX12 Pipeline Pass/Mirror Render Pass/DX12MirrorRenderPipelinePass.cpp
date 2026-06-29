@@ -252,6 +252,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
 		DX12RendererHelper::GetStaticSamplers(samplers);
 
+		// mirror sampler
+		CD3DX12_STATIC_SAMPLER_DESC mirrorSampler(
+			6,                                  // shaderRegister: Must match 'register(s6)' in HLSL
+			D3D12_FILTER_ANISOTROPIC,           // filter
+			D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressW
+			0.0f,                               // mipLODBias
+			16,                                 // maxAnisotropy
+			D3D12_COMPARISON_FUNC_ALWAYS,       // comparisonFunc
+			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK // borderColor
+		);
+
+		samplers[DX12RendererHelper::DX12_MAX_SAMPLERS - 1] = mirrorSampler;
+
 		// A root signature is an array of root parameters.
 		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
 		rootSigDesc.Init(
