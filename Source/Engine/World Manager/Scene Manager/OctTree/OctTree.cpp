@@ -77,7 +77,7 @@ namespace Engine {
 				// maybe the code should be strong enough can this assert isn't necessary
 				ENGINE_ASSERT(
 					childIndex < OctTree::TOTAL_NUMBER_OF_NODES,
-					L"Out of OctTree allNodes bounds"
+					"Out of OctTree allNodes bounds"
 				);
 
 				OctTreeNode& child = allNodes[childIndex];

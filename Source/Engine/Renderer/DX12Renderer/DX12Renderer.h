@@ -9,10 +9,13 @@
 #include "d3dx12.h"
 #include "DX12 Pipeline Pass/Blur Pass/DX12BlurPipelinePass.h"
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
+#include "DX12 Descriptor Manager/DX12DescriptorManager.h"
 #include "DX12 Gpu Profiler/DX12GpuProfiler.h"
+#include "DX12 Pipeline Pass/Mirror Render Pass/DX12MirrorRenderPipelinePass.h"
+#include "DX12 Pipeline Pass/Opaque Render Pass/DX12OpaqueRenderPipelinePass.h"
 #include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
 #include "DX12 Data Structures/DX12PipelineDataStructures.h"
-#include "DX12 Pipeline Pass/Opaque Render Pass/DX12OpaqueRenderPipelinePass.h"
+#include "DX12 Render Target Manager/DX12RenderTargetManager.h"
 #include <fstream>
 #include <unordered_map>
 
@@ -42,6 +45,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		DX12Renderer();
 		~DX12Renderer();
 
+		DX12Renderer(const DX12Renderer&) = delete;
+		DX12Renderer& operator=(const DX12Renderer&) = delete;
+		DX12Renderer(DX12Renderer&&) = delete;
+		DX12Renderer& operator=(DX12Renderer&&) = delete;
+
 		bool Initialize(
 			HWND mainHwnd,
 			int numberOfFrameResources,
@@ -51,7 +59,30 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		void FinishInitialize() override;
 		void Shutdown() override;
-		bool LoadTexture(std::wstring& filename, uint32_t id) override;
+
+		bool LoadTexture(
+			std::wstring& filename, 
+			uint32_t id
+		) override;
+
+		bool PrepareToSetupRenderPipelines(
+			uint32_t numberOfEntities,
+			uint8_t maxSubMeshesPerEntity,
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t debugSystemPerPassCBCount,
+			uint32_t debugSystemMaxCharacters
+		);
+
+		bool SetupMirrorRenderPipeline(
+			uint32_t numberOfEntities,
+			uint8_t maxSubMeshesPerEntity,
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t sizeOfPerMaterialCBV,
+			uint32_t debugSystemPerPassCBCount,
+			uint32_t debugSystemMaxCharacters
+		);
 
 		bool SetupOpaqueRenderPipeline(
 			uint32_t numberOfEntities,
@@ -80,7 +111,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		) override;
 
 		void PrepareForUpdate() override;
-		void UpdateOpaqueRenderItemsPerPassCb(
+
+		void UpdateOpaquePassRenderItemsPerPassCb(
+			const void* data, 
+			size_t dataSize
+		) const override;
+
+		void UpdateMirrorPassRenderItemsPerPassCb(
 			const void* data, 
 			size_t dataSize
 		) const override;
@@ -104,11 +141,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t perMaterialCbSize
 		) override;
 
-		void UpdateDebugSystemPerPassCb(const void* data) override;
+		void UpdateDebugSystemPerPassCb(
+			const void* data
+		) const noexcept override;
+
 		void UpdateDebugSystemStructuredBuffer(
 			uint32_t count,
 			const void* data
-		);
+		) const noexcept;
 
 		void BeginFrame(uint32_t numberOfMaterials) override;
 		void Execute(const IPipelinePassExecuteContext& context) override;
@@ -117,6 +157,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void OnResize(UINT width, UINT height) override;
 
 		const DX12GpuProfilerResults& GetProfilerResults();
+
+		uint32_t GetCurrentFrameIndex() const noexcept;
 
 	private:
 		DX12FrameResource* mCurrentFrameResource = nullptr;
@@ -138,7 +180,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffers[DX12RendererConfig::NUMBER_OF_SWAPCHAIN_BUFFERS];
 		Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 		std::array<std::unique_ptr<DX12FrameResource>, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> mFrameResources;
-		DX12OpaqueRenderPipelinePass mRenderPipelinePass;
+		DX12RenderTargetManager mRenderTargetManager;
+		DX12DescriptorManager mDescriptorManager;
+		DX12OpaqueRenderPipelinePass mOpaqueRenderPipelinePass;
+		DX12MirrorRenderPipelinePass mMirrorRenderPipelinePass;
 		DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
 		DX12BlurPipelinePass mBlurPipelinePass;
 		DX12PipelinePassAggregator mPiplinePassAggregator;
@@ -177,10 +222,14 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		void FlushCommandQueue();
 		void LogAdapters();
 		void LogAdapterOutputs(IDXGIAdapter* adapter);
-		void LogOutputDisplayModes(IDXGIOutput* output, DXGI_FORMAT format);
+		void LogOutputDisplayModes(
+			IDXGIOutput* output, 
+			DXGI_FORMAT format
+		);
 		void CreateCommandObjects();
 		void CreateSwapChain();
 		void CreateRtvDsvDescriptorHeaps();
+		void DisposeUploaders();
 		D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 		D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 
@@ -192,12 +241,20 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t debugSystemMaxCharacters
 		);
 
+		bool InitializeDescriptorManager(
+			uint32_t numMaterials,
+			uint32_t numTextures
+		);
+
+		bool DrawMirrorPassOpaqueRenderItems(
+			const DX12RenderPipelinePassExecuteContext& context
+		);
+
+		void BeginOpaquePassFrame();
 		bool DrawOpaqueRenderItems(
-			const DX12OpaquePipelinePassExecuteContext& context
+			const DX12RenderPipelinePassExecuteContext& context
 		);
 		bool DrawDebugSystem(uint32_t numberOfCharacters);
 		bool DrawBlurPass();
-
-		void DisposeUploaders();
 	};
 }

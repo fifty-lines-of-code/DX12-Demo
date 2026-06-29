@@ -30,10 +30,21 @@ namespace Engine::EngineWorld {
 			uint32_t index,
 			Vector3 center, 
 			Vector3 scale, 
+			BasisVectors basisVectors,
+			Vector3 surfaceNormal,
 			EntityType entityType,
 			EngineResources::MeshID meshID,
 			std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshBlueprints,
-			uint8_t activeSubMeshCount
+			uint8_t activeSubMeshCount,
+			bool isStatic
+		);
+		void GenerateBasisVectorsFrom(
+			// angles are in DX12 LH CW:
+			// 0=+Z, 90=+X, 180=-Z, 270=-X
+			float yawDegrees, 
+			float pitchDegrees,
+			float rollDegrees, 
+			BasisVectors& basisVectors
 		);
 	};
 }

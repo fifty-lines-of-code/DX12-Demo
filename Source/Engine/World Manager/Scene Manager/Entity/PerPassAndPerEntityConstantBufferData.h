@@ -17,7 +17,7 @@ namespace Engine::EngineWorld {
 
 		// remember when you update this struct
 		// also update 
-		// 1. DX12FrameResource
+		// 1. DX12ResourceDataStructures
 		// 2. cbuffer in the shaders
 	};
 	static_assert((sizeof(EntityConstantBufferData) % 256) == 0,
@@ -30,7 +30,7 @@ namespace Engine::EngineWorld {
 
 		// remember when you udate this struct
 		// also update
-		// 1. DX12FrameResource
+		// 1. DX12ResourceDataStructures
 		// 2. cbuffer in shaders
 
 		// we've made this 256 bytes as we are updating the
@@ -46,6 +46,7 @@ namespace Engine::EngineWorld {
 
 	struct PerPassConstantBufferData {
 		Matrix4x4 ViewProjectionTranspose;
+		Matrix4x4 ReflectedViewProjectionTranspose;
 		Vector4 AmbientLight;
 		Vector3 EyePosW;
 		float PassPad0;
@@ -53,10 +54,11 @@ namespace Engine::EngineWorld {
 
 		// remember when you update this struct
 		// also update 
-		// 1. DX12FrameResource
-		// 2. cbuffer in the shaders
+		// 1. DX12ResourceDataStructures
+		// 2. cbuffer in both the shaders
+		// opaque_vs_ps and opaque_mirror_ps
 
-		uint32_t SubMeshPad[40];
+		uint32_t SubMeshPad[24];
 	};
 
 	static_assert((sizeof(PerPassConstantBufferData) % 256) == 0,

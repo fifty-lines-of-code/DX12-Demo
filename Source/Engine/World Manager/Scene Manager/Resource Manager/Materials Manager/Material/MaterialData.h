@@ -12,7 +12,7 @@ namespace Engine::EngineResources {
 
 		// remember when you update this struct
 		// also update 
-		// 1. DX12FrameResource
+		// 1. DX12ResourceDataStructures
 		// 2. cbuffer in the shaders
 	};
 }

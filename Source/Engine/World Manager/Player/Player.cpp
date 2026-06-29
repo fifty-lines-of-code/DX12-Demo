@@ -10,7 +10,22 @@ Player::Player() : mPlayerAnimator() {}
 
 Player::~Player() { mEntity = nullptr; }
 
-void Player::SetEntity(Engine::EngineWorld::Entity& entity) { mEntity = &entity; }
+void Player::SetEntity(Engine::EngineWorld::Entity& entity) { 
+	mEntity = &entity; 
+
+	// todo:
+	// this is temp fix for now until we upgrade to
+	// storing angles inside transform data
+	// instead of basis vectors
+	const auto& basis = entity.GetTransformData().BasisVectors;
+
+	// Calculate the starting yaw angle directly from the Forward vector
+	// This matches the exact inverse operation of your basis generator
+	float initialRotationRad = std::atan2(-basis.Forward.x, basis.Forward.z);
+
+	// Initialize your animator with this exact world space angle
+	mPlayerAnimator.InitializeRotation(initialRotationRad);
+}
 
 void Player::Update(
 	float deltaTime, 
@@ -19,6 +34,8 @@ void Player::Update(
 ) {
 	// reset velocity intent
 	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
+
 	physicsBody.VelocityIntent.Reset();
 
 	// update player's state
@@ -57,7 +74,7 @@ void Player::Update(
 	}
 	case PlayerState::BackwardsDashing:
 	{
-		Engine::Vector3 forward = physicsBody.BasisVectors.forward;
+		Engine::Vector3 forward = transformData.BasisVectors.Forward;
 		forward.Normalize();
 
 		physicsBody.VelocityIntent.x = -forward.x *  mPlayerLogic.mBackwardsDashVelocity * deltaTime;
@@ -79,10 +96,6 @@ void Player::Update(
 	}
 
 	mEntity->SetIsDirty(true);
-}
-
-const Engine::Vector3& Player::GetCenter() const {
-	return mEntity->GetPhysicsBody().Center;
 }
 
 Engine::AABB Player::CalculatePotentialFootprintAABB() const {
@@ -108,10 +121,12 @@ Engine::AABB Player::CalculatePotentialFootprintAABB() const {
 	return broadphase;
 }
 
-void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& collisionResult) {
-	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+void Player::PostPhysicsUpdate(
+	const Engine::EnginePhysics::CollisionResult& collisionResult
+) {
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
 
-	physicsBody.Center = collisionResult.ProposedCenter;
+	transformData.Center = collisionResult.ProposedCenter;
 
 	if (collisionResult.HasCollided() && 
 		mPlayerLogic.GetPlayerState() == PlayerState::BackwardsDashing) {
@@ -129,15 +144,15 @@ void Player::PostPhysicsUpdate(const Engine::EnginePhysics::CollisionResult& col
 void Player::UpdateBasisVectorsFromVisualRotation() {
 	float currentRotation = mPlayerAnimator.GetRotation();
 
-	Engine::EnginePhysics::PhysicsBody& physicsBody = mEntity->GetPhysicsBody();
+	Engine::EngineWorld::EntityTransformData& transformData = mEntity->GetTransformData();
 
-	physicsBody.BasisVectors.forward.x = std::sin(currentRotation);
-	physicsBody.BasisVectors.forward.y = 0.0f;
-	physicsBody.BasisVectors.forward.z = std::cos(currentRotation);
+	transformData.BasisVectors.Forward.x = std::sin(currentRotation);
+	transformData.BasisVectors.Forward.y = 0.0f;
+	transformData.BasisVectors.Forward.z = std::cos(currentRotation);
 
-	physicsBody.BasisVectors.right.x = std::cos(currentRotation);
-	physicsBody.BasisVectors.right.y = 0.0f;
-	physicsBody.BasisVectors.right.z = -std::sin(currentRotation);
+	transformData.BasisVectors.Right.x = std::cos(currentRotation);
+	transformData.BasisVectors.Right.y = 0.0f;
+	transformData.BasisVectors.Right.z = -std::sin(currentRotation);
 }
 
 void Player::CalculateMovementVector(
@@ -147,11 +162,11 @@ void Player::CalculateMovementVector(
 	Engine::Vector3& movement
 ) {
 	// 1. Isolate and flatten the camera's forward vector to the 2D ground plane
-	Engine::Vector3 flatCamFwd = { cameraBasisVectors.forward.x, 0.0f, cameraBasisVectors.forward.z };
+	Engine::Vector3 flatCamFwd = { cameraBasisVectors.Forward.x, 0.0f, cameraBasisVectors.Forward.z };
 	flatCamFwd.Normalize();
 
 	// 2. Isolate and flatten the camera's right vector to the 2D ground plane
-	Engine::Vector3 flatCamRight = { cameraBasisVectors.right.x, 0.0f, cameraBasisVectors.right.z };
+	Engine::Vector3 flatCamRight = { cameraBasisVectors.Right.x, 0.0f, cameraBasisVectors.Right.z };
 	flatCamRight.Normalize();
 
 	// 3. Now safely blend horizontal basis vectors by the stick inputs

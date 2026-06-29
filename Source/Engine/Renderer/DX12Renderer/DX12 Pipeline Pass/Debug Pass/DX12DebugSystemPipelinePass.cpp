@@ -25,6 +25,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12DebugSystemPipelinePass::OnShutdown() {
 		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
 		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
+		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
 	}
 
 	void DX12DebugSystemPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {
@@ -116,7 +117,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		UINT numberOfDescriptors = (1 * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES) + 1;
 
 		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
 		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
 		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -239,7 +240,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		rootParameters[2].InitAsDescriptorTable(1, &slotRootRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
 		// Static Sampler for smooth texel mapping interpolation
-		std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers;
+		std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
 		DX12RendererHelper::GetStaticSamplers(samplers);
 
 		// index 3 is the linear clamp we want

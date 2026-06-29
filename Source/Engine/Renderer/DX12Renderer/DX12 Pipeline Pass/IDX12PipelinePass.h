@@ -1,6 +1,6 @@
 #pragma once
 
-#include <d3d12.h>
+#include "../d3dx12.h"
 #include "../DX12 Gpu Profiler/DX12GpuProfiler.h"
 #include "../DX12RendererConfig.h"
 #include "../../../../Helper/Helper.h"
@@ -36,10 +36,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// delete copy and assignment operators
 		// so that we don't have any unwanted copies
-		// that perform shallow copies and maybe go out of scope at
-		// unexpected times
+		// that perform shallow copies and maybe 
+		// go out of scope at unexpected times
 		IDX12PipelinePass(const IDX12PipelinePass&) = delete;
 		IDX12PipelinePass& operator=(const IDX12PipelinePass&) = delete;
+		IDX12PipelinePass(IDX12PipelinePass&&) = delete;
+		IDX12PipelinePass& operator=(IDX12PipelinePass&&) = delete;
 
 		bool Initialize(const DX12PipelinePassInitArgs& args);
 		void ShutDown();
@@ -53,7 +55,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mCommandAllocators[DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES];
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipelineStateObject = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		bool mIsInitialized;
 
 	protected:

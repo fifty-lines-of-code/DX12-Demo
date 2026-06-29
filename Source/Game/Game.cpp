@@ -1,11 +1,13 @@
 #include "Game.h"
 
-#include "../Engine/Camera/Camera.h"
-#include "../Engine/Debug System/DebugSystem.h"
-#include "../Engine/World Manager/Scene Manager/Entity/Entity.h"
 #include "../Helper/Helper.h"
 
-Game::Game(HINSTANCE hInstance, int windowedClientWidth, int windowedClientHeight, const std::wstring caption) :
+Game::Game(
+	HINSTANCE hInstance, 
+	int windowedClientWidth, 
+	int windowedClientHeight, 
+	const std::wstring caption
+) :
 	mhMainWnd(nullptr),
 	mMainWndCaption(caption),
 	mEngineCore(hInstance, mMainWndCaption),
@@ -88,7 +90,7 @@ void Game::CalculateFullscreenDimensions() {
 void Game::SetFullscreen() {
 
 	// make sure we have a main handle
-	ENGINE_ASSERT(mhMainWnd != nullptr, L"Main Window Handle should NOT be nullptr");
+	ENGINE_ASSERT(mhMainWnd != nullptr, "Main Window Handle should NOT be nullptr");
 
 	// strip all borders, captions, resize styles
 	SetWindowLongPtr(mhMainWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
@@ -156,7 +158,7 @@ void Game::CalculateFrameStats() {
 		",MSPF:" +
 		std::to_string(previousMSPF) +
 		"\n";
-	Engine::DebugSystem::DebugSystem::GetInstance().LogText(fpsStr);
+	mEngineCore.LogToDebugSystem(fpsStr);
 
 	// Compute averages over one second period.
 	if ((mTimer.GetTotalTime() - timeElapsed) >= 1.0f)

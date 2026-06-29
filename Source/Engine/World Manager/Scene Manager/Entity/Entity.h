@@ -2,6 +2,8 @@
 
 #include <array>
 #include "../../../Math/BasisVectors.h"
+#include "EntityRenderData.h"
+#include "EntityTransformData.h"
 #include "EntityType.h"
 #include "../../../Math/Geometry.h"
 #include "../Resource Manager/Materials Manager/Material/Material.h"
@@ -9,13 +11,9 @@
 #include "PerPassAndPerEntityConstantBufferData.h"
 #include "../../../Physics System/PhysicsBody.h"
 #include "../Resource Manager/Texture Manager/TextureID.h"
+#include "../../Scene/SceneBlueprint.h"
 
 namespace Engine::EngineWorld {
-
-	struct EntitySubMeshMaterialData {
-		uint32_t MaterialID = 0;
-		uint32_t TextureID = 0;
-	};
 
 	class Entity {
 	public:
@@ -27,18 +25,20 @@ namespace Engine::EngineWorld {
 			bool isStatic,
 			bool isActive
 		);
-		~Entity();
+		~Entity() = default;
 
-		void SetID(uint32_t id);
-		uint32_t GetID() const;
+		bool Initialize(
+			const EntityBlueprint& entityBlueprint,
+			uint32_t id,
+			EngineResources::Mesh* mesh
+		) noexcept;
 
-		void SetIsStatic(bool isStatic);
-		bool GetIsStatic() const;
-
-		void SetMesh(EngineResources::Mesh* mesh);
-		const EngineResources::Mesh* GetMesh() const;
-
-		void Update(float stickX, float stickY, float deltaTime, float speed);
+		void Update(
+			float stickX,
+			float stickY, 
+			float deltaTime, 
+			float speed
+		);
 
 		void CopyToDestinationEntityConstantBufferDataTransposed(EntityConstantBufferData& bufferData);
 
@@ -47,36 +47,62 @@ namespace Engine::EngineWorld {
 			EntitySubMeshConstantBufferData& destinationBufferData
 		);
 
-		EnginePhysics::PhysicsBody& GetPhysicsBody();
-		const AABB& GetAABB() const;
+		uint32_t GetID() const noexcept;
+
+		bool GetIsStatic() const noexcept;
+
+		Vector3 GetCenter() const noexcept;
+		Vector3 GetScale() const noexcept;
+		Vector3 GetSurfaceNormal() const noexcept;
+
+		const EngineResources::Mesh* GetMesh() const noexcept;
+
+		EnginePhysics::PhysicsBody& GetPhysicsBody() noexcept;
+		const AABB& GetAABB() const noexcept;
+		EntityTransformData& GetTransformData() noexcept;
 
 		bool GetIsDirty() const;
 		void SetIsDirty(bool dirty);
 
 		bool GetIsActive() const noexcept;
-		void SetIsActive(bool isActive) noexcept;
-
-		void SetScale(Vector3 scale);
 
 		bool GetIsTerrainOrFloor() const noexcept;
 		
-		void SetEntityType(EntityType entityType) noexcept;
 		EntityType GetEntityType() const noexcept;
 
-		void SetSubMeshMaterialAndTexture(
-			uint8_t subMeshIndex,
-			EngineResources::MaterialType material,
-			EngineResources::TextureID texture
-		) noexcept;
+		bool IsSubMeshAtIndexRenderingAMirror(
+			uint32_t subMeshIndex
+		) const noexcept;
 
 	private:
 		EngineResources::Mesh* mMesh;
 		EnginePhysics::PhysicsBody mPhysicsBody;
-		std::array<EntitySubMeshMaterialData, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> mSubMeshMaterialData;
+		EntityRenderData mRenderData;
+		EntityTransformData mTransformData;
 		uint32_t mID;
 		EntityType mEntityType;
 		bool mIsStatic;
 		bool mIsDirty;
 		bool mIsActive;
+
+	private:
+		void SetID(uint32_t id);
+		void SetMesh(EngineResources::Mesh* mesh);
+		void SetEntityType(EntityType entityType) noexcept;
+		void SetIsStatic(bool isStatic);
+		void SetIsActive(bool isActive) noexcept;
+		void SetCenter(const Vector3& center) noexcept;
+		void SetScale(const Vector3& scale) noexcept;
+		void SetBasisVectors(
+			const BasisVectors& basisVectors
+		) noexcept;
+		void SetSubMeshMaterialAndTexture(
+			uint8_t subMeshIndex,
+			EngineResources::MaterialType material,
+			EngineResources::TextureID texture
+		) noexcept;
+		void SetSurfaceNormal(
+			const Vector3& surfaceNormal
+		) noexcept;
 	};
 }

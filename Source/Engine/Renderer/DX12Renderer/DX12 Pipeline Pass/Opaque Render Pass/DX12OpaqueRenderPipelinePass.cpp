@@ -14,7 +14,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	) {
 		const DX12OpaqueRenderPipelineInitArgs& renderArgs = static_cast<const DX12OpaqueRenderPipelineInitArgs&>(args);
 
-		if (!CreateConstantBufferDescriptors(renderArgs)) { return false; }
 		if (!CreateRootSignature(renderArgs)) { return false; }
 		if (!CreateShadersAndInputLayout()) { return false; }
 		if (!CreatePipelineStateObject(renderArgs)) { return false; }
@@ -23,6 +22,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12OpaqueRenderPipelinePass::OnShutdown() {
+		if (mMirrorPipelineStateObject != nullptr) { 
+			mMirrorPipelineStateObject.Reset(); 
+		}
+		if (mMirrorPsByteCode != nullptr) { mMirrorPsByteCode.Reset(); }
 		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
 		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
 		mInputLayout.clear();
@@ -38,15 +41,18 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	) {
 		if (args.NumberOfItems == 0) { return; }
 
+		bool isMirrorPSOBound = false;
+
 		// Grab the command allocator for the current frame
 		ID3D12CommandAllocator* allocator = mCommandAllocators[args.CurrentFrameIndex].Get();
 		ThrowIfFailed(allocator->Reset());
 
+		// reset the command list
 		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
 
 		// tell the profiler to start profiling
 		args.GpuProfiler.BeginPass(
-			mCommandList.Get(), 
+			mCommandList.Get(),
 			(uint8_t)RendererPipelinePass::OPAQUE_RENDER_PASS
 		);
 
@@ -58,6 +64,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		mCommandList->RSSetScissorRects(1, &args.ScissorRect);
 
 		// set the render target
+		// each command list has to set its own render target
 		mCommandList->OMSetRenderTargets(
 			1,
 			&args.BackBufferView,
@@ -66,7 +73,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// set the descriptor heap
-		ID3D12DescriptorHeap* descriptorHeaps[] = { mDescriptorHeap.Get() };
+		ID3D12DescriptorHeap* descriptorHeaps[] = { args.DescriptorHeap };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		// per pass cb
@@ -76,31 +83,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		);
 
 		// materials cb
-		auto materialsCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-		);
-		int globalMaterialHeapOffset = (args.NumberOfMaterials * args.CurrentFrameIndex);
-
-		materialsCbvHandle.Offset(
-			globalMaterialHeapOffset, 
-			args.CbvSrvUavDescriptorSize
-		);
 		mCommandList->SetGraphicsRootDescriptorTable(
 			mMaterialsCBIndex,
-			materialsCbvHandle
+			args.MaterialsCbvHandle
 		);
 
 		// textures
-		auto texturesCbHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			mDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-		);
-		texturesCbHandle.Offset(
-			mTexturesCbHeapOffset, 
-			args.CbvSrvUavDescriptorSize
-		);
 		mCommandList->SetGraphicsRootDescriptorTable(
 			mTexturesCBIndex,
-			texturesCbHandle
+			args.TexturesCbvHandle
 		);
 
 		// now draw each item
@@ -144,7 +135,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 			// now draw per sub mesh
 			for (uint8_t j = 0; j < itemContext.SubMeshCount; ++j) {
-				const DX12OpaqueRenderPipelinePerItemPerSubMeshArgs& subMeshContext =
+				const DX12OpaqueRenderPipelinePerItemPerSubMeshExecuteArgs& subMeshContext =
 					itemContext.SubMeshExecuteArgs[j];
  
 				uint32_t subMeshOffset = j * args.AlignedSizeOfPerRenderItemSubMeshCb;
@@ -159,6 +150,20 @@ namespace Engine::EngineRenderer::DX12Renderer {
 					mPerObjectPerSubMeshCBIndex,
 					subMeshAddress
 				);
+
+				// bind the correct PSO
+				if (subMeshContext.IsRenderingAMirror) {
+					if (!isMirrorPSOBound) {
+						mCommandList->SetPipelineState(mMirrorPipelineStateObject.Get());
+						isMirrorPSOBound = true;
+					}
+				}
+				else {
+					if (isMirrorPSOBound) {
+						mCommandList->SetPipelineState(mPipelineStateObject.Get());
+						isMirrorPSOBound = false;
+					}
+				}
 
 				// draw call
 				mCommandList->DrawIndexedInstanced(
@@ -180,122 +185,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// don't close the command list, the aggregator will close it.
 	}
 
-	bool DX12OpaqueRenderPipelinePass::CreateConstantBufferDescriptors(
-		const DX12OpaqueRenderPipelineInitArgs& args
-	) {
-		// Textures sit at the very end after the 3 frames of per material cb
-		mTexturesCbHeapOffset = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
-
-		// Compute the global total of descriptors across all frames
-		// (M materials) * Total Frames + No Textures
-		UINT numberOfDescriptors = args.NumberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES + args.NumberOfTextures;
-
-		// Describe the CBV descriptor heap
-		D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-		cbvHeapDesc.NumDescriptors = numberOfDescriptors;
-		cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		cbvHeapDesc.NodeMask = 0;
-
-		// Create the CBV descriptor heap
-		ThrowIfFailed(
-			args.Device->CreateDescriptorHeap(
-				&cbvHeapDesc,
-				IID_PPV_ARGS(&mDescriptorHeap)
-			)
-		);
-
-		// Pass the offsets and sizes forward to generate the views
-		return CreateConstantBufferViews(args);
-	}
-
-	bool DX12OpaqueRenderPipelinePass::CreateConstantBufferViews(
-		const DX12OpaqueRenderPipelineInitArgs& args
-	) {		
-		// per material cbs are laid out first per frame
-		// so 
-		// PerMatCB0(F0), PerMatCB1(F0), PerMatCB0(F1)..., PerMatCBN-1(FN-1)
-		// then the textures are laid out
-		// T0, T1..., TN-1
-
-		// our per material cb
-		// ((alignedPerMaterialCB) * numberOfMaterials * numberOfFrames
-		for (UINT frameIndex = 0; frameIndex < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frameIndex)
-		{
-			D3D12_GPU_VIRTUAL_ADDRESS cbAddress = args.PerMaterialCBAddress[frameIndex];
-
-			for (uint32_t i = 0; i < args.NumberOfMaterials; ++i) {
-				// Offset to this material cbv in the descriptor heap.
-				int heapIndex = (args.NumberOfMaterials * frameIndex) + i;
-				auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
-					mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-				);
-				handle.Offset(heapIndex, args.CbvSrvUavDescriptorSize);
-
-				D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-				uint32_t thisMaterialOffset = i * args.AlignedSizeOfPerMaterialCb;
-				cbvDesc.BufferLocation = cbAddress + thisMaterialOffset;
-				cbvDesc.SizeInBytes = args.AlignedSizeOfPerMaterialCb;
-
-				args.Device->CreateConstantBufferView(&cbvDesc, handle);
-			}
-		}
-
-		// then our textures
-
-		// ensure TexturesData is a valid pointer
-		if (args.TexturesData == nullptr) { return false; }
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(
-			mDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-		);
-		// offset to the start of textures
-		hDescriptor.Offset(mTexturesCbHeapOffset, args.CbvSrvUavDescriptorSize);
-
-		for (uint32_t i = 0; i < args.NumberOfTextures; ++i) {
-			// walk to this descriptor in the heap
-			CD3DX12_CPU_DESCRIPTOR_HANDLE currentHandle(
-				hDescriptor, 
-				(INT)i,
-				args.CbvSrvUavDescriptorSize
-			);
-
-			// todo: find a way to ensure we don't overflow
-			const DX12Texture& tex = args.TexturesData[i];
-			ID3D12Resource* resource;
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-			// if unloaded 
-			if (!tex.IsLoaded || tex.Resource == nullptr) {
-				srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // Generic pixel format
-				srvDesc.Texture2D.MipLevels = 1;
-				resource = nullptr;
-			}
-			else {
-				srvDesc.Format = tex.Resource->GetDesc().Format; // Grab format from the DDS file
-				srvDesc.Texture2D.MipLevels = tex.Resource->GetDesc().MipLevels;
-				resource = tex.Resource.Get();
-			}
-
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-			// Bake the view configuration straight into the descriptor heap slot
-			args.Device->CreateShaderResourceView(resource, &srvDesc, currentHandle);
-		}
-
-		return true;
-	}
-
 	bool DX12OpaqueRenderPipelinePass::CreateRootSignature(
 		const DX12OpaqueRenderPipelineInitArgs& args
 	) {
 		// TODO: Update to Roott Signature 1.1 for dynamic indexing inside 
 		// Materials and Textures array
 
-		// we have 4 parameters for this root signature
+		// we have 5 parameters for this root signature
 		CD3DX12_ROOT_PARAMETER slotRootParameter[5];
 
 		// Create a two CBVs inlined into the Root Signature
@@ -316,7 +212,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// textures buffer
 		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
 		// (t0)
-		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, args.NumberOfTextures, 0); 
+		cbvTable2.Init(
+			D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 
+			DX12RendererConfig::MAX_TEXTURES_IN_SHADERS,
+			0
+		); 
 		slotRootParameter[mTexturesCBIndex].InitAsDescriptorTable(
 			1, 
 			&cbvTable2,
@@ -326,6 +226,21 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// static samplers
 		std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12RendererHelper::DX12_MAX_SAMPLERS> samplers;
 		DX12RendererHelper::GetStaticSamplers(samplers);
+
+		// mirror sampler
+		CD3DX12_STATIC_SAMPLER_DESC mirrorSampler(
+			6,                                  // shaderRegister
+			D3D12_FILTER_ANISOTROPIC,           // filter
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,   // addressU
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,   // addressV
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,   // addressW
+			0.0f,                               // mipLODBias
+			16,                                 // maxAnisotropy
+			D3D12_COMPARISON_FUNC_ALWAYS,       // comparisonFunc
+			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK
+		);
+
+		samplers[DX12RendererHelper::DX12_MAX_SAMPLERS - 1] = mirrorSampler;
 
 		// A root signature is an array of root parameters.
 		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
@@ -368,6 +283,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	bool DX12OpaqueRenderPipelinePass::CreateShadersAndInputLayout() {
 		mVsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "VS", "vs_5_1");
 		mPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "PS", "ps_5_1");
+		mMirrorPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_mirror_ps.hlsl", nullptr, "Mirror_PS", "ps_5_1");
 
 		mInputLayout =
 		{
@@ -385,36 +301,56 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	bool DX12OpaqueRenderPipelinePass::CreatePipelineStateObject(
 		const DX12OpaqueRenderPipelineInitArgs& args
 	) {
-		// describe the pso
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-		psoDesc.pRootSignature = mRootSignature.Get();
-		psoDesc.VS =
+		// describe the opaque
+		// pso
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc = {};
+		opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+		opaquePsoDesc.pRootSignature = mRootSignature.Get();
+		opaquePsoDesc.VS =
 		{
 			reinterpret_cast<BYTE*>(mVsByteCode->GetBufferPointer()),
 			mVsByteCode->GetBufferSize()
 		};
-		psoDesc.PS =
+		opaquePsoDesc.PS =
 		{
 			reinterpret_cast<BYTE*>(mPsByteCode->GetBufferPointer()),
 			mPsByteCode->GetBufferSize()
 		};
-		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		psoDesc.NumRenderTargets = 1;
-		psoDesc.RTVFormats[0] = args.BackBufferFormat;
-		psoDesc.SampleDesc.Count = 1;
-		psoDesc.SampleDesc.Quality = 0;
-		psoDesc.DSVFormat = args.DepthStencilFormat;
+		opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+		opaquePsoDesc.SampleMask = UINT_MAX;
+		opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		opaquePsoDesc.NumRenderTargets = 1;
+		opaquePsoDesc.RTVFormats[0] = args.BackBufferFormat;
+		opaquePsoDesc.SampleDesc.Count = 1;
+		opaquePsoDesc.SampleDesc.Quality = 0;
+		opaquePsoDesc.DSVFormat = args.DepthStencilFormat;
 
-		// build the pso
+		// build the opaque pso
 		ThrowIfFailed(
 			args.Device->CreateGraphicsPipelineState(
-				&psoDesc,
+				&opaquePsoDesc,
 				IID_PPV_ARGS(&mPipelineStateObject)
+			)
+		);
+
+		// describe the mirror pso
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC mirrorPsoDesc = opaquePsoDesc;
+		mirrorPsoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		mirrorPsoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE; 
+
+		mirrorPsoDesc.PS =
+		{
+			reinterpret_cast<BYTE*>(mMirrorPsByteCode->GetBufferPointer()),
+			mMirrorPsByteCode->GetBufferSize()
+		};
+
+		// build the mirror pso
+		ThrowIfFailed(
+			args.Device->CreateGraphicsPipelineState(
+				&mirrorPsoDesc,
+				IID_PPV_ARGS(&mMirrorPipelineStateObject)
 			)
 		);
 

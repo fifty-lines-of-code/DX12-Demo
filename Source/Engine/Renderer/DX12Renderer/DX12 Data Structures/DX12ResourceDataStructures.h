@@ -38,11 +38,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
     struct DX12OpaquePerPassConstants {
         DirectX::XMFLOAT4X4 ViewProjectionTranspose = DX12RendererHelper::Identity4X4();
+        DirectX::XMFLOAT4X4 ReflectedViewProjectionTranspose = DX12RendererHelper::Identity4X4();
         DirectX::XMFLOAT4 AmbientLight;
         DirectX::XMFLOAT3 EyePosW;
         float PassPad0;
         DX12LightData Lights[16];
-        uint32_t PassPad1[40];
+        uint32_t PassPad1[24];
     };
     static_assert(
         (sizeof(

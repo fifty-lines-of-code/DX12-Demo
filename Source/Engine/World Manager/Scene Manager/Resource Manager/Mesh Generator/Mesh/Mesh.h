@@ -10,7 +10,7 @@ namespace Engine::EngineResources {
 
 	enum class MeshID : uint32_t {
 		CUBE = 0,
-		MIRROR,
+		CUBE_TWO_SUBMESHES,
 		TERRAIN_0x0,
 		COUNT,
 		INVALID
@@ -20,6 +20,7 @@ namespace Engine::EngineResources {
 		uint32_t IndexCount = 0;
 		uint32_t StartIndexLocation = 0;
 		uint32_t BaseVertexLocation = 0;
+
 	};
 
 	class Mesh {

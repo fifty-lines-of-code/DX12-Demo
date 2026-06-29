@@ -10,23 +10,23 @@ namespace Engine::EngineWorld {
 	class Chunk {
 	public:
 		Chunk();
-		~Chunk();
+		~Chunk() = default;
+
+		Chunk(const Chunk& rhs) = delete;
+		Chunk& operator=(const Chunk& rhs) = delete;
+		Chunk(Chunk&&) = delete;
+		Chunk& operator=(Chunk&&) = delete;
 
 		bool Initialize(
 			uint16_t id, 
-			Vector3& center,
-			uint32_t chunkEntityStartIndex
+			Vector3& center
 		);
 
 		bool Load(
-			uint8_t* entityStartAddressInBytes, 
-			EngineResources::ResourceManager& resourceManager,
-			SceneBlueprint& sceneBlueprint
+			const std::vector<uint32_t>& entityIDs
 		);
 
 		uint16_t GetID() const noexcept;
-
-		uint16_t GetIdOfTerrainOrFloor() const noexcept;
 
 	public:
 		static constexpr uint8_t MAX_ENTITIES_IN_A_CHUNK = 64;
@@ -38,9 +38,9 @@ namespace Engine::EngineWorld {
 		std::array<uint32_t, Chunk::MAX_ENTITIES_IN_A_CHUNK> mEntities;
 		Vector3 mCenter;
 		uint16_t mID;
-		uint16_t mNextEntityID;
+		uint16_t mEntityCount;
+		uint16_t mNextEntityIndex;
 		uint16_t mIdOfTerrainOrFloor;
-		uint8_t mTotalNumberOfEntities;
 
 	private:
 		bool Insert(uint32_t entityID);

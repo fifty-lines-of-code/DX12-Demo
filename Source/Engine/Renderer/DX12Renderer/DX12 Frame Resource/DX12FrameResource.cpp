@@ -13,7 +13,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
         UINT debugSystemPerPassCBCount, 
         UINT debugSystemMaxCharacters
     ) :
-        mOpaquePerPassCB(device, perPassCbCount, true),
+        mOpaquePassRenderItemsPerPassCB(device, perPassCbCount, true),
+        mMirrorPassRenderItemsPerPassCB(device, perPassCbCount, true),
         mOpaqueRenderItemCB(device, numberOfEntities, true),
         mOpaqueRenderItemPerSubMeshCB(device, numberOfEntities * maxSubMeshesPerEntity, true),
         mPerMaterialCB(device, numberOfMaterials, true),

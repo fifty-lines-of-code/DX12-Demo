@@ -20,26 +20,27 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	};
 
 	// opaque render item per sub mesh execute context
-	struct DX12OpaqueRenderItemPerSubMeshExecuteContext {
+	struct DX12RenderItemPerSubMeshExecuteContext {
 		uint8_t ID;
 		uint32_t IndexCount;
 		uint32_t StartIndexLocation;
 		uint32_t BaseVertexLocation;
+		bool IsRenderingAMirror;
 	};
 
-	// opaquep per render item execute context
-	struct DX12OpaqueRenderItemExecuteContext {
+	// opaque per render item execute context
+	struct DX12RenderItemExecuteContext {
 		uint32_t ID;
 		uint32_t MeshID;
 		uint8_t SubMeshCount;
-		std::vector<DX12OpaqueRenderItemPerSubMeshExecuteContext> SubMeshExecuteContext;
+		std::vector<DX12RenderItemPerSubMeshExecuteContext> SubMeshExecuteContext;
 	};
 
 	// opaque pass execute context
-	struct DX12OpaquePipelinePassExecuteContext : 
+	struct DX12RenderPipelinePassExecuteContext : 
 		public DX12PipelinePassExecuteContext {
 		uint8_t MaxNumSubMeshesPerItem;
 		uint32_t NumberOfMaterials;
-		const DX12OpaqueRenderItemExecuteContext* RenderItems;
+		const DX12RenderItemExecuteContext* RenderItems;
 	};
 }

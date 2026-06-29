@@ -79,8 +79,10 @@ namespace Engine::EngineWorld {
 		// in them
 		// TODO:
 		EnginePhysics::PhysicsBody& physicsBody = playerEntity.GetPhysicsBody();
-		float playerX = physicsBody.Center.x;
-		float playerZ = physicsBody.Center.z;
+		EngineWorld::EntityTransformData& transformData = playerEntity.GetTransformData();
+
+		float playerX = transformData.Center.x;
+		float playerZ = transformData.Center.z;
 		float proposedY = mSceneManager.GetProposedYOfTerrainOrFloor(
 			playerX,
 			playerZ,
@@ -101,9 +103,9 @@ namespace Engine::EngineWorld {
 
 		// log player X, Z
 		char buffer[32];
-		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.x);
+		snprintf(buffer, sizeof(buffer), "%.2f", transformData.Center.x);
 		std::string posX(buffer);
-		snprintf(buffer, sizeof(buffer), "%.2f", physicsBody.Center.z);
+		snprintf(buffer, sizeof(buffer), "%.2f", transformData.Center.z);
 		std::string posZ(buffer);
 
 		std::string playerXZ =
@@ -157,6 +159,12 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetEntities();
 	}
 
+	void WorldManager::GetEntitiesForReflectionPass(
+		std::vector<const Entity*>& entities
+	) {
+		return mSceneManager.GetEntitiesForReflectionPass(entities);
+	}
+
 	EngineResources::MaterialArray& WorldManager::GetMaterials() noexcept {
 		return mSceneManager.GetMaterials();
 	}
@@ -165,16 +173,20 @@ namespace Engine::EngineWorld {
 		return mSceneManager.GetTextures();
 	}
 
-	const Vector3& WorldManager::GetPlayerCenter() const {
-		return mPlayer.GetCenter();
-	}
-
-	Entity& WorldManager::GetPlayerEntity() {
-		return mSceneManager.GetPlayerEntity();
+	Vector3 WorldManager::GetPlayerCenter() {
+		return mSceneManager.GetPlayerEntity().GetTransformData().Center;
 	}
 
 	const EngineResources::MeshArray& WorldManager::GetMeshesToLoad() const noexcept {
 		return mSceneManager.GetMeshesToLoad();
+	}
+
+	bool WorldManager::HasActiveMirrors() const noexcept {
+		return mSceneManager.HasActiveMirrors();
+	}
+
+	const EngineSimulation::MirrorPlaneQueryResult WorldManager::GetMirrorPlaneQueryResult() const noexcept {
+		return mSceneManager.GetMirrorPlaneQueryResult();
 	}
 
 #pragma endregion

@@ -4,10 +4,18 @@
 #include "../../../Math/MathHelper.h"
 
 PlayerAnimator::PlayerAnimator() : 
-	mCurrentRotation(0.f)
-{}
+	mCurrentRotation(0),
+	mDebugAnimationSpeed(1.f),
+	mIWantToDebugAnimation(false)
+{
+#ifdef _DEBUG
+	mDebugAnimationSpeed = mIWantToDebugAnimation ? 0.01f : 1.f;
+#endif 
+}
 
-PlayerAnimator::~PlayerAnimator() {}
+void PlayerAnimator::InitializeRotation(float rotation) {
+	mCurrentRotation = rotation;
+}
 
 void PlayerAnimator::UpdateVisualRotation(
 	float deltaTime,
@@ -20,28 +28,37 @@ void PlayerAnimator::UpdateVisualRotation(
 	float targetRotation = std::atan2(movement.x, movement.z);
 	float deltaRotation = targetRotation - mCurrentRotation;
 
-	// we have to make sure we take the shortest rotation 
-	// so rotate -90 instead of 270
-	// to do that we subtract 2pi if delta is > pi
-	// and add 2pi if delta is < -pi
-	// since rotation values will accumulate, we do this over a loop
-
-	while (deltaRotation > Engine::MathHelper::Pi) { 
-		deltaRotation -= Engine::MathHelper::Two_Pi; 
+	// Shortest path optimization:
+	// Subtract 2pi if delta is > pi, and add 2pi if delta is < -pi
+	while (deltaRotation > Engine::MathHelper::Pi) {
+		deltaRotation -= Engine::MathHelper::Two_Pi;
 	}
 
-	while (deltaRotation < -Engine::MathHelper::Pi) { 
-		deltaRotation += Engine::MathHelper::Two_Pi; 
+	while (deltaRotation < -Engine::MathHelper::Pi) {
+		deltaRotation += Engine::MathHelper::Two_Pi;
 	}
 
+	// Completion check
 	if (std::abs(deltaRotation) < 0.01f) {
 		mCurrentRotation = targetRotation;
 		mIsRotationComplete = true;
 		return;
 	}
 
-	// now we smoothly interpolate to the targetRotation
-	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime;
+	// Smoothly interpolate to the targetRotation
+	static float debugAnimationSpeed = 1.f;
+	mCurrentRotation += deltaRotation * rotationSpeed * deltaTime * mDebugAnimationSpeed;
+
+	// Bounding Safety Wrap:
+	// Keeps mCurrentRotation strictly locked inside the [-PI, PI] range.
+	// This prevents the shortest-path while-loops above from accumulating multi-loop overhead 
+	// when the player runs in circles continuously.
+	while (mCurrentRotation > Engine::MathHelper::Pi) {
+		mCurrentRotation -= Engine::MathHelper::Two_Pi;
+	}
+	while (mCurrentRotation < -Engine::MathHelper::Pi) {
+		mCurrentRotation += Engine::MathHelper::Two_Pi;
+	}
 }
 
 void PlayerAnimator::AnimateBackwardsDash(

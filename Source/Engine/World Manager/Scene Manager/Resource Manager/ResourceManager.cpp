@@ -38,7 +38,7 @@ namespace Engine::EngineResources {
 				CreateCubeMesh(mMeshes[index]);
 				break;
 				
-			case MeshID::MIRROR:
+			case MeshID::CUBE_TWO_SUBMESHES:
 				CreateMirrorMesh(mMeshes[index]);
 				break;
 
@@ -104,14 +104,14 @@ namespace Engine::EngineResources {
 		std::vector<uint16_t> indices;
 		std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> subMeshes;
 
-		mMeshGenerator.GenerateMirrorMesh(
+		mMeshGenerator.GenerateCubeMesh_With_TwoSubMeshes(
 			vertices,
 			indices,
 			subMeshes
 		);
 
 		mesh.Load(
-			MeshID::MIRROR,
+			MeshID::CUBE_TWO_SUBMESHES,
 			vertices,
 			indices,
 			subMeshes,

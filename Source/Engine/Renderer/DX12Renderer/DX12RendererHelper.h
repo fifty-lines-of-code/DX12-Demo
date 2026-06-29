@@ -154,7 +154,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			};
 		}
 
-		static const size_t DX12_MAX_SAMPLERS = 6;
+		static const size_t DX12_MAX_SAMPLERS = 7;
 
 		// Credit for below method: Frank Luna
 		static void GetStaticSamplers(std::array<CD3DX12_STATIC_SAMPLER_DESC, DX12_MAX_SAMPLERS>& array)

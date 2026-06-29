@@ -42,6 +42,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	private:
 		DX12BlurComputeConstants mComputeConstants;
 		Microsoft::WRL::ComPtr<ID3D12Resource> mScratchTextureResource = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDescriptorHeap = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mCsByteCode = nullptr;
 		
 	private:

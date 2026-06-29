@@ -49,6 +49,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	void DX12BlurPipelinePass::OnShutdown() {
 		if (mScratchTextureResource != nullptr) { mScratchTextureResource.Reset(); }
 		if (mCsByteCode != nullptr) { mCsByteCode.Reset(); }
+		if (mDescriptorHeap != nullptr) { mDescriptorHeap.Reset(); }
 	}
 
 	void DX12BlurPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {

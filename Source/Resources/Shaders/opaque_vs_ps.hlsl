@@ -22,7 +22,7 @@
 #endif
 
 #ifndef NUM_TEXTURES
-    #define NUM_TEXTURES 128
+    #define NUM_TEXTURES 256
 #endif
 
 #include "LightingUtil.hlsl"
@@ -62,23 +62,25 @@ cbuffer cbPerSubMesh : register(b1) {
 
 cbuffer cbPerPass: register(b2) {
     float4x4 ViewProjTranspose;
+    float4x4 ReflectedViewProjTranspose;
     float4 AmbientLight;
     float3 EyePosW;
     float PassPad0;
     Light Lights[MaxLights]; // MaxLights is defined inside LightingUtil.hlsl
-    uint4 PassPad1[40];
+    uint4 PassPad1[24];
 };
 
 ConstantBuffer<cbMaterial> gMaterials[NUM_MATERIALS] : register(b3);
 
 Texture2D gTextures[NUM_TEXTURES] : register(t0);
 
-SamplerState gsamPointWrap        : register(s0);
-SamplerState gsamPointClamp       : register(s1);
-SamplerState gsamLinearWrap       : register(s2);
-SamplerState gsamLinearClamp      : register(s3);
-SamplerState gsamAnisotropicWrap  : register(s4);
-SamplerState gsamAnisotropicClamp : register(s5);
+SamplerState gsamPointWrap                  : register(s0);
+SamplerState gsamPointClamp                 : register(s1);
+SamplerState gsamLinearWrap                 : register(s2);
+SamplerState gsamLinearClamp                : register(s3);
+SamplerState gsamAnisotropicWrap            : register(s4);
+SamplerState gsamAnisotropicClamp           : register(s5);
+SamplerState gsamMirrorAnisotropicClamp     : register(s6);
 
 // vertex shader
 VertexOut VS(VertexIn vin)

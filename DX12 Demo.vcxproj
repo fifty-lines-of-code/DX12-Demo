@@ -137,7 +137,10 @@
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManager.h" />
     <ClInclude Include="Source\Engine\Audio System\Audio Manager\AudioManagerHelper.h" />
     <ClInclude Include="Source\Engine\Audio System\AudioSystem.h" />
-    <ClInclude Include="Source\Engine\Camera\Camera.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\CameraHelper.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\CameraManager.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\Main Camera\MainCamera.h" />
+    <ClInclude Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugLimits.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugSystem.h" />
     <ClInclude Include="Source\Engine\Debug System\DebugSystemDataStructures.h" />
@@ -161,13 +164,17 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12PipelineDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Data Structures\DX12ResourceDataStructures.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager\DX12DescriptorManager.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePass.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePassDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Texture\DX12Texture.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12DefaultUploadBuffer.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Upload Buffers\DX12StructuredUploadBuffer.h" />
@@ -176,6 +183,7 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RendererHelper.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12RenderItem.h" />
     <ClInclude Include="Source\Engine\Renderer\IRenderer.h" />
+    <ClInclude Include="Source\Engine\Simulation\SimulationDataStructures.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player Logic\PlayerLogic.h" />
     <ClInclude Include="Source\Engine\World Manager\Player\Player.h" />
@@ -183,6 +191,8 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\ChunksManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Chunks Manager\Chunk\Chunk.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\Entity.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityRenderData.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityTransformData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\EntityType.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Entity\PerPassAndPerEntityConstantBufferData.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Directional Lights\DirectionalLight.h" />
@@ -191,6 +201,7 @@
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.h" />
+    <ClInclude Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.h" />
     <ClInclude Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\MaterialData.h" />
@@ -219,19 +230,24 @@
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\Audio Memory Arena\AudioMemoryArena.cpp" />
     <ClCompile Include="Source\Engine\Audio System\Audio Manager\AudioManager.cpp" />
     <ClCompile Include="Source\Engine\Audio System\AudioSystem.cpp" />
-    <ClCompile Include="Source\Engine\Camera\Camera.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\CameraManager.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\Main Camera\MainCamera.cpp" />
+    <ClCompile Include="Source\Engine\Camera Manager\Reflected Camera\ReflectedCamera.cpp" />
     <ClCompile Include="Source\Engine\Debug System\DebugSystem.cpp" />
     <ClCompile Include="Source\Engine\EngineCore.cpp" />
     <ClCompile Include="Source\Engine\Input System\XBox\XboxInputSystem.cpp" />
     <ClCompile Include="Source\Engine\Physics System\PhysicsSystem.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DDS Loader\DDSTextureLoader.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Descriptor Manager\DX12DescriptorManager.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Frame Resource\DX12FrameResource.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Gpu Profiler\DX12GpuProfiler.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Source\Engine\Renderer\IRenderer.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Player\Player Animator\PlayerAnimator.cpp" />
@@ -245,6 +261,7 @@
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Lights\Lights Manager\LightsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTree.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\OctTree\OctTreeNode.cpp" />
+    <ClCompile Include="Source\Engine\World Manager\Scene Manager\Reflection Manager\ReflectionManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\MaterialsManager.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Materials Manager\Material\Material.cpp" />
     <ClCompile Include="Source\Engine\World Manager\Scene Manager\Resource Manager\Mesh Generator\MeshGenerator.cpp" />
@@ -272,6 +289,7 @@
     <Image Include="Source\Resources\Heightmaps\Chunk0x0.png" />
     <Image Include="Source\Resources\Textures\Checkboard.dds" />
     <Image Include="Source\Resources\Textures\WoodCrate01.dds" />
+    <Image Include="Source\Resources\Textures\WoodCrate02.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -300,6 +318,11 @@
   <ItemGroup>
     <Media Include="Source\Resources\Audio\Background\bg-1.wav" />
     <Media Include="Source\Resources\Audio\SFX\light_attack.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Resources\Shaders\opaque_mirror_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

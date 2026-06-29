@@ -21,11 +21,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		const DX12Texture* TexturesData;
 	};
 
-	struct DX12OpaqueRenderPipelinePerItemPerSubMeshArgs {
+	struct DX12OpaqueRenderPipelinePerItemPerSubMeshExecuteArgs {
 		uint32_t ID;
 		uint32_t IndexCount;
 		uint32_t StartIndexLocation;
 		uint32_t BaseVertexLocation;
+		bool IsRenderingAMirror;
 	};
 
 	struct DX12OpaqueRenderPipelinePerItemExecuteArgs {
@@ -33,10 +34,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 		uint8_t SubMeshCount;
-		std::vector< DX12OpaqueRenderPipelinePerItemPerSubMeshArgs> SubMeshExecuteArgs;
+		std::vector< DX12OpaqueRenderPipelinePerItemPerSubMeshExecuteArgs> SubMeshExecuteArgs;
 	};
 
 	struct DX12OpaqueRenderPipelineExecuteArgs : public DX12PipelinePassExecuteArgs {
+		ID3D12DescriptorHeap* DescriptorHeap;
 		DX12OpaqueRenderPipelinePerItemExecuteArgs* PipelineItemsExecuteArgs;
 		uint32_t NumberOfItems;
 		uint8_t NumberOfSubMeshesPerItem;
@@ -46,23 +48,36 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t AlignedSizeOfPerRenderItemSubMeshCb;
 		D3D12_GPU_VIRTUAL_ADDRESS PerRenderItemSubMeshCBResourceAddress;
 		uint32_t NumberOfMaterials;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE MaterialsCbvHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE TexturesCbvHandle;
 	};
 
 	class DX12OpaqueRenderPipelinePass : public IDX12PipelinePass {
 	public:
+		DX12OpaqueRenderPipelinePass() = default;
 		~DX12OpaqueRenderPipelinePass() = default;
+
+		DX12OpaqueRenderPipelinePass(const DX12OpaqueRenderPipelinePass&) = delete;
+		DX12OpaqueRenderPipelinePass& operator=(const DX12OpaqueRenderPipelinePass&) = delete;
+		DX12OpaqueRenderPipelinePass(DX12OpaqueRenderPipelinePass&&) = delete;
+		DX12OpaqueRenderPipelinePass& operator=(DX12OpaqueRenderPipelinePass&&) = delete;
 
 	protected:
 		bool OnInitialize(
 			const DX12PipelinePassInitArgs& args
 		) override;
 		void OnShutdown() override;
-		void OnExecute(const DX12PipelinePassExecuteArgs& args) override;
+		void OnExecute(
+			const DX12PipelinePassExecuteArgs& args
+		) override;
 
 	private:
 		std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 		Microsoft::WRL::ComPtr<ID3DBlob> mVsByteCode = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> mPsByteCode = nullptr;
+		Microsoft::WRL::ComPtr<ID3DBlob> mMirrorPsByteCode = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> mMirrorPipelineStateObject = nullptr;
+
 		uint32_t mTexturesCbHeapOffset = 0;
 		uint8_t mPerObjectCBIndex = 0;
 		uint8_t mPerObjectPerSubMeshCBIndex = 1;
@@ -73,12 +88,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	private:
 		void Execute(
 			const DX12OpaqueRenderPipelineExecuteArgs& args
-		);
-		bool CreateConstantBufferDescriptors(
-			const DX12OpaqueRenderPipelineInitArgs& args
-		);
-		bool CreateConstantBufferViews(
-			const DX12OpaqueRenderPipelineInitArgs& args
 		);
 		bool CreateRootSignature(
 			const DX12OpaqueRenderPipelineInitArgs& args

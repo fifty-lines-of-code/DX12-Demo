@@ -21,7 +21,7 @@ namespace Engine::EngineResources {
 			std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH>& subMeshes
 		) const noexcept;
 
-		void GenerateMirrorMesh(
+		void GenerateCubeMesh_With_TwoSubMeshes(
 			std::vector<Vertex>& outVertices,
 			std::vector<uint16_t>& outIndices,
 			std::array<SubMesh, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH>& subMeshes

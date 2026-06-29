@@ -11,6 +11,7 @@ namespace Engine::EngineRenderer {
 
 	enum class RendererPipelinePass : uint8_t {
 		SHADOW_PASS,
+		MIRROR_RENDER_PASS,
 		OPAQUE_RENDER_PASS,
 		DEBUG_SYSTEM_PASS,
 		BLUR_UI_PASS,
@@ -51,8 +52,12 @@ namespace Engine::EngineRenderer {
 			const void* indices
 		) = 0;
 		virtual void PrepareForUpdate() = 0;
-		virtual void UpdateOpaqueRenderItemsPerPassCb(
+		virtual void UpdateOpaquePassRenderItemsPerPassCb(
 			const void* data, 
+			size_t dataSize
+		) const = 0;
+		virtual void UpdateMirrorPassRenderItemsPerPassCb(
+			const void* data,
 			size_t dataSize
 		) const = 0;
 		virtual void UpdateOpaqueRenderItemCb(
@@ -71,7 +76,7 @@ namespace Engine::EngineRenderer {
 			const void* data, 
 			uint32_t perMaterialCbSize
 		) = 0;
-		virtual void UpdateDebugSystemPerPassCb(const void* data) = 0;
+		virtual void UpdateDebugSystemPerPassCb(const void* data) const noexcept = 0;
 		virtual void BeginFrame(uint32_t numberOfMaterials) = 0;
 		virtual void Execute(const IPipelinePassExecuteContext& context) = 0;
 		virtual bool DrawDebugSystem(uint32_t numberOfCharacters) = 0;

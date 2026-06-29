@@ -11,9 +11,10 @@ namespace Engine::EnginePhysics {
 		CollisionResult& collisionResult
 	) {
 		PhysicsBody& physicsBody = entity.GetPhysicsBody();
+		EngineWorld::EntityTransformData& transformData = entity.GetTransformData();
 
 		// Set the proposed center to current center
-		collisionResult.ProposedCenter = physicsBody.Center;
+		collisionResult.ProposedCenter = transformData.Center;
 
 		if (physicsBody.VelocityIntent.x == 0.f &&
 			physicsBody.VelocityIntent.z == 0.f) {
@@ -22,7 +23,7 @@ namespace Engine::EnginePhysics {
 
 		uint32_t entityID = entity.GetID();
 		// store the safe Center
-		Vector3 safeCenter = physicsBody.Center;
+		Vector3 safeCenter = transformData.Center;
 
 		// resolve movement in the x direction
 		if (physicsBody.VelocityIntent.x != 0.f) {
@@ -91,7 +92,7 @@ namespace Engine::EnginePhysics {
 		}
 
 		// resolve movement in Y
-		safeCenter.y = terrainGroundY + physicsBody.Scale.y;
+		safeCenter.y = terrainGroundY + transformData.Scale.y;
 
 		// commit the movement
 		collisionResult.ProposedCenter = safeCenter;

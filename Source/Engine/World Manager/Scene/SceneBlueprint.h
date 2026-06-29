@@ -24,10 +24,13 @@ namespace Engine::EngineWorld {
 	struct EntityBlueprint {
 		Vector3 Center;
 		Vector3 Scale;
+		BasisVectors BasisVectors;
+		Vector3 SurfaceNormal;
 		EntityType EntityType;
 		EngineResources::MeshID MeshID;
 		std::array<EntitySubMeshBlueprint, EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH> EntitySubMeshBlueprints;
 		uint8_t ActiveSubMeshCount;
+		bool IsStatic;
 	};
 
 	struct SceneBlueprint {
