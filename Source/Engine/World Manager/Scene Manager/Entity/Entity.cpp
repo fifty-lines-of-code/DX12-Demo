@@ -123,12 +123,28 @@ namespace Engine::EngineWorld {
 
 	bool Entity::GetIsActive() const noexcept { return mIsActive; }
 
-	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
-
 	bool Entity::GetIsTerrainOrFloor() const noexcept {
 		return
 			mEntityType == EntityType::TERRAIN ||
 			mEntityType == EntityType::FLOOR;
+	}
+
+	EntityType Entity::GetEntityType() const noexcept { return mEntityType; }
+
+
+	bool Entity::IsSubMeshAtIndexRenderingAMirror(uint32_t subMeshIndex) const noexcept {
+		if (mEntityType != EntityType::MIRROR) { return false; }
+
+		ENGINE_ASSERT(
+			subMeshIndex < EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			"SubMesh Index is Incorrect, Bad things will happen!"
+		);
+
+		uint8_t index =
+			subMeshIndex >= EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH ?
+			0 : subMeshIndex;
+
+		return mRenderData.SubMeshMaterials[index].IsUsingMirrorMaterial;
 	}
 
 #pragma region Private
@@ -194,6 +210,8 @@ namespace Engine::EngineWorld {
 			0 : subMeshIndex;
 
 		mRenderData.SubMeshMaterials[index].MaterialID = (uint8_t)material;
+		mRenderData.SubMeshMaterials[index].IsUsingMirrorMaterial =
+			material == EngineResources::MaterialType::MIRROR;
 		mRenderData.SubMeshMaterials[index].TextureID = (uint8_t)texture;
 	}
 #pragma endregion

@@ -11,6 +11,7 @@
 #include "DX12 Pipeline Pass/Debug Pass/DX12DebugSystemPipelinePass.h"
 #include "DX12 Descriptor Manager/DX12DescriptorManager.h"
 #include "DX12 Gpu Profiler/DX12GpuProfiler.h"
+#include "DX12 Pipeline Pass/Mirror Render Pass/DX12MirrorRenderPipelinePass.h"
 #include "DX12 Pipeline Pass/Opaque Render Pass/DX12OpaqueRenderPipelinePass.h"
 #include "DX12 Pipeline Pass/Pipeline Pass Aggregator/DX12PipelinePassAggregator.h"
 #include "DX12 Data Structures/DX12PipelineDataStructures.h"
@@ -69,6 +70,16 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint8_t maxSubMeshesPerEntity,
 			uint32_t numberOfMaterials,
 			uint32_t numberOfTextures,
+			uint32_t debugSystemPerPassCBCount,
+			uint32_t debugSystemMaxCharacters
+		);
+
+		bool SetupMirrorRenderPipeline(
+			uint32_t numberOfEntities,
+			uint8_t maxSubMeshesPerEntity,
+			uint32_t numberOfMaterials,
+			uint32_t numberOfTextures,
+			uint32_t sizeOfPerMaterialCBV,
 			uint32_t debugSystemPerPassCBCount,
 			uint32_t debugSystemMaxCharacters
 		);
@@ -147,6 +158,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		const DX12GpuProfilerResults& GetProfilerResults();
 
+		uint32_t GetCurrentFrameIndex() const noexcept;
+
 	private:
 		DX12FrameResource* mCurrentFrameResource = nullptr;
 
@@ -169,7 +182,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		std::array<std::unique_ptr<DX12FrameResource>, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> mFrameResources;
 		DX12RenderTargetManager mRenderTargetManager;
 		DX12DescriptorManager mDescriptorManager;
-		DX12OpaqueRenderPipelinePass mRenderPipelinePass;
+		DX12OpaqueRenderPipelinePass mOpaqueRenderPipelinePass;
+		DX12MirrorRenderPipelinePass mMirrorRenderPipelinePass;
 		DX12DebugSystemPipelinePass mDebugSystemPipelinePass;
 		DX12BlurPipelinePass mBlurPipelinePass;
 		DX12PipelinePassAggregator mPiplinePassAggregator;
@@ -227,8 +241,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t debugSystemMaxCharacters
 		);
 
+		bool DrawMirrorPassOpaqueRenderItems(
+			const DX12RenderPipelinePassExecuteContext& context
+		);
+
+		void BeginOpaquePassFrame();
 		bool DrawOpaqueRenderItems(
-			const DX12OpaquePipelinePassExecuteContext& context
+			const DX12RenderPipelinePassExecuteContext& context
 		);
 		bool DrawDebugSystem(uint32_t numberOfCharacters);
 		bool DrawBlurPass();

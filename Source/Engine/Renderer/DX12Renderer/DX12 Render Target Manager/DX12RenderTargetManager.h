@@ -42,7 +42,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         ) const noexcept;
         DXGI_FORMAT GetMirrorRtvFormat() const noexcept;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetMirrorDsv(
+        D3D12_CPU_DESCRIPTOR_HANDLE GetMirrorDepthStencilView(
             uint32_t frameIndex
         ) const noexcept;
         DXGI_FORMAT GetMirrorDsvFormat() const noexcept;
@@ -82,5 +82,4 @@ namespace Engine::EngineRenderer::DX12Renderer {
         bool CreateMirrorDsvViews(ID3D12Device* device);
         void ReleaseMirrorDsvResources();
     };
-
 }

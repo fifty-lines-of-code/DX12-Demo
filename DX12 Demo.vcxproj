@@ -170,6 +170,8 @@
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePass.h" />
+    <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePassDataStructures.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.h" />
     <ClInclude Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.h" />
@@ -242,6 +244,7 @@
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Blur Pass\DX12BlurPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Debug Pass\DX12DebugSystemPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\IDX12PipelinePass.cpp" />
+    <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Mirror Render Pass\DX12MirrorRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Opaque Render Pass\DX12OpaqueRenderPipelinePass.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Pipeline Pass\Pipeline Pass Aggregator\DX12PipelinePassAggregator.cpp" />
     <ClCompile Include="Source\Engine\Renderer\DX12Renderer\DX12 Render Target Manager\DX12RenderTargetManager.cpp" />
@@ -315,6 +318,11 @@
   <ItemGroup>
     <Media Include="Source\Resources\Audio\Background\bg-1.wav" />
     <Media Include="Source\Resources\Audio\SFX\light_attack.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Resources\Shaders\opaque_mirror_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

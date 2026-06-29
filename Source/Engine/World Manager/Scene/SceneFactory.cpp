@@ -216,7 +216,7 @@ namespace Engine::EngineWorld {
 		subMeshBlueprint0.TextureID = EngineResources::TextureID::INVALID;
 		subMeshBlueprint1 = {};
 		subMeshBlueprint1.MaterialType = EngineResources::MaterialType::MIRROR;
-		subMeshBlueprint1.TextureID = EngineResources::TextureID::CHECKBOARD;
+		subMeshBlueprint1.TextureID = EngineResources::TextureID::INVALID;
 		result = UpdateBlueprint(
 			2, // raw array index
 			Vector3(0.f, 2.205f, -1.f), // center

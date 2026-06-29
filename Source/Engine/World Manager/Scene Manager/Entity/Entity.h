@@ -70,6 +70,10 @@ namespace Engine::EngineWorld {
 		
 		EntityType GetEntityType() const noexcept;
 
+		bool IsSubMeshAtIndexRenderingAMirror(
+			uint32_t subMeshIndex
+		) const noexcept;
+
 	private:
 		EngineResources::Mesh* mMesh;
 		EnginePhysics::PhysicsBody mPhysicsBody;

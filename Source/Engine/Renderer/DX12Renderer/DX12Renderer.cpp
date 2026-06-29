@@ -98,7 +98,8 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 		mBlurPipelinePass.ShutDown();
 		mDebugSystemPipelinePass.ShutDown();
-		mRenderPipelinePass.ShutDown();
+		mMirrorRenderPipelinePass.ShutDown();
+		mOpaqueRenderPipelinePass.ShutDown();
 		mDescriptorManager.Shutdown();
 		mRenderTargetManager.Shutdown();
 		for (auto& resource : mFrameResources) {
@@ -235,6 +236,44 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
+	bool DX12Renderer::SetupMirrorRenderPipeline(
+		uint32_t numberOfEntities,
+		uint8_t maxSubMeshesPerEntity,
+		uint32_t numberOfMaterials,
+		uint32_t numberOfTextures,
+		uint32_t sizeOfPerMaterialCb,
+		uint32_t debugSystemPerPassCBCount,
+		uint32_t debugSystemMaxCharacters
+	) {
+		if (mMirrorRenderPipelinePass.GetIsInitialized()) { return true; }
+
+		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress = {};
+
+		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
+			PerMaterialCBAddress[i] = mFrameResources[i]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
+		}
+		uint32_t alignedSizeOfPerMaterialCb = DX12RendererHelper::CalculateAlignedConstantBufferByteSize(sizeOfPerMaterialCb);
+
+		DX12MirrorRenderPipelineInitArgs rArgs{
+			{
+				mDX12Device.Get(),
+				mInitAndResizeCommandAllocator.Get(),
+				mBackBufferFormat,
+				mDepthStencilFormat,
+				mCbvSrvUavDescriptorSize
+			},
+			numberOfMaterials,
+			numberOfTextures,
+			alignedSizeOfPerMaterialCb,
+			PerMaterialCBAddress,
+			mTextures.data()
+		};
+
+		if (!mMirrorRenderPipelinePass.Initialize(rArgs)) { return false; }
+
+		return true;
+	}
+
 	bool DX12Renderer::SetupOpaqueRenderPipeline(
 		uint32_t numberOfEntities,
 		uint8_t maxSubMeshesPerEntity,
@@ -244,9 +283,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		uint32_t debugSystemPerPassCBCount,
 		uint32_t debugSystemMaxCharacters
 	) {
-		if (mRenderPipelinePass.GetIsInitialized()) { return true; }
+		if (mOpaqueRenderPipelinePass.GetIsInitialized()) { return true; }
 
-		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress;
+		std::array<D3D12_GPU_VIRTUAL_ADDRESS, DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES> PerMaterialCBAddress = {};
 
 		for (uint32_t i = 0; i < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++i) {
 			PerMaterialCBAddress[i] = mFrameResources[i]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
@@ -268,7 +307,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mTextures.data()
 		};
 
-		if (!mRenderPipelinePass.Initialize(rArgs)) { return false; }
+		if (!mOpaqueRenderPipelinePass.Initialize(rArgs)) { return false; }
 
 		return true;
 	}
@@ -490,7 +529,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 	}
 
 	void DX12Renderer::BeginFrame(uint32_t numberOfMaterials) {
-
 		// tell gpu profiler it's a new frame
 		mGpuProfiler.BeginFrame();
 
@@ -509,59 +547,19 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				nullptr
 			)
 		);
-	
-		// transition this frame's back buffer to render target
-		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
-
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			currentBackBuffer,
-			D3D12_RESOURCE_STATE_PRESENT,
-			D3D12_RESOURCE_STATE_RENDER_TARGET
-		);
-
-		// Indicate the transition via a command.
-		mSetupCommandList->ResourceBarrier(
-			1,
-			&barrier
-		);
-
-		auto currentBackBufferView = CurrentBackBufferView();
-		auto depthStencilView = DepthStencilView();
-
-		// Clear the back buffer and depth/stencil buffer
-		mSetupCommandList->ClearRenderTargetView(
-			currentBackBufferView,
-			Colors::LightSteelBlue,
-			0, 
-			nullptr
-		);
-
-		mSetupCommandList->ClearDepthStencilView(
-			DepthStencilView(), 
-			D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-			1.0f, 
-			0,
-			0,
-			nullptr
-		);
-
-		// Specify the buffers we are going to render to.
-		mSetupCommandList->OMSetRenderTargets(
-			1,
-			&currentBackBufferView, 
-			true,
-			&depthStencilView
-		);
 	}
 
 	void DX12Renderer::Execute(const IPipelinePassExecuteContext& context) {
 
 		switch (context.GetPipelinePassType()) {
 		case RendererPipelinePass::MIRROR_RENDER_PASS: {
-			// todo:
+			const DX12RenderPipelinePassExecuteContext& ppContext = static_cast<const DX12RenderPipelinePassExecuteContext&>(context);
+			DrawMirrorPassOpaqueRenderItems(ppContext);
+			break;
 		}
 		case RendererPipelinePass::OPAQUE_RENDER_PASS: {
-			const DX12OpaquePipelinePassExecuteContext& ppContext = static_cast<const DX12OpaquePipelinePassExecuteContext&>(context);
+			BeginOpaquePassFrame();
+			const DX12RenderPipelinePassExecuteContext& ppContext = static_cast<const DX12RenderPipelinePassExecuteContext&>(context);
 			DrawOpaqueRenderItems(ppContext);
 			break;
 		}
@@ -812,6 +810,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 	const DX12GpuProfilerResults& DX12Renderer::GetProfilerResults() {
 		return mGpuProfiler.GetProfilerResults();
+	}
+
+	uint32_t DX12Renderer::GetCurrentFrameIndex() const noexcept {
+		return mCurrentFrameResourceIndex;
 	}
 
 #pragma region Private
@@ -1205,8 +1207,133 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		}
 	}
 
+	bool DX12Renderer::DrawMirrorPassOpaqueRenderItems(
+		const DX12RenderPipelinePassExecuteContext& context
+	) {		
+		// todo: add this to some sort of a ring buffer so memory can be reused
+		std::array<DX12MirrorRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
+
+		// fill in the execute args from execute context per render item
+		for (uint32_t i = 0; i < context.NumberOfItems; ++i) {
+			if (i >= DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
+
+			auto& renderItem = context.RenderItems[i];
+			const DX12MeshResource* const resource = mMeshResourceMap[renderItem.MeshID].get();
+
+			if (resource == nullptr) { continue; }
+
+			PerItemExecuteArgs[i].ID = renderItem.ID;
+			PerItemExecuteArgs[i].VertexBufferView = resource->VertexBufferView();
+			PerItemExecuteArgs[i].IndexBufferView = resource->IndexBufferView();
+			PerItemExecuteArgs[i].SubMeshCount = renderItem.SubMeshCount;
+			PerItemExecuteArgs[i].SubMeshExecuteArgs.reserve(renderItem.SubMeshCount);
+
+			// load up data per sub mesh per render item
+			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
+				const DX12RenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
+
+				DX12MirrorRenderPipelinePerItemPerSubMeshExecuteArgs subMeshArgs = {};
+
+				subMeshArgs.ID = j;
+				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
+				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
+				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
+				PerItemExecuteArgs[i].SubMeshExecuteArgs.push_back(subMeshArgs);
+			}
+		}
+
+		ID3D12Resource* currentMirrorBuffer = mRenderTargetManager.GetMirrorResource(
+			mCurrentFrameResourceIndex
+		);
+		auto currentMirrorBufferView = mRenderTargetManager.GetMirrorRtv(
+			mCurrentFrameResourceIndex
+		);
+		auto currentMirrorDepthStencilView = mRenderTargetManager.GetMirrorDepthStencilView(
+			mCurrentFrameResourceIndex
+		);
+
+		ID3D12DescriptorHeap* sharedHeap = mDescriptorManager.GetSharedHeap();
+
+		DX12MirrorRenderPipelineExecuteArgs rArgs {
+			{
+				mCurrentFrameResourceIndex,
+				mCurrentBackBufferIndex,
+				mCbvSrvUavDescriptorSize,
+				currentMirrorBuffer,
+				currentMirrorBufferView,
+				currentMirrorDepthStencilView,
+				mScreenViewport,
+				mScissorRect,
+				mGpuProfiler
+			},
+			mDescriptorManager.GetSharedHeap(),
+			PerItemExecuteArgs.data(),
+			context.NumberOfItems,
+			context.MaxNumSubMeshesPerItem,
+			mCurrentFrameResource->mMirrorPassRenderItemsPerPassCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemCB.Resource()->GetGPUVirtualAddress(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.ElementByteSize(),
+			mCurrentFrameResource->mOpaqueRenderItemPerSubMeshCB.Resource()->GetGPUVirtualAddress(),
+			context.NumberOfMaterials,
+			mDescriptorManager.GetMaterialsDescriptorHandle(mCurrentFrameResourceIndex),
+			mDescriptorManager.GetTexturesDescriptorHandle()
+		};
+
+		mMirrorRenderPipelinePass.ExecutePass(rArgs);
+
+		mPiplinePassAggregator.InsertPass(&mMirrorRenderPipelinePass);
+
+		return true;
+	}
+
+	void DX12Renderer::BeginOpaquePassFrame() {
+		// transition this frame's back buffer to render target
+		ID3D12Resource* currentBackBuffer = mSwapChainBuffers[mCurrentBackBufferIndex].Get();
+
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			currentBackBuffer,
+			D3D12_RESOURCE_STATE_PRESENT,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		// Indicate the transition via a command.
+		mSetupCommandList->ResourceBarrier(
+			1,
+			&barrier
+		);
+
+		auto currentBackBufferView = CurrentBackBufferView();
+		auto depthStencilView = DepthStencilView();
+
+		// Clear the back buffer and depth/stencil buffer
+		mSetupCommandList->ClearRenderTargetView(
+			currentBackBufferView,
+			Colors::LightSteelBlue,
+			0,
+			nullptr
+		);
+
+		mSetupCommandList->ClearDepthStencilView(
+			depthStencilView,
+			D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+			1.0f,
+			0,
+			0,
+			nullptr
+		);
+
+		// Specify the buffers we are going to render to.
+		mSetupCommandList->OMSetRenderTargets(
+			1,
+			&currentBackBufferView,
+			true,
+			&depthStencilView
+		);
+	}
+
 	bool DX12Renderer::DrawOpaqueRenderItems(
-		const DX12OpaquePipelinePassExecuteContext& context
+		const DX12RenderPipelinePassExecuteContext& context
 	) {
 		// todo: add this to some sort of a ring buffer so memory can be reused
 		std::array<DX12OpaqueRenderPipelinePerItemExecuteArgs, DX12RendererConfig::MAX_ITEMS_PER_PASS> PerItemExecuteArgs = {};
@@ -1228,14 +1355,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 			// load up data per sub mesh per render item
 			for (uint8_t j = 0; j < renderItem.SubMeshCount; ++j) {
-				const DX12OpaqueRenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
+				const DX12RenderItemPerSubMeshExecuteContext& subMeshExecuteContext = renderItem.SubMeshExecuteContext[j];
 
-				DX12OpaqueRenderPipelinePerItemPerSubMeshArgs subMeshArgs = {};
+				DX12OpaqueRenderPipelinePerItemPerSubMeshExecuteArgs subMeshArgs = {};
 
 				subMeshArgs.ID = j;
 				subMeshArgs.IndexCount = subMeshExecuteContext.IndexCount;
 				subMeshArgs.StartIndexLocation = subMeshExecuteContext.StartIndexLocation;
 				subMeshArgs.BaseVertexLocation = subMeshExecuteContext.BaseVertexLocation;
+				subMeshArgs.IsRenderingAMirror = subMeshExecuteContext.IsRenderingAMirror;
 				PerItemExecuteArgs[i].SubMeshExecuteArgs.push_back(subMeshArgs);
 			}
 		}
@@ -1272,9 +1400,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			mDescriptorManager.GetTexturesDescriptorHandle()
 		};
 
-		mRenderPipelinePass.ExecutePass(rArgs);
+		mOpaqueRenderPipelinePass.ExecutePass(rArgs);
 
-		mPiplinePassAggregator.InsertPass(&mRenderPipelinePass);
+		mPiplinePassAggregator.InsertPass(&mOpaqueRenderPipelinePass);
 
 		return true;
 	}

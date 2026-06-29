@@ -1,5 +1,7 @@
 #include "DX12RenderTargetManager.h"
+
 #include "../d3dx12.h"
+#include <DirectXColors.h>
 #include "../../../../Helper/Helper.h"
 
 namespace Engine::EngineRenderer::DX12Renderer {
@@ -79,7 +81,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
         return mRtvFormat;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE DX12RenderTargetManager::GetMirrorDsv(
+    D3D12_CPU_DESCRIPTOR_HANDLE DX12RenderTargetManager::GetMirrorDepthStencilView(
         uint32_t frameIndex
     ) const noexcept {
         if (frameIndex >= DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES) { return {}; }
@@ -119,6 +121,13 @@ namespace Engine::EngineRenderer::DX12Renderer {
     ) {
         CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 
+        D3D12_CLEAR_VALUE backBufferClearValue = {};
+        backBufferClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        backBufferClearValue.Color[0] = DirectX::XMVectorGetX(DirectX::Colors::LightSteelBlue);
+        backBufferClearValue.Color[1] = DirectX::XMVectorGetY(DirectX::Colors::LightSteelBlue);
+        backBufferClearValue.Color[2] = DirectX::XMVectorGetZ(DirectX::Colors::LightSteelBlue);
+        backBufferClearValue.Color[3] = DirectX::XMVectorGetW(DirectX::Colors::LightSteelBlue);
+
         for (uint32_t frame = 0; frame < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frame) {
             auto& entry = mMirrorRtvEntries[frame];
 
@@ -140,7 +149,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
                 D3D12_HEAP_FLAG_NONE,
                 &resourceDesc,
                 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                nullptr,
+                &backBufferClearValue,
                 IID_PPV_ARGS(&entry.Resource)
             );
             if (FAILED(hr)) { return false; }

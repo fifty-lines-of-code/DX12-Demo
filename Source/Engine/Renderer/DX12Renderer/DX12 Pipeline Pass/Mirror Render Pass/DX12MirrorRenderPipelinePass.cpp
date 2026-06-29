@@ -1,6 +1,7 @@
-#include "DX12OpaqueRenderPipelinePass.h"
+#include "DX12MirrorRenderPipelinePass.h"
 
 #include "../../d3dx12.h"
+#include <DirectXColors.h>
 #include "../../DX12RendererHelper.h"
 #include "../../DX12 Data Structures/DX12ResourceDataStructures.h"
 #include "../../../../../Helper/Helper.h"
@@ -9,10 +10,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 #pragma region Private
 
-	bool DX12OpaqueRenderPipelinePass::OnInitialize(
+	bool DX12MirrorRenderPipelinePass::OnInitialize(
 		const DX12PipelinePassInitArgs& args
 	) {
-		const DX12OpaqueRenderPipelineInitArgs& renderArgs = static_cast<const DX12OpaqueRenderPipelineInitArgs&>(args);
+		const DX12MirrorRenderPipelineInitArgs& renderArgs = static_cast<const DX12MirrorRenderPipelineInitArgs&>(args);
 
 		if (!CreateRootSignature(renderArgs)) { return false; }
 		if (!CreateShadersAndInputLayout()) { return false; }
@@ -21,50 +22,75 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	void DX12OpaqueRenderPipelinePass::OnShutdown() {
-		if (mMirrorPipelineStateObject != nullptr) { 
-			mMirrorPipelineStateObject.Reset(); 
-		}
-		if (mMirrorPsByteCode != nullptr) { mMirrorPsByteCode.Reset(); }
+	void DX12MirrorRenderPipelinePass::OnShutdown() {
 		if (mPsByteCode != nullptr) { mPsByteCode.Reset(); }
 		if (mVsByteCode != nullptr) { mVsByteCode.Reset(); }
 		mInputLayout.clear();
 	}
 
-	void DX12OpaqueRenderPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {
-		const DX12OpaqueRenderPipelineExecuteArgs& dArgs = static_cast<const DX12OpaqueRenderPipelineExecuteArgs&>(args);
+	void DX12MirrorRenderPipelinePass::OnExecute(const DX12PipelinePassExecuteArgs& args) {
+		const DX12MirrorRenderPipelineExecuteArgs& dArgs = static_cast<const DX12MirrorRenderPipelineExecuteArgs&>(args);
 		Execute(dArgs);
 	}
 
-	void DX12OpaqueRenderPipelinePass::Execute(
-		const DX12OpaqueRenderPipelineExecuteArgs& args
+	void DX12MirrorRenderPipelinePass::Execute(
+		const DX12MirrorRenderPipelineExecuteArgs& args
 	) {
 		if (args.NumberOfItems == 0) { return; }
-
-		bool isMirrorPSOBound = false;
 
 		// Grab the command allocator for the current frame
 		ID3D12CommandAllocator* allocator = mCommandAllocators[args.CurrentFrameIndex].Get();
 		ThrowIfFailed(allocator->Reset());
 
-		// reset the command list
 		ThrowIfFailed(mCommandList->Reset(allocator, mPipelineStateObject.Get()));
 
 		// tell the profiler to start profiling
 		args.GpuProfiler.BeginPass(
 			mCommandList.Get(),
-			(uint8_t)RendererPipelinePass::OPAQUE_RENDER_PASS
+			(uint8_t)RendererPipelinePass::MIRROR_RENDER_PASS
 		);
 
 		// set the root signature
 		mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
+		// TODO:
+		// transition the back buffer view to render target from pixel source
+
 		// set view port and scissor rect
 		mCommandList->RSSetViewports(1, &args.Viewport);
 		mCommandList->RSSetScissorRects(1, &args.ScissorRect);
 
-		// set the render target
-		// each command list has to set its own render target
+		// transition this frame mirror resource buffer to render target
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			args.CurrentBackBufferResource,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+
+		// Indicate the transition via a command.
+		mCommandList->ResourceBarrier(
+			1,
+			&barrier
+		);
+
+		// Clear the render target buffer and associated depth/stencil buffer
+		mCommandList->ClearRenderTargetView(
+			args.BackBufferView,
+			DirectX::Colors::LightSteelBlue,
+			0,
+			nullptr
+		);
+
+		mCommandList->ClearDepthStencilView(
+			args.DepthStencilView,
+			D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+			1.0f,
+			0,
+			0,
+			nullptr
+		);
+
+		// Specify the buffers we are going to render to.
 		mCommandList->OMSetRenderTargets(
 			1,
 			&args.BackBufferView,
@@ -96,7 +122,7 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// now draw each item
 		for (uint32_t i = 0; i < args.NumberOfItems; ++i) {
-			const DX12OpaqueRenderPipelinePerItemExecuteArgs& itemContext = args.PipelineItemsExecuteArgs[i];
+			const DX12MirrorRenderPipelinePerItemExecuteArgs& itemContext = args.PipelineItemsExecuteArgs[i];
 
 			// set vertex buffer
 			mCommandList->IASetVertexBuffers(
@@ -116,15 +142,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			// Offset to the CBV in the CBV heap for this object and for this frame resource.
 			uint32_t entityOffset = itemContext.ID * args.AlignedSizeOfPerRenderItemCb;
 			D3D12_GPU_VIRTUAL_ADDRESS currentEntityAddress =
-				args.PerRenderItemCBResourceAddress + 
+				args.PerRenderItemCBResourceAddress +
 				entityOffset;
 
 			mCommandList->SetGraphicsRootConstantBufferView(
-				mPerObjectCBIndex, 
+				mPerObjectCBIndex,
 				currentEntityAddress
 			);
 
-			uint32_t entitySubMeshesOffset = itemContext.ID * 
+			uint32_t entitySubMeshesOffset = itemContext.ID *
 				args.NumberOfSubMeshesPerItem *
 				args.AlignedSizeOfPerRenderItemSubMeshCb;
 
@@ -135,9 +161,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 			// now draw per sub mesh
 			for (uint8_t j = 0; j < itemContext.SubMeshCount; ++j) {
-				const DX12OpaqueRenderPipelinePerItemPerSubMeshExecuteArgs& subMeshContext =
+				const DX12MirrorRenderPipelinePerItemPerSubMeshExecuteArgs& subMeshContext =
 					itemContext.SubMeshExecuteArgs[j];
- 
+
 				uint32_t subMeshOffset = j * args.AlignedSizeOfPerRenderItemSubMeshCb;
 
 				// get this submeshes address
@@ -151,20 +177,6 @@ namespace Engine::EngineRenderer::DX12Renderer {
 					subMeshAddress
 				);
 
-				// bind the correct PSO
-				if (subMeshContext.IsRenderingAMirror) {
-					if (!isMirrorPSOBound) {
-						mCommandList->SetPipelineState(mMirrorPipelineStateObject.Get());
-						isMirrorPSOBound = true;
-					}
-				}
-				else {
-					if (isMirrorPSOBound) {
-						mCommandList->SetPipelineState(mPipelineStateObject.Get());
-						isMirrorPSOBound = false;
-					}
-				}
-
 				// draw call
 				mCommandList->DrawIndexedInstanced(
 					subMeshContext.IndexCount,
@@ -176,19 +188,32 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			}
 		}
 
+		// transition the back buffer to pixel source
+		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			args.CurrentBackBufferResource,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+		);
+
+		// Indicate the transition via a command.
+		mCommandList->ResourceBarrier(
+			1,
+			&barrier
+		);
+
 		// tell the profiler to end profiling
 		args.GpuProfiler.EndPass(
 			mCommandList.Get(),
-			(uint8_t)RendererPipelinePass::OPAQUE_RENDER_PASS
+			(uint8_t)RendererPipelinePass::MIRROR_RENDER_PASS
 		);
 
 		// don't close the command list, the aggregator will close it.
 	}
 
-	bool DX12OpaqueRenderPipelinePass::CreateRootSignature(
-		const DX12OpaqueRenderPipelineInitArgs& args
+	bool DX12MirrorRenderPipelinePass::CreateRootSignature(
+		const DX12MirrorRenderPipelineInitArgs& args
 	) {
-		// TODO: Update to Roott Signature 1.1 for dynamic indexing inside 
+		// TODO: Update to Root Signature 1.1 for dynamic indexing inside 
 		// Materials and Textures array
 
 		// we have 5 parameters for this root signature
@@ -206,15 +231,15 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// per material cb
 		CD3DX12_DESCRIPTOR_RANGE cbvTable1;
 		//(b3)
-		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, args.NumberOfMaterials, 3); 
+		cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, args.NumberOfMaterials, 3);
 		slotRootParameter[mMaterialsCBIndex].InitAsDescriptorTable(1, &cbvTable1);
 
 		// textures buffer
 		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
 		// (t0)
-		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 256, 0); 
+		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 256, 0);
 		slotRootParameter[mTexturesCBIndex].InitAsDescriptorTable(
-			1, 
+			1,
 			&cbvTable2,
 			D3D12_SHADER_VISIBILITY_PIXEL
 		);
@@ -261,10 +286,9 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12OpaqueRenderPipelinePass::CreateShadersAndInputLayout() {
+	bool DX12MirrorRenderPipelinePass::CreateShadersAndInputLayout() {
 		mVsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "VS", "vs_5_1");
 		mPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_vs_ps.hlsl", nullptr, "PS", "ps_5_1");
-		mMirrorPsByteCode = DX12RendererHelper::CompileShader(L"Source\\Resources\\Shaders\\opaque_mirror_ps.hlsl", nullptr, "Mirror_PS", "ps_5_1");
 
 		mInputLayout =
 		{
@@ -279,64 +303,48 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		return true;
 	}
 
-	bool DX12OpaqueRenderPipelinePass::CreatePipelineStateObject(
-		const DX12OpaqueRenderPipelineInitArgs& args
+	bool DX12MirrorRenderPipelinePass::CreatePipelineStateObject(
+		const DX12MirrorRenderPipelineInitArgs& args
 	) {
-		// describe the opaque
-		// pso
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc = {};
-		opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-		opaquePsoDesc.pRootSignature = mRootSignature.Get();
-		opaquePsoDesc.VS =
+		// describe the pso
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+		psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+		psoDesc.pRootSignature = mRootSignature.Get();
+		psoDesc.VS =
 		{
 			reinterpret_cast<BYTE*>(mVsByteCode->GetBufferPointer()),
 			mVsByteCode->GetBufferSize()
 		};
-		opaquePsoDesc.PS =
+		psoDesc.PS =
 		{
 			reinterpret_cast<BYTE*>(mPsByteCode->GetBufferPointer()),
 			mPsByteCode->GetBufferSize()
 		};
-		opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		opaquePsoDesc.SampleMask = UINT_MAX;
-		opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		opaquePsoDesc.NumRenderTargets = 1;
-		opaquePsoDesc.RTVFormats[0] = args.BackBufferFormat;
-		opaquePsoDesc.SampleDesc.Count = 1;
-		opaquePsoDesc.SampleDesc.Quality = 0;
-		opaquePsoDesc.DSVFormat = args.DepthStencilFormat;
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
-		// build the opaque pso
+		// For mirror pass, we want front CCW to be True
+		// as the triangle winding is inverted 
+		psoDesc.RasterizerState.FrontCounterClockwise = true;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = args.BackBufferFormat;
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.SampleDesc.Quality = 0;
+		psoDesc.DSVFormat = args.DepthStencilFormat;
+
+		// build the pso
 		ThrowIfFailed(
 			args.Device->CreateGraphicsPipelineState(
-				&opaquePsoDesc,
+				&psoDesc,
 				IID_PPV_ARGS(&mPipelineStateObject)
-			)
-		);
-
-		// describe the mirror pso
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC mirrorPsoDesc = opaquePsoDesc;
-		mirrorPsoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-		mirrorPsoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE; 
-
-		mirrorPsoDesc.PS =
-		{
-			reinterpret_cast<BYTE*>(mMirrorPsByteCode->GetBufferPointer()),
-			mMirrorPsByteCode->GetBufferSize()
-		};
-
-		// build the mirror pso
-		ThrowIfFailed(
-			args.Device->CreateGraphicsPipelineState(
-				&mirrorPsoDesc,
-				IID_PPV_ARGS(&mMirrorPipelineStateObject)
 			)
 		);
 
 		return true;
 	}
-
 #pragma endregion
 }

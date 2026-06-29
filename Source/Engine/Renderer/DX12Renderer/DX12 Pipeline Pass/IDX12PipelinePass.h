@@ -36,10 +36,12 @@ namespace Engine::EngineRenderer::DX12Renderer {
 
 		// delete copy and assignment operators
 		// so that we don't have any unwanted copies
-		// that perform shallow copies and maybe go out of scope at
-		// unexpected times
+		// that perform shallow copies and maybe 
+		// go out of scope at unexpected times
 		IDX12PipelinePass(const IDX12PipelinePass&) = delete;
 		IDX12PipelinePass& operator=(const IDX12PipelinePass&) = delete;
+		IDX12PipelinePass(IDX12PipelinePass&&) = delete;
+		IDX12PipelinePass& operator=(IDX12PipelinePass&&) = delete;
 
 		bool Initialize(const DX12PipelinePassInitArgs& args);
 		void ShutDown();

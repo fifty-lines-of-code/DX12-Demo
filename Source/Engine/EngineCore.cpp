@@ -141,10 +141,10 @@ namespace Engine {
 		// instead of manually having to execute passes like so below
 
 		if (mWorldManager.HasActiveMirrors()) {
-			// TODO: draw the mirror pass
+			DrawMirrorRenderPass();
 		}
 
-		// draw our 3D objects
+		// draw the opaque pass
 		DrawOpaqueRenderPass();
 
 		// draw our debug system
@@ -255,6 +255,20 @@ namespace Engine {
 			return false;
 		}
 
+		// setup mirror pipeline
+		result = mRenderer.SetupMirrorRenderPipeline(
+			(uint32_t)mWorldManager.GetEntityCount(),
+			EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH,
+			// todo: configure and use EngineConfig::EngineConfig::MAX_MATERIALS
+			mWorldManager.GetMaterialCount(),
+			EngineConfig::EngineConfig::MAX_TEXTURES,
+			mWorldManager.GetConstantBufferDataByteSizeOfEachMaterialObject(),
+			1,
+			DebugSystem::DebugLimits::MAX_CHARACTERS
+		);
+
+		if (!result) { return false; }
+
 		// setup opaque render pipeline
 		result = mRenderer.SetupOpaqueRenderPipeline(
 			(uint32_t)mWorldManager.GetEntityCount(),
@@ -313,6 +327,8 @@ namespace Engine {
 		// DirectXMath uses row-major alignment in CPU memory, but 
 		// HLSL defaults to column-major storage for matrix packing. 
 		// We transpose here to prevent skewed vector transformations on the GPU.
+
+		// store main camera view proj
 		const Matrix4x4& viewProj = mCameraManager.GetViewProjection(
 			EngineCamera::CameraType::MAIN
 		);
@@ -324,7 +340,19 @@ namespace Engine {
 			viewProjTranspose
 		);
 
-		// set camera pos
+		// store reflected camera view proj
+		const Matrix4x4& reflectedViewProj = mCameraManager.GetViewProjection(
+			EngineCamera::CameraType::REFLECTED
+		);
+		DirectX::XMMATRIX reflectedViewProjTranspose = DirectX::XMMatrixTranspose(
+			DirectX::XMLoadFloat4x4(&reflectedViewProj.AsXMFLOAT4X4())
+		);
+		DirectX::XMStoreFloat4x4(
+			&perPassCB.ReflectedViewProjectionTranspose.AsXMFLOAT4X4(),
+			reflectedViewProjTranspose
+		);
+
+		// set main camera pos
 		const Vector3& cameraPos = mCameraManager.GetCameraCenter(
 			EngineCamera::CameraType::MAIN
 		);
@@ -359,6 +387,12 @@ namespace Engine {
 		);
 		DirectX::XMStoreFloat4x4(
 			&perPassCB.ViewProjectionTranspose.AsXMFLOAT4X4(),
+			viewProjTranspose
+		);
+
+		// store reflected in both view proj transposes for mirror pass
+		DirectX::XMStoreFloat4x4(
+			&perPassCB.ReflectedViewProjectionTranspose.AsXMFLOAT4X4(),
 			viewProjTranspose
 		);
 
@@ -410,6 +444,33 @@ namespace Engine {
 						i,
 						subMeshData[i]
 					);
+
+					// if we have active mirrors in the scene
+					// then those mirror surfaces need to sample the 
+					// texture rtv and those sit at at the end of the texture array
+					// after MAX_TEXTURES
+					// so we have to update the texture ID to the correect slot
+					// in the textures array
+					
+					// TODO: handle multiple mirrors
+					// currently we have hardcoded a single mirror
+					// for MAX_MIRRORS, we'd have to store some sort of 
+					// MirrorID in our entities so that we can jump to the
+					// correct slot based on the mirror ID as each mirror will get
+					// NUM_FRAMES worth of rtvs to write to and sample from
+
+					if (mWorldManager.HasActiveMirrors() &&
+						entity.IsSubMeshAtIndexRenderingAMirror(i)) {
+						uint32_t textureID = 
+							EngineConfig::EngineConfig::MAX_TEXTURES +
+							mRenderer.GetCurrentFrameIndex();
+						subMeshData[i].TextureID = textureID;
+						Logger::PRINT(
+							L"Sub Mesh Mirror RTV index is: " +
+							std::to_wstring(textureID) +
+							L"\n"
+						);
+					}
 				}
 
 				// fire off sub mesh data per entity
@@ -469,7 +530,58 @@ namespace Engine {
 	}
 
 	void EngineCore::DrawMirrorRenderPass() {
+		std::vector<const EngineWorld::Entity*> reflectionPassEntities;
+		mWorldManager.GetEntitiesForReflectionPass(reflectionPassEntities);
 
+		if (reflectionPassEntities.size() == 0) {
+			return;
+		}
+
+		// excute context of all render items
+		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext;
+
+		// mirror pipeline pass execute context
+		EngineRenderer::DX12Renderer::DX12RenderPipelinePassExecuteContext context;
+
+		// load up the context
+		context.NumberOfItems = (uint32_t)reflectionPassEntities.size();
+		context.MaxNumSubMeshesPerItem = EngineConfig::EngineConfig::MAX_SUBMESHES_PER_MESH;
+		context.NumberOfMaterials = mWorldManager.GetMaterialCount();
+		context.PipelinePass = EngineRenderer::RendererPipelinePass::MIRROR_RENDER_PASS;
+
+		for (uint32_t i = 0; i < reflectionPassEntities.size(); ++i) {
+			if (i >= EngineRenderer::DX12Renderer::DX12RendererConfig::MAX_ITEMS_PER_PASS) { break; }
+
+			const EngineWorld::Entity* entity = reflectionPassEntities[i];
+
+			// set ID
+			itemsExecuteContext[i].ID = entity->GetID();
+
+			// set Mesh ID
+			auto* mesh = entity->GetMesh();
+			itemsExecuteContext[i].MeshID = (uint32_t)mesh->GetMeshID();
+
+			// set submesh count
+			uint8_t subMeshCount = mesh->GetActiveSubMeshCount();
+			itemsExecuteContext[i].SubMeshCount = subMeshCount;
+			itemsExecuteContext[i].SubMeshExecuteContext.reserve(subMeshCount);
+
+			// update per entity sub mesh data
+			for (uint8_t j = 0; j < subMeshCount; ++j) {
+				EngineRenderer::DX12Renderer::DX12RenderItemPerSubMeshExecuteContext subMeshExecuteContext = {};
+				const EngineResources::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
+
+				subMeshExecuteContext.ID = j;
+				subMeshExecuteContext.IndexCount = subMeshAtJ.IndexCount;
+				subMeshExecuteContext.StartIndexLocation = subMeshAtJ.StartIndexLocation;
+				subMeshExecuteContext.BaseVertexLocation = subMeshAtJ.BaseVertexLocation;
+				itemsExecuteContext[i].SubMeshExecuteContext.push_back(subMeshExecuteContext);
+			}
+		}
+		context.RenderItems = itemsExecuteContext.data();
+
+		// execute the opaque render
+		mRenderer.Execute(context);
 	}
 
 	void EngineCore::DrawOpaqueRenderPass() {
@@ -477,10 +589,10 @@ namespace Engine {
 		const uint32_t entityCount = mWorldManager.GetEntityCount();
 
 		// excute context of all render items
-		std::array<EngineRenderer::DX12Renderer::DX12OpaqueRenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext;
+		std::array<EngineRenderer::DX12Renderer::DX12RenderItemExecuteContext, EngineConfig::EngineConfig::MAX_ENTITIES> itemsExecuteContext;
 
 		// opaque pipeline pass execute context
-		EngineRenderer::DX12Renderer::DX12OpaquePipelinePassExecuteContext context;
+		EngineRenderer::DX12Renderer::DX12RenderPipelinePassExecuteContext context;
 
 		// load up the context
 		context.NumberOfItems = (uint32_t)entities.size();
@@ -507,13 +619,19 @@ namespace Engine {
 
 			// update per entity sub mesh data
 			for (uint8_t j = 0; j < subMeshCount; ++j) {
-				EngineRenderer::DX12Renderer::DX12OpaqueRenderItemPerSubMeshExecuteContext subMeshExecuteContext = {};
+				EngineRenderer::DX12Renderer::DX12RenderItemPerSubMeshExecuteContext subMeshExecuteContext = {};
 				const EngineResources::SubMesh& subMeshAtJ = mesh->GetSubMeshAtIndex(j);
 
 				subMeshExecuteContext.ID = j;
 				subMeshExecuteContext.IndexCount = subMeshAtJ.IndexCount;
 				subMeshExecuteContext.StartIndexLocation = subMeshAtJ.StartIndexLocation;
 				subMeshExecuteContext.BaseVertexLocation = subMeshAtJ.BaseVertexLocation;
+
+				// if submesh is rendering a mirror, let the renderer know
+				if (mWorldManager.HasActiveMirrors()) {
+					subMeshExecuteContext.IsRenderingAMirror = entity.IsSubMeshAtIndexRenderingAMirror(j);
+				}
+
 				itemsExecuteContext[i].SubMeshExecuteContext.push_back(subMeshExecuteContext);
 			}
 		}
@@ -543,6 +661,5 @@ namespace Engine {
 			LogToDebugSystem(opaqueProfilingMs);
 		}
 	}
-
 #pragma endregion
 }

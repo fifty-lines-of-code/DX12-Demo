@@ -9,6 +9,7 @@ namespace Engine::EngineWorld {
 	struct EntitySubMeshMaterialData {
 		uint32_t MaterialID = 0;
 		uint32_t TextureID = 0;
+		bool IsUsingMirrorMaterial = false;
 	};
 
 	struct EntityRenderData {
