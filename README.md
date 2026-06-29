@@ -1,340 +1,122 @@
 # 🎮 DX12 Real-Time Game Engine
 
-<p>
-A custom real-time game engine built from scratch using DirectX 12, focused on explicit GPU programming, frame synchronization, engine architecture, and data-oriented design.
-</p>
+A custom real-time game engine built from scratch using DirectX 12, focusing on explicit GPU programming, frame synchronization, engine architecture, and data-oriented design.
 
 ---
 
-## ⚡ What This Project Is
-
-This is a **low-level real-time engine** designed to replicate core systems found in modern game engines:
-
-- Explicit DirectX 12 rendering pipeline
-- GPU command submission architecture
-- Frame synchronization (CPU/GPU parallel execution)
-- Data-oriented scene and memory design
-- Scene-driven world loading system
-- Real-time gameplay, rendering, collision, and audio integration
-
-It is built to understand how real-time engines operate at the system level, not just how to use graphics APIs.
+## ⚡ Core Philosophy
+This is a **low-level real-time engine** designed to replicate systems found in modern commercial titles. Every CPU/GPU interaction is intentional, explicit, and visible.
+* **Data-Oriented:** Flat memory layouts, minimal pointer indirection, and cache-efficient designs.
+* **Explicit Control:** Manual command recording, barrier synchronization, and deterministic frame behavior.
 
 ---
 
-## 🧠 Core Engine Systems
+## 🧠 Engine Subsystems
 
-### 🖼️ Rendering (DirectX 12)
+### 🖼️ Rendering Pipeline (DirectX 12)
+* **Architecture:** Multi-pass pipeline with manual command list recording per pass.
+* **Resource Binding:** Explicit model via descriptor heaps, root signatures, and Pipeline State Objects (PSOs).
+* **Synchronization:** Resource state transitions governed by barrier-based synchronization models.
+* **Mesh System:** Shared geometry via Mesh → SubMesh architecture with instance-specific material/texture overrides.
+* **Planar Reflections:** Real-time planar reflection system utilizing dynamic render-to-texture passes.
+* **Lighting & Effects:** Phong lighting model, heightmap-based terrain rendering, font atlas sampling, and a 2-pass compute shader blur.
 
-- Multi-pass rendering pipeline
-- Manual command list recording per pass
-- Explicit GPU resource binding model (descriptor heaps, root signatures, PSOs)
-- Resource state transitions and barrier-based synchronization model
-- Explicit GPU command submission pipeline control
-- Mesh → SubMesh rendering architecture
-- Per-entity material and texture overrides
-- Shared geometry with instance-specific rendering state
+### ⏱️ Frame & Execution System
+* **Parallelism:** Triple-buffered frame architecture utilizing fence-based CPU/GPU synchronization.
+* **Scheduling:** CPU builds frame $N$ while the GPU executes frame $N-1$, preventing CPU/GPU stalls.
+* **Execution Flow:** 1. Poll double-buffered input system.
+  2. Update simulation (world, camera, gameplay).
+  3. Perform AABB & terrain-interpolated collision queries.
+  4. Synchronize frame resources using fences.
+  5. Record & submit DX12 command lists; resolve GPU profiling queries; Present.
 
----
-
-### ⏱ Frame System
-
-- Triple-buffered frame architecture
-- Fence-based CPU/GPU synchronization
-- Frame-indexed resource management
-- Safe parallel execution between CPU and GPU
-- CPU builds frame N while GPU executes frame N-1
-
----
-
-### 🧩 Scene Management System
-
-- SceneFactory-driven scene creation system
-- SceneBlueprint-based declarative scene definitions
-- WorldManager responsible for scene lifecycle and loading
-- Entity spawning via blueprint parameters into flat arrays
-- Player entity stored in fixed slot 0 for deterministic access
-- Chunk-based world system starting at (0,0)
-
-**Current Flow:**
-
-- SceneFactory generates SceneBlueprint
-- WorldManager loads scene
-- Entities are placed into:
-  - Slot 0 → Player
-  - Chunk (0,0) → World entities
-- Flat array entity storage (cache-efficient design)
-- Slot reuse allocation system (no fragmentation)
-- Chunk-based world partitioning system
-- Octree spatial structure for fast queries and culling
-- Terrain system integrated per chunk (heightmap-driven world data)
-
-**Future:**
-
-- Runtime chunk streaming around player position
-- Dynamic world loading/unloading
-
----
-
-### 🌍 Terrain System
-
-- Heightmap-based terrain per chunk
-- Each chunk contains its own vertex grid and spacing data
-- Terrain rendered as a triangulated grid (two triangles per quad)
-- Player movement is terrain-aware:
-  - Converts world position → chunk space
-  - Identifies current terrain quad
-  - Determines which triangle of the quad the player is over
-  - Uses triangle-based interpolation for height sampling
-- Ensures gameplay surface matches rendered geometry exactly
-- Prevents mismatch between physics, collision, and rendering
-
----
+### 🧩 Scene & Terrain Management
+* **Lifecycle:** `WorldManager` drives scene lifecycles defined via declarative `SceneBlueprint` structures.
+* **Memory Layout:** Entities are spawned into flat arrays (cache-efficient design) with a fragmentation-free slot reuse system.
+* **Spatial Partitioning:** Octree spatial structure used for fast queries and culling.
+* **Terrain Height Sampling:** Heightmap-driven chunk terrain. Player movement is terrain-aware, sampling triangle-based interpolation of the underlying quad to ensure exact collision and rendering synchronization.
 
 ### 🎮 Input & Gameplay System
-
-- Keyboard + Xbox controller support
-- Multithreaded double-buffered input system
-- Third-person movement system:
-  - Walk / run / sprint scaling
-  - Context-aware dash mechanics
-  - Intent-buffered transitions
-
----
-
-### ⚔️ Collision System
-
-- AABB-based collision detection for entity interactions
-- Terrain collision integrated via height sampling and triangle interpolation
-- Real-time gameplay validation and physics approximation
-- Prevents clipping, floating, and terrain desync issues
-
----
+* Multithreaded, double-buffered input tracking both Keyboard and Xbox Controller states.
+* Context-aware movement (walk/run/sprint scaling) and intent-buffered transitions (e.g., backwards dash).
 
 ### 🔊 Audio System
+* Driven by a 64MB fixed `AudioMemoryArena`.
+* **Runtime Mixer:** Background audio dynamically ducks to 0.4 volume during one-shot SFX playback. Features non-blocking runtime volume interpolation with ~50ms DSP-style fade curves.
 
-- AudioMemoryArena (64MB audio pool)
-- Looping background audio playback
-- One-shot SFX triggered via RB input
-- Runtime audio mixing and ducking system
-- Supports layered audio blending for gameplay feedback
-
-**Mixing System:**
-
-- Background audio ducks to 0.4 volume during SFX playback
-- One-shot audio fades in (0 → 0.7 over ~50ms)
-- One-shot audio fades out during final ~50ms
-- Background audio smoothly returns to full volume
-- Non-blocking runtime volume interpolation
-
----
-
-### 🖼️ Rendering Features
-
-- Terrain rendering (heightmap-based)
-- Font rendering (quad + atlas sampling)
-- Compute shader 2-pass blur
-- Phong lighting model
-
----
-
-### 📊 Performance & Debugging
-
-- Built-in GPU profiling system using DirectX 12 timestamp queries
-- Records GPU execution time for individual render passes
-- Batched query resolution at the end of each frame to minimise profiling overhead
-- Frame-delayed readback architecture avoids CPU/GPU synchronization stalls
-- GPU timestamps converted into millisecond timings using hardware timestamp frequency
-- Profiling data visualised directly within the engine debug UI
-- Enables real-time analysis of render pass performance and GPU bottlenecks
+### 📊 Performance Instrumentation
+* **GPU Profiling:** Built-in timestamp profiling using DirectX 12 timestamp queries.
+* **Zero Stall:** Batched query resolution at frame-end paired with a frame-delayed readback architecture avoids pipeline serialization stalls. Timings are displayed via the engine debug UI.
 
 ---
 
 ## 🎮 Controls
 
 ### Keyboard (Debug)
-
-- **F** → Toggle fullscreen / windowed mode
-- **D** → Toggle debug UI window
-
----
+* **F** → Toggle fullscreen / windowed mode
+* **D** → Toggle debug UI window
 
 ### Xbox Controller
-
-- Left Stick:
-  - &lt; 50% → Slow walk
-  - &gt;= 50% → Normal walk
-
-- Hold **B** while moving → Run
-
-- Press **B** from idle:
-  - Short intent window (~X seconds)
-  - If movement intent detected → Run from idle
-  - Otherwise → Backwards dash
-
-- Press **RB**:
-  - Plays one-shot SFX
-  - Triggers runtime audio mixing system
-
----
-
-## ⚙️ Performance Design Philosophy
-
-- Flat memory layouts (cache-efficient design)
-- Minimal pointer indirection
-- Explicit resource ownership
-- Deterministic frame behavior
-- No hidden engine magic
-
-<p>
-Every CPU/GPU interaction is intentional and visible.
-</p>
+* **Left Stick:** $< 50\%$ Slow walk | $\ge 50\%$ Normal walk
+* **Hold B (Moving):** Run
+* **Press B (Idle):** Intent-buffered window (Movement detected $\rightarrow$ Run | Otherwise $\rightarrow$ Backwards dash)
+* **Press RB:** Play one-shot SFX (Triggers dynamic audio ducking mixer)
 
 ---
 
 ## 🧱 Tech Stack
-
-- C++ (ISO C++17)
-- DirectX 12
-- HLSL
-- Win32 API
-- Multithreaded CPU systems
+* **Language:** C++ (ISO C++17)
+* **Graphics API:** DirectX 12 (HLSL)
+* **OS Interface:** Win32 API
+* **Dependencies:** Multithreaded CPU core systems
 
 ---
 
-## 📐 Engine Execution Flow (High-Level Mental Model)
+## 🧭 Project Status
 
-<p>
-The engine is structured around explicit CPU/GPU parallelism.
-</p>
+### Current Focus
+* Enhancing planar reflection pass efficiency
+* Pre-shadow projection experiments
+* Skeletal animation pipeline foundations
 
-<p>
-The CPU builds commands for the current frame while the GPU may still be executing work from previous frames. Before reusing frame-indexed resources, the engine waits on the associated fence value to ensure GPU completion.
-</p>
-
-### Initialization
-
-- Initialize subsystems (camera, scene, input, rendering, audio, spatial structures)
-
----
-
-### Main Loop
-
-- Poll double-buffered input system
-- Update simulation systems (world, camera, gameplay)
-- Perform collision detection (AABB)
-- Synchronize frame using fences
-- Execute render pass system
-- Record DirectX 12 command lists
-- Submit work via GPU command queue
-- Resolve GPU profiling queries
-- Present frame
-
----
-
-## 📚 Resources & Inspiration
-
-This project is informed by industry-standard graphics and engine development resources:
-
-- **Introduction to 3D Game Programming with DirectX 12** — Frank Luna
-- **Game Engine Architecture** — Jason Gregory
-- **Microsoft DirectX 12 Documentation**
-
-Additional learning comes from iterative engine development, GPU debugging, performance profiling, and low-level systems development.
-
----
-
-## 📌 What This Demonstrates
-
-- Real-time engine architecture
-- Explicit GPU submission and frame scheduling systems
-- Low-level graphics API proficiency (DirectX 12)
-- Barrier-based synchronization and resource lifetime management
-- GPU performance instrumentation and profiling
-- Engine tooling and debugging infrastructure
-- Scene system and world streaming design
-- Audio mixing and runtime DSP-style control
-- Data-oriented architecture (flat arrays, chunking)
-- Asset ownership and instance-based rendering architecture
-- Integration of rendering, gameplay, collision, physics, and audio systems
-- CPU/GPU parallel execution model understanding
-
----
-
-## 🧭 Current Work
-
-- Planar reflection system (render-to-texture)
-- Pre-shadow projection experiments
-- Skeletal animation pipeline foundations
-- Multi-submesh mesh architecture
-
----
-
-## 🚀 Future Work
-
-- Dynamic chunk streaming system (world loading around player)
-- Shadow mapping system
-- FBX skeletal animation system
-- Physically Based Rendering (PBR)
-- Render graph architecture
-- Frustum culling (octree-driven)
-- Wireframe debug rendering mode
-- Advanced audio system (3D spatialization)
+### Future Roadmap
+* Dynamic runtime chunk streaming around player
+* Shadow mapping & Frustum culling (octree-driven)
+* Physically Based Rendering (PBR) & Render Graph architecture
+* Advanced audio (3D spatialization)
 
 ---
 
 ## 📸 Media
 
-### 🎥 Videos
+### 🎥 Engine Demonstrations
 
-#### Full Engine Demo GIF (Terrain Traversal, Collision, Camera, Movement)
+* **Planar Reflections (Mirror)**
+  ![Planar Reflections Mirror Demo](Docs/Images/Mirror-Demo.gif)
+  *🎥 Raw Video:* [Watch High-Res MP4](Docs/Videos/Mirror-Demo.mp4)
 
-![Full Engine](Docs/Images/Full-Engine-Demo.gif)
+* **Full Engine Demo (Terrain, Collision, & Movement)**
+  ![Full Engine Traversal Demo](Docs/Images/Full-Engine-Demo.gif)
+  *🎥 Raw Video:* [Watch High-Res MP4](Docs/Videos/Full-Engine-Demo.mp4)
 
-#### Full Engine Demo Video
+* **Debug UI, GPU Profiler, & Compute Shader Blur**
+  ![Debug UI and Blur Pass Demo](Docs/Images/Debug-UI-And-Blur-Demo.gif)
+  *🎥 Raw Video:* [Watch High-Res MP4](Docs/Videos/Full-Engine-Demo.mp4)
 
-[Watch Video](Docs/Videos/Full-Engine-Demo.mp4)
-
-#### Debug UI + Blur GIF
-
-![Debug UI + Blur](Docs/Images/Debug-UI-And-Blur-Demo.gif)
-
-#### Debug UI + Blur Video
-
-[Watch Video](Docs/Videos/Debug-UI-And-Blur-Demo.mp4)
-
-#### Audio Ducking Demo
-
-[Watch Video](Docs/Videos/Audio-Ducking-Demo.mp4)
+* **Dynamic Audio System**
+  *🎥 Raw Video:* [Watch Audio Ducking Demo](Docs/Videos/Audio-Ducking-Demo.mp4)
 
 ---
 
 ### 🖼️ Screenshots
 
-#### Debug UI with Profiling
-
-![Debug UI](Docs/Images/Debug-Menu-With-Profiling-Demo.png)
-
-#### Terrain Rendering
-
-![Terrain Rendering](Docs/Images/Terrain-Rendering-Demo.png)
-
-#### Blur Effect
-
-![Blur Demo](Docs/Images/Blur-Demo.png)
-
-#### GPU Profiling
-
-![GPU Profiling](Docs/Images/GPU-Profiling-Demo.png)
+| Planar Reflections | GPU Profiler UI | Terrain Rendering | Blur Compute Pass |
+| :---: | :---: | :---: | :---: |
+| ![Mirror](Docs/Images/Mirror-Demo.png) | ![Profiler](Docs/Images/Debug-Menu-With-Profiling-Demo.png) | ![Terrain](Docs/Images/Terrain-Rendering-Demo.png) | ![Blur](Docs/Images/Blur-Demo.png) |
 
 ---
 
-## 🧠 Why This Project Exists
-
-Built to implement a real-time engine from scratch focusing on:
-
-- GPU programming models
-- Engine architecture design
-- Data-oriented systems
-- Rendering pipelines
-- Performance analysis and profiling
-- Performance-critical software engineering
+## 📚 Resources & Inspiration
+* *Introduction to 3D Game Programming with DirectX 12* — Frank Luna
+* *Game Engine Architecture* — Jason Gregory
+* *Microsoft DirectX 12 Documentation*
