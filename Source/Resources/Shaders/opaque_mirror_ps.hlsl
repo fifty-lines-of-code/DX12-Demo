@@ -19,7 +19,7 @@
 #endif
 
 #ifndef NUM_TEXTURES
-    #define NUM_TEXTURES 128
+    #define NUM_TEXTURES 256
 #endif
 
 #include "LightingUtil.hlsl"

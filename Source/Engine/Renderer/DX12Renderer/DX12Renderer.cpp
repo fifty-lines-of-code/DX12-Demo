@@ -161,79 +161,10 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			debugSystemMaxCharacters
 		);
 
-		// =====================================================================
-		// 1. Build Material CBV Init Data
-		//    Flat array: [Mat0_F0, Mat1_F0, ..., MatN_F0, Mat0_F1, ..., MatN_FN-1]
-		// =====================================================================
-		uint32_t totalMaterialCbvs = numberOfMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
-		std::vector<MaterialCbvInitArgs> matCbvData(totalMaterialCbvs);
-
-		for (uint32_t frame = 0; frame < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frame) {
-			D3D12_GPU_VIRTUAL_ADDRESS frameCbBase =
-				mFrameResources[frame]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
-
-			for (uint32_t mat = 0; mat < numberOfMaterials; ++mat) {
-				uint32_t index = frame * numberOfMaterials + mat;
-				matCbvData[index].FrameIndex = frame;
-				matCbvData[index].MaterialIndex = mat;
-				matCbvData[index].BufferLocation = frameCbBase +
-					mat * mFrameResources[frame]->mPerMaterialCB.ElementByteSize();
-				matCbvData[index].SizeInBytes =
-					static_cast<uint32_t>(mFrameResources[frame]->mPerMaterialCB.ElementByteSize());
-			}
-		}
-
-		// =====================================================================
-		// 2. Build Texture SRV Init Data
-		// =====================================================================
-		std::vector<TextureSrvInitArgs> texSrvData(numberOfTextures);
-
-		for (uint32_t i = 0; i < numberOfTextures; ++i) {
-			const DX12Texture& tex = mTextures[i];
-
-			texSrvData[i].TextureIndex = i;
-			texSrvData[i].Resource = tex.IsLoaded ? tex.Resource.Get() : nullptr;
-
-			texSrvData[i].SrvDesc = {};
-			if (tex.IsLoaded && tex.Resource != nullptr) {
-				auto desc = tex.Resource->GetDesc();
-				texSrvData[i].SrvDesc.Format = desc.Format;
-				texSrvData[i].SrvDesc.Texture2D.MipLevels = desc.MipLevels;
-			}
-			else {
-				// Null/unloaded texture: safe default SRV
-				texSrvData[i].SrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-				texSrvData[i].SrvDesc.Texture2D.MipLevels = 1;
-			}
-			texSrvData[i].SrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			texSrvData[i].SrvDesc.Texture2D.MostDetailedMip = 0;
-			texSrvData[i].SrvDesc.Texture2D.PlaneSlice = 0;
-			texSrvData[i].SrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-			texSrvData[i].SrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		}
-
-		// =====================================================================
-		// 3. Initialize Descriptor Manager
-		//    Creates shared heap + populates all material CBVs and texture SRVs.
-		//    Mirror SRVs created separately after render target manager init.
-		// =====================================================================
-		bool result = mDescriptorManager.Initialize(
-			mDX12Device.Get(),
+		return InitializeDescriptorManager(
 			numberOfMaterials,
-			matCbvData.data(),
-			static_cast<uint32_t>(matCbvData.size()),
-			texSrvData.data(),
-			static_cast<uint32_t>(texSrvData.size())
+			numberOfTextures
 		);
-
-		if (!result) {
-			Logger::ERR(L"Failed to initialize DX12DescriptorManager");
-			return false;
-		}
-
-		// Mirror SRVs are created inside OnResize
-
-		return true;
 	}
 
 	bool DX12Renderer::SetupMirrorRenderPipeline(
@@ -1205,6 +1136,85 @@ namespace Engine::EngineRenderer::DX12Renderer {
 				debugSystemMaxCharacters
 			);
 		}
+	}
+
+	bool DX12Renderer::InitializeDescriptorManager(
+		uint32_t numMaterials,
+		uint32_t numTextures
+	) {
+		// =====================================================================
+		// 1. Build Material CBV Init Data
+		//    Flat array: [Mat0_F0, Mat1_F0, ..., MatN_F0, Mat0_F1, ..., MatN_FN-1]
+		// =====================================================================
+		uint32_t totalMaterialCbvs = numMaterials * DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES;
+		std::vector<MaterialCbvInitArgs> matCbvData(totalMaterialCbvs);
+
+		for (uint32_t frame = 0; frame < DX12RendererConfig::NUMBER_OF_FRAME_RESOURCES; ++frame) {
+			D3D12_GPU_VIRTUAL_ADDRESS frameCbBase =
+				mFrameResources[frame]->mPerMaterialCB.Resource()->GetGPUVirtualAddress();
+
+			for (uint32_t mat = 0; mat < numMaterials; ++mat) {
+				uint32_t index = frame * numMaterials + mat;
+				matCbvData[index].FrameIndex = frame;
+				matCbvData[index].MaterialIndex = mat;
+				matCbvData[index].BufferLocation = frameCbBase +
+					mat * mFrameResources[frame]->mPerMaterialCB.ElementByteSize();
+				matCbvData[index].SizeInBytes =
+					static_cast<uint32_t>(mFrameResources[frame]->mPerMaterialCB.ElementByteSize());
+			}
+		}
+
+		// =====================================================================
+		// 2. Build Texture SRV Init Data
+		// =====================================================================
+		std::vector<TextureSrvInitArgs> texSrvData(numTextures);
+
+		for (uint32_t i = 0; i < numTextures; ++i) {
+			const DX12Texture& tex = mTextures[i];
+
+			texSrvData[i].TextureIndex = i;
+			texSrvData[i].Resource = tex.IsLoaded ? tex.Resource.Get() : nullptr;
+
+			texSrvData[i].SrvDesc = {};
+			if (tex.IsLoaded && tex.Resource != nullptr) {
+				auto desc = tex.Resource->GetDesc();
+				texSrvData[i].SrvDesc.Format = desc.Format;
+				texSrvData[i].SrvDesc.Texture2D.MipLevels = desc.MipLevels;
+			}
+			else {
+				// Null/unloaded texture: safe default SRV
+				texSrvData[i].SrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				texSrvData[i].SrvDesc.Texture2D.MipLevels = 1;
+			}
+			texSrvData[i].SrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			texSrvData[i].SrvDesc.Texture2D.MostDetailedMip = 0;
+			texSrvData[i].SrvDesc.Texture2D.PlaneSlice = 0;
+			texSrvData[i].SrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+			texSrvData[i].SrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		}
+
+		// =====================================================================
+		// 3. Initialize Descriptor Manager
+		//    Creates shared heap + populates all material CBVs and texture SRVs.
+		//    Mirror SRVs created separately after render target manager init.
+		// =====================================================================
+		bool result = mDescriptorManager.Initialize(
+			mDX12Device.Get(),
+			numMaterials,
+			matCbvData.data(),
+			static_cast<uint32_t>(matCbvData.size()),
+			texSrvData.data(),
+			static_cast<uint32_t>(texSrvData.size())
+		);
+
+		if (!result) {
+			Logger::ERR(L"Failed to initialize DX12DescriptorManager");
+			return false;
+		}
+
+		// Mirror SRVs are created inside OnResize
+
+		return true;
 	}
 
 	bool DX12Renderer::DrawMirrorPassOpaqueRenderItems(

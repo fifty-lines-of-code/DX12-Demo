@@ -241,6 +241,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 			uint32_t debugSystemMaxCharacters
 		);
 
+		bool InitializeDescriptorManager(
+			uint32_t numMaterials,
+			uint32_t numTextures
+		);
+
 		bool DrawMirrorPassOpaqueRenderItems(
 			const DX12RenderPipelinePassExecuteContext& context
 		);

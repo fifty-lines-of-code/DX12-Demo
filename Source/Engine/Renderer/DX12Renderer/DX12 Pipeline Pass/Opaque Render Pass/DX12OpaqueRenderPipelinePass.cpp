@@ -212,7 +212,11 @@ namespace Engine::EngineRenderer::DX12Renderer {
 		// textures buffer
 		CD3DX12_DESCRIPTOR_RANGE cbvTable2;
 		// (t0)
-		cbvTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 256, 0); 
+		cbvTable2.Init(
+			D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 
+			DX12RendererConfig::MAX_TEXTURES_IN_SHADERS,
+			0
+		); 
 		slotRootParameter[mTexturesCBIndex].InitAsDescriptorTable(
 			1, 
 			&cbvTable2,
