@@ -468,6 +468,10 @@ namespace Engine {
 		}
 	}
 
+	void EngineCore::DrawMirrorRenderPass() {
+
+	}
+
 	void EngineCore::DrawOpaqueRenderPass() {
 		auto& entities = mWorldManager.GetEntities();
 		const uint32_t entityCount = mWorldManager.GetEntityCount();

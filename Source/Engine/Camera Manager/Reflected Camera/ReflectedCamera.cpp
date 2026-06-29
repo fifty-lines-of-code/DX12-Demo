@@ -1,11 +1,12 @@
 #include "ReflectedCamera.h"
 
+#include <cmath>
 #include "../../../Helper/Logger.h"
 
 namespace Engine::EngineCamera {
 
-    ReflectedCamera::ReflectedCamera() : 
-        mShouldDebugPrint(false) 
+    ReflectedCamera::ReflectedCamera() :
+        mShouldDebugPrint(false)
     {}
 
     void ReflectedCamera::UpdateWithMainCameraData(
@@ -22,9 +23,7 @@ namespace Engine::EngineCamera {
         mData = {};
         mData.IsValid = false;
 
-        if (mirrorPlanes.Count == 0) {
-            return;
-        }
+        if (mirrorPlanes.Count == 0) { return; }
 
         // TODO: Iterate all mirrors and populate an array of ReflectedCameraData.
         //       For now, extract and process only the first mirror in the array.
@@ -72,7 +71,10 @@ namespace Engine::EngineCamera {
         // =========================================================================
         const DirectX::XMVECTOR negCamFwd = DirectX::XMVectorNegate(camFwd);
         const float facingDot = DirectX::XMVectorGetX(
-            DirectX::XMVector3Dot(negCamFwd, planeNormal)
+            DirectX::XMVector3Dot(
+                negCamFwd, 
+                planeNormal
+            )
         );
 
         if (facingDot < EngineConfig::EngineConfig::MIRROR_PLANE_ANGLE_EPSILON) {
@@ -137,26 +139,82 @@ namespace Engine::EngineCamera {
             camUp
         );
         const DirectX::XMMATRIX viewXM = DirectX::XMMatrixMultiply(
-            manualReflect, 
+            manualReflect,
             mainViewXM
         );
 
         // Standard projection (identical to main camera)
         const DirectX::XMMATRIX projXM = DirectX::XMMatrixPerspectiveFovLH(
-            fovY, 
+            fovY,
             aspectRatio, 
             nearPlane, 
             farPlane
         );
 
-        // Pre-multiply VP on CPU -- never per-vertex on GPU
-        const DirectX::XMMATRIX vpXM = DirectX::XMMatrixMultiply(viewXM, projXM);
+        // =========================================================================
+        // 4. ERIC LENGYEL'S OBLIQUE CLIPPING PLANE MODIFICATION
+        // Replaces the standard near plane with the mirror plane so that
+        // geometry behind the mirror is clipped without wasting depth precision.
+        // =========================================================================
+
+        // Transform the world-space plane equation into View Space
+        const DirectX::XMVECTOR viewNormal = DirectX::XMVector3TransformNormal(planeNormal, viewXM);
+        const DirectX::XMVECTOR viewMirrorPos = DirectX::XMVector3Transform(mirrorPos, viewXM);
+        const float viewD = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(viewNormal, viewMirrorPos));
+
+        // Package the view-space plane coefficients C = [Cx, Cy, Cz, Cw]
+        alignas(16) float cValues[4];
+        DirectX::XMStoreFloat4(reinterpret_cast<DirectX::XMFLOAT4*>(cValues), viewNormal);
+        cValues[3] = viewD;
+
+        // Calculate the corner point Q of the view frustum opposite the clip plane
+        float qx = (cValues[0] > 0.0f ? 1.0f : (cValues[0] < 0.0f ? -1.0f : 0.0f)) / projXM.r[0].m128_f32[0];
+        float qy = (cValues[1] > 0.0f ? 1.0f : (cValues[1] < 0.0f ? -1.0f : 0.0f)) / projXM.r[1].m128_f32[1];
+        float qz = 1.0f;
+        float qw = (1.0f - projXM.r[2].m128_f32[2]) / projXM.r[3].m128_f32[2];
+
+        // Generate the scaled projection plane vector M = C * (1.0 / Dot(C, Q))
+        float dotCQ = cValues[0] * qx + cValues[1] * qy + cValues[2] * qz + cValues[3] * qw;
+
+        // GUARD: Degenerate case where mirror plane intersects reflected camera
+        // frustum corner. Falls back to standard projection to prevent NaN/Inf.
+        if (std::abs(dotCQ) < 1e-6f) {
+            const DirectX::XMMATRIX vpXM = DirectX::XMMatrixMultiply(viewXM, projXM);
+
+            DirectX::XMStoreFloat4x4(&mData.View.AsXMFLOAT4X4(), viewXM);
+            DirectX::XMStoreFloat4x4(&mData.Projection.AsXMFLOAT4X4(), projXM);
+            DirectX::XMStoreFloat4x4(&mData.ViewProjection.AsXMFLOAT4X4(), vpXM);
+            DirectX::XMStoreFloat3(&mData.Center.AsXMFLOAT3(), reflPos);
+
+            mData.IsValid = true;
+            DebugPrintCameraData();
+            return;
+        }
+
+        float scale = 1.0f / dotCQ;
+
+        float mx = cValues[0] * scale;
+        float my = cValues[1] * scale;
+        float mz = cValues[2] * scale;
+        float mw = cValues[3] * scale;
+
+        // Lengyel's oblique clipping modifies column 2 (Z-row) of the projection
+        // matrix in row-major storage. This replaces the standard near plane with
+        // the mirror plane while preserving depth precision for nearby geometry.
+        DirectX::XMMATRIX obliqueProjXM = projXM;
+        obliqueProjXM.r[0].m128_f32[2] = mx;  // Row 0, Column 2
+        obliqueProjXM.r[1].m128_f32[2] = my;  // Row 1, Column 2
+        obliqueProjXM.r[2].m128_f32[2] = mz;  // Row 2, Column 2
+        obliqueProjXM.r[3].m128_f32[2] = mw;  // Row 3, Column 2
+
+        // Pre-multiply View-Projection on CPU -- never per-vertex on GPU
+        const DirectX::XMMATRIX vpXM = DirectX::XMMatrixMultiply(viewXM, obliqueProjXM);
 
         // =========================================================================
-        // 4. STORE RESULTS
+        // 5. STORE RESULTS
         // =========================================================================
         DirectX::XMStoreFloat4x4(&mData.View.AsXMFLOAT4X4(), viewXM);
-        DirectX::XMStoreFloat4x4(&mData.Projection.AsXMFLOAT4X4(), projXM);
+        DirectX::XMStoreFloat4x4(&mData.Projection.AsXMFLOAT4X4(), obliqueProjXM);
         DirectX::XMStoreFloat4x4(&mData.ViewProjection.AsXMFLOAT4X4(), vpXM);
         DirectX::XMStoreFloat3(&mData.Center.AsXMFLOAT3(), reflPos);
 

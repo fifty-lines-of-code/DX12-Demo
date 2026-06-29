@@ -73,6 +73,7 @@ namespace Engine {
 		void UpdatePerEntityConstantBuffers();
 		void UpdatePerMaterialConstantBuffers();
 		void UpdateDebugSystemConstantBuffers();
+		void DrawMirrorRenderPass();
 		void DrawOpaqueRenderPass();
 		void LogProfilingData();
 	};
